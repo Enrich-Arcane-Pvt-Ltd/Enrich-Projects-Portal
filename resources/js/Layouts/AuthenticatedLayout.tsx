@@ -15,64 +15,88 @@ export default function Authenticated({
         useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
+        <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+            <nav className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
-                                </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
+                    <div className="flex h-16 justify-between items-center">
+                        <div className="flex items-center gap-8">
+                            <Link href="/dashboard" className="flex items-center gap-3 group">
+                                <div className="h-10 w-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg shadow-indigo-500/20 ring-1 ring-white/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden shrink-0">
+                                    <img
+                                        src="/images/logo.png"
+                                        alt="Enrich Arcane"
+                                        className="h-full w-full object-contain"
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-base tracking-tight text-white flex items-center gap-2">
+                                        Enrich Vault
+                                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                            Developer Portal
+                                        </span>
+                                    </span>
+                                    <span className="text-xs text-slate-400">Enrich Arcane (Pvt) Ltd</span>
+                                </div>
+                            </Link>
                         </div>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
+                        <div className="hidden sm:flex sm:items-center sm:gap-4">
+                            <div className="relative">
                                 <Dropdown>
                                     <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center gap-2.5 rounded-lg border border-slate-700/60 bg-slate-800/80 px-3 py-1.5 text-sm font-medium text-slate-200 transition duration-150 ease-in-out hover:border-slate-600 hover:bg-slate-800 focus:outline-none"
+                                        >
+                                            <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-400 text-[11px] font-bold text-white flex items-center justify-center">
+                                                {user.name.charAt(0)}
+                                            </div>
+                                            <span>{user.name}</span>
+                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                user.role === 'admin'
+                                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                            }`}>
+                                                {user.role}
+                                            </span>
+                                            <svg
+                                                className="h-4 w-4 text-slate-400"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
                                             >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
                                     </Dropdown.Trigger>
 
-                                    <Dropdown.Content>
+                                    <Dropdown.Content contentClasses="py-1 bg-slate-900 border border-slate-800 shadow-xl rounded-lg">
+                                        <div className="px-4 py-2 border-b border-slate-800 text-xs text-slate-400">
+                                            Signed in as <span className="font-medium text-slate-200">{user.email}</span>
+                                        </div>
                                         <Dropdown.Link
                                             href={route('profile.edit')}
+                                            className="text-slate-300 hover:bg-slate-800 hover:text-white focus:bg-slate-800 focus:text-white active:bg-slate-800"
                                         >
-                                            Profile
+                                            Account Settings
                                         </Dropdown.Link>
+                                        {user.role === 'admin' && (
+                                            <a
+                                                href="/admin"
+                                                className="block w-full px-4 py-2 text-start text-sm leading-5 text-amber-300 hover:bg-amber-500/10 focus:bg-amber-500/10 focus:outline-none transition duration-150 ease-in-out"
+                                            >
+                                                Go to Admin Portal
+                                            </a>
+                                        )}
                                         <Dropdown.Link
                                             href={route('logout')}
                                             method="post"
                                             as="button"
+                                            className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 focus:bg-rose-500/10 focus:text-rose-300 active:bg-rose-500/20"
                                         >
                                             Log Out
                                         </Dropdown.Link>
@@ -88,7 +112,7 @@ export default function Authenticated({
                                         (previousState) => !previousState,
                                     )
                                 }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-300 focus:outline-none"
                             >
                                 <svg
                                     className="h-6 w-6"
@@ -127,46 +151,43 @@ export default function Authenticated({
                 <div
                     className={
                         (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
+                        ' sm:hidden border-b border-slate-800 bg-slate-900 px-4 pt-2 pb-3 space-y-1'
                     }
                 >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
+                    <ResponsiveNavLink
+                        href={route('dashboard')}
+                        active={route().current('dashboard')}
+                        className="text-slate-200"
+                    >
+                        My Projects
+                    </ResponsiveNavLink>
+                    {user.role === 'admin' && (
+                        <a
+                            href="/admin"
+                            className="block px-3 py-2 rounded-md text-base font-medium text-amber-400 hover:bg-slate-800"
                         >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
+                            Admin Portal
+                        </a>
+                    )}
+                    <ResponsiveNavLink
+                        href={route('profile.edit')}
+                        className="text-slate-300"
+                    >
+                        Profile
+                    </ResponsiveNavLink>
+                    <ResponsiveNavLink
+                        method="post"
+                        href={route('logout')}
+                        as="button"
+                        className="text-rose-400"
+                    >
+                        Log Out
+                    </ResponsiveNavLink>
                 </div>
             </nav>
 
             {header && (
-                <header className="bg-white shadow">
+                <header className="border-b border-slate-800/60 bg-slate-900/40">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {header}
                     </div>
