@@ -24,7 +24,15 @@ class ProjectsTable
                     ->description(fn ($record) => $record->code),
                 TextColumn::make('type')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'web_app' => 'Web App',
+                        'mobile_app' => 'Mobile App',
+                        'iot_embedded' => 'IOT Embedded',
+                        'api_service' => 'Api Service',
+                        'hybrid' => 'Hybrid',
+                        default => $state ?? '',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
                         'web_app' => 'info',
                         'mobile_app' => 'success',
                         'iot_embedded' => 'warning',
@@ -34,7 +42,15 @@ class ProjectsTable
                     }),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'in_progress' => 'In Progress',
+                        'planning' => 'Planning',
+                        'maintenance' => 'Maintenance',
+                        'completed' => 'Completed',
+                        'archived' => 'Archived',
+                        default => $state ?? '',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
                         'in_progress' => 'success',
                         'planning' => 'info',
                         'maintenance' => 'warning',
@@ -44,7 +60,14 @@ class ProjectsTable
                     }),
                 TextColumn::make('priority')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'critical' => 'Critical',
+                        'high' => 'High',
+                        'medium' => 'Medium',
+                        'low' => 'Low',
+                        default => $state ?? '',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
                         'critical' => 'danger',
                         'high' => 'warning',
                         'medium' => 'info',
