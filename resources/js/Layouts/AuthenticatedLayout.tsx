@@ -21,10 +21,12 @@ export default function Authenticated({
                     <div className="flex h-16 justify-between items-center">
                         <div className="flex items-center gap-8">
                             <Link href="/dashboard" className="flex items-center gap-3 group">
-                                <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 ring-1 ring-white/20 group-hover:scale-105 transition-transform duration-200">
-                                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
+                                <div className="h-10 w-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg shadow-indigo-500/20 ring-1 ring-white/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden shrink-0">
+                                    <img
+                                        src="/images/logo.png"
+                                        alt="Enrich Arcane"
+                                        className="h-full w-full object-contain"
+                                    />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="font-bold text-base tracking-tight text-white flex items-center gap-2">
@@ -33,32 +35,9 @@ export default function Authenticated({
                                             Developer Portal
                                         </span>
                                     </span>
-                                    <span className="text-xs text-slate-400">Centralized Project Vault</span>
+                                    <span className="text-xs text-slate-400">Enrich Arcane (Pvt) Ltd</span>
                                 </div>
                             </Link>
-
-                            <div className="hidden space-x-4 sm:flex items-center">
-                                <Link
-                                    href={route('dashboard')}
-                                    className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors text-white bg-slate-800/80 border border-slate-700/60"
-                                >
-                                    My Assigned Projects
-                                </Link>
-
-                                {user.role === 'admin' && (
-                                    <a
-                                        href="/admin"
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
-                                        title="Open Filament Admin Panel"
-                                    >
-                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        Filament Admin Panel
-                                    </a>
-                                )}
-                            </div>
                         </div>
 
                         <div className="hidden sm:flex sm:items-center sm:gap-4">
@@ -101,14 +80,14 @@ export default function Authenticated({
                                         </div>
                                         <Dropdown.Link
                                             href={route('profile.edit')}
-                                            className="text-slate-300 hover:bg-slate-800 hover:text-white"
+                                            className="text-slate-300 hover:bg-slate-800 hover:text-white focus:bg-slate-800 focus:text-white active:bg-slate-800"
                                         >
                                             Account Settings
                                         </Dropdown.Link>
                                         {user.role === 'admin' && (
                                             <a
                                                 href="/admin"
-                                                className="block w-full px-4 py-2 text-start text-sm leading-5 text-amber-300 hover:bg-amber-500/10 transition duration-150 ease-in-out"
+                                                className="block w-full px-4 py-2 text-start text-sm leading-5 text-amber-300 hover:bg-amber-500/10 focus:bg-amber-500/10 focus:outline-none transition duration-150 ease-in-out"
                                             >
                                                 Go to Admin Portal
                                             </a>
@@ -117,7 +96,7 @@ export default function Authenticated({
                                             href={route('logout')}
                                             method="post"
                                             as="button"
-                                            className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                                            className="text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 focus:bg-rose-500/10 focus:text-rose-300 active:bg-rose-500/20"
                                         >
                                             Log Out
                                         </Dropdown.Link>

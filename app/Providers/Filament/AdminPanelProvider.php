@@ -28,6 +28,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandLogo(asset('images/logo.png'))
+            ->brandLogoHeight('2.75rem')
             ->brandName('Enrich Project Vault')
             ->colors([
                 'primary' => Color::Indigo,
