@@ -374,10 +374,14 @@ export default function Dashboard({
                                         )}
 
                                         {/* Vault Resource Counters */}
-                                        <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
                                             <div className="flex items-center gap-1.5" title="Credentials">
                                                 <span>🔑</span>
                                                 <span>{project.credentials?.length || 0} Secrets</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5" title="Client Access Credentials">
+                                                <span>👤</span>
+                                                <span>{(project.client_access_credentials || project.clientAccessCredentials)?.length || 0} Clients</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Servers">
                                                 <span>🖥️</span>
@@ -398,6 +402,10 @@ export default function Dashboard({
                                             <div className="flex items-center gap-1.5" title="Documents">
                                                 <span>📄</span>
                                                 <span>{project.documents?.length || 0} Docs</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-slate-500 text-[10px]">
+                                                <span>🛡️</span>
+                                                <span>SOC2 Audited</span>
                                             </div>
                                         </div>
                                     </div>

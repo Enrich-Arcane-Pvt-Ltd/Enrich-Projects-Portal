@@ -1,4 +1,4 @@
-import { AuditLog, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount } from '@/types';
+import { AuditLog, ClientAccessCredential, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount } from '@/types';
 import axios from 'axios';
 import { useState } from 'react';
 
@@ -8,13 +8,14 @@ interface ProjectVaultModalProps {
     onClose: () => void;
 }
 
-type TabType = 'overview' | 'credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
+type TabType = 'overview' | 'credentials' | 'client_credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
 
 export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectVaultModalProps) {
     if (!isOpen || !project) return null;
 
     const [activeTab, setActiveTab] = useState<TabType>('credentials');
     const [revealedSecrets, setRevealedSecrets] = useState<Record<number, string>>({});
+    const [revealedClients, setRevealedClients] = useState<Record<number, string>>({});
     const [revealedAccounts, setRevealedAccounts] = useState<Record<number, string>>({});
     const [revealedServers, setRevealedServers] = useState<Record<string, string>>({});
     const [revealedIot, setRevealedIot] = useState<Record<number, string>>({});
@@ -77,6 +78,54 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
         }
     };
 
+    const handleRevealClientCredential = async (clientCred: ClientAccessCredential) => {
+        if (revealedClients[clientCred.id]) {
+            const copy = { ...revealedClients };
+            delete copy[clientCred.id];
+            setRevealedClients(copy);
+            return;
+        }
+
+        setLoadingIds(prev => ({ ...prev, [`client_${clientCred.id}`]: true }));
+        try {
+            const res = await axios.post(`/developer/reveal-client-credential/${clientCred.id}`);
+            setRevealedClients(prev => ({ ...prev, [clientCred.id]: res.data.password }));
+            triggerCopyFeedback(`Audited: Revealed ${clientCred.username} password`);
+        } catch (error) {
+            console.error('Failed to reveal client credential', error);
+        } finally {
+            setLoadingIds(prev => ({ ...prev, [`client_${clientCred.id}`]: false }));
+        }
+    };
+
+    const handleCopyClientPassword = async (clientCred: ClientAccessCredential) => {
+        let password = revealedClients[clientCred.id];
+        if (!password) {
+            try {
+                const res = await axios.post(`/developer/reveal-client-credential/${clientCred.id}`);
+                password = res.data.password;
+                setRevealedClients(prev => ({ ...prev, [clientCred.id]: password! }));
+            } catch (err) {
+                console.error('Failed to fetch client password for copy', err);
+                return;
+            }
+        }
+
+        if (password) {
+            navigator.clipboard.writeText(password);
+            triggerCopyFeedback(`Copied password for ${clientCred.username}`);
+            try {
+                await axios.post('/developer/log-copy', {
+                    project_id: project.id,
+                    target_field: `Client Password: ${clientCred.username}${clientCred.email ? ` (${clientCred.email})` : ''}`,
+                    action_type: 'COPIED_KEY',
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    };
+
     const handleRevealAccountPassword = async (account: ThirdPartyAccount) => {
         if (revealedAccounts[account.id]) {
             const copy = { ...revealedAccounts };
@@ -134,6 +183,7 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
 
     const tabs: { id: TabType; label: string; count?: number; icon: string }[] = [
         { id: 'credentials', label: 'Credentials Vault', count: project.credentials?.length || 0, icon: '🔑' },
+        { id: 'client_credentials', label: 'Client Access Credentials', count: (project.client_access_credentials || project.clientAccessCredentials)?.length || 0, icon: '👤' },
         { id: 'links', label: 'Repositories & Git', count: project.links?.length || 0, icon: '🔗' },
         { id: 'servers', label: 'Servers & Environments', count: project.server_environments?.length || 0, icon: '🖥️' },
         { id: 'accounts', label: 'Third-Party Accounts', count: project.third_party_accounts?.length || 0, icon: '☁️' },
@@ -335,6 +385,165 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                         Copy
                                                     </button>
                                                 </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* TAB: CLIENT ACCESS CREDENTIALS */}
+                    {activeTab === 'client_credentials' && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    Client Access Credentials & App Logins ({((project.client_access_credentials || project.clientAccessCredentials)?.length || 0)})
+                                </h3>
+                                <span className="text-xs text-slate-400">
+                                    Click <strong>Reveal Password</strong> to decrypt with automated audit logging.
+                                </span>
+                            </div>
+
+                            {(!((project.client_access_credentials || project.clientAccessCredentials)?.length)) ? (
+                                <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
+                                    No client access credentials configured for this application yet.
+                                </div>
+                            ) : (
+                                <div className="grid gap-4">
+                                    {(project.client_access_credentials || project.clientAccessCredentials)!.map((clientCred) => {
+                                        const isRevealed = Boolean(revealedClients[clientCred.id]);
+                                        const isLoading = Boolean(loadingIds[`client_${clientCred.id}`]);
+
+                                        return (
+                                            <div
+                                                key={clientCred.id}
+                                                className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3 hover:border-slate-700 transition-colors"
+                                            >
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-bold text-slate-100 text-sm">{clientCred.username}</span>
+                                                            {clientCred.role && (
+                                                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                                                    {clientCred.role}
+                                                                </span>
+                                                            )}
+                                                            {clientCred.environment && (
+                                                                <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                                                                    clientCred.environment === 'production' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                                                                    clientCred.environment === 'staging' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                                                                    'bg-slate-700 text-slate-300'
+                                                                }`}>
+                                                                    {clientCred.environment}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {clientCred.email && (
+                                                            <p className="text-xs text-slate-400 flex items-center gap-2">
+                                                                <span>Email: <strong className="text-slate-200">{clientCred.email}</strong></span>
+                                                                <button
+                                                                    onClick={() => handleCopyText(clientCred.email!, `Client Email: ${clientCred.username}`)}
+                                                                    className="text-[11px] text-indigo-400 hover:text-indigo-300 hover:underline"
+                                                                >
+                                                                    Copy
+                                                                </button>
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {clientCred.login_url && (
+                                                            <a
+                                                                href={clientCred.login_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1 transition-colors"
+                                                                title="Open Login Portal"
+                                                            >
+                                                                <span>Portal</span>
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                                </svg>
+                                                            </a>
+                                                        )}
+
+                                                        <button
+                                                            onClick={() => handleRevealClientCredential(clientCred)}
+                                                            disabled={isLoading}
+                                                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                                                                isRevealed
+                                                                    ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                                                    : 'bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20'
+                                                            }`}
+                                                        >
+                                                            {isLoading ? (
+                                                                <span>Decrypting...</span>
+                                                            ) : isRevealed ? (
+                                                                <>
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                                                    </svg>
+                                                                    Hide
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                                    </svg>
+                                                                    Reveal Password
+                                                                </>
+                                                            )}
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => handleCopyClientPassword(clientCred)}
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 transition-colors flex items-center gap-1.5"
+                                                            title="Copy password and log audit record"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                            Copy Password
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Details Row: Username, Email, Password */}
+                                                <div className="grid sm:grid-cols-3 gap-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                                                    <div>
+                                                        <span className="text-slate-500">UserName:</span>{' '}
+                                                        <span className="text-slate-200 font-mono font-medium">{clientCred.username}</span>
+                                                        <button
+                                                            onClick={() => handleCopyText(clientCred.username, `Client Username: ${clientCred.username}`)}
+                                                            className="ml-2 text-[10px] text-indigo-400 hover:underline"
+                                                        >
+                                                            Copy
+                                                        </button>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500">Email:</span>{' '}
+                                                        <span className="text-slate-200 font-mono">{clientCred.email || '-'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-500">Password:</span>{' '}
+                                                        <span className="font-mono text-amber-300">
+                                                            {isRevealed ? (
+                                                                <span className="font-bold">{revealedClients[clientCred.id]}</span>
+                                                            ) : (
+                                                                <span className="tracking-widest">••••••••••••</span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Notes / 2FA */}
+                                                {clientCred.notes && (
+                                                    <div className="text-xs bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80 text-slate-300">
+                                                        <span className="text-slate-500 font-medium">Notes / 2FA:</span> {clientCred.notes}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}

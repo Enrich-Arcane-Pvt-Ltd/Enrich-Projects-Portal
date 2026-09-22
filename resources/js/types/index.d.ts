@@ -95,6 +95,20 @@ export interface AuditLog {
     created_at: string;
 }
 
+export interface ClientAccessCredential {
+    id: number;
+    project_id: number;
+    username: string;
+    email?: string;
+    password?: string;
+    role?: string;
+    login_url?: string;
+    environment?: 'local' | 'staging' | 'production';
+    notes?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface Project {
     id: number;
     name: string;
@@ -114,6 +128,8 @@ export interface Project {
     links?: ProjectLink[];
     third_party_accounts?: ThirdPartyAccount[];
     credentials?: ProjectCredential[];
+    client_access_credentials?: ClientAccessCredential[];
+    clientAccessCredentials?: ClientAccessCredential[];
     server_environments?: ServerEnvironment[];
     background_services?: BackgroundService[];
     iot_configurations?: IotConfiguration[];

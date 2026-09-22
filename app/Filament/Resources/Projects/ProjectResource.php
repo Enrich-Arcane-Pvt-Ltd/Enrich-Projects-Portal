@@ -7,6 +7,7 @@ use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\BackgroundServicesRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\ClientAccessCredentialsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\CredentialsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DevelopersRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DocumentsRelationManager;
@@ -56,6 +57,7 @@ class ProjectResource extends Resource
     {
         return [
             CredentialsRelationManager::class,
+            ClientAccessCredentialsRelationManager::class,
             LinksRelationManager::class,
             ServerEnvironmentsRelationManager::class,
             ThirdPartyAccountsRelationManager::class,
