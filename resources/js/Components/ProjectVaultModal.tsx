@@ -1,6 +1,6 @@
 import { AuditLog, ClientAccessCredential, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount } from '@/types';
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface ProjectVaultModalProps {
     project: Project | null;
@@ -21,6 +21,47 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
     const [revealedIot, setRevealedIot] = useState<Record<number, string>>({});
     const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
     const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+
+    const tabsContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    const updateScrollButtons = () => {
+        const el = tabsContainerRef.current;
+        if (!el) return;
+        setCanScrollLeft(el.scrollLeft > 6);
+        setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 6);
+    };
+
+    useEffect(() => {
+        // Run slightly after mount/render to ensure clientWidth and scrollWidth are calculated
+        const timeout = setTimeout(updateScrollButtons, 50);
+        window.addEventListener('resize', updateScrollButtons);
+        return () => {
+            clearTimeout(timeout);
+            window.removeEventListener('resize', updateScrollButtons);
+        };
+    }, [isOpen, project]);
+
+    const scrollTabs = (direction: 'left' | 'right') => {
+        const el = tabsContainerRef.current;
+        if (!el) return;
+        const scrollAmount = 260;
+        el.scrollBy({
+            left: direction === 'left' ? -scrollAmount : scrollAmount,
+            behavior: 'smooth',
+        });
+        setTimeout(updateScrollButtons, 300);
+    };
+
+    const handleWheelScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+        const el = tabsContainerRef.current;
+        if (!el) return;
+        if (e.deltaY !== 0) {
+            el.scrollLeft += e.deltaY;
+            updateScrollButtons();
+        }
+    };
 
     const triggerCopyFeedback = (msg: string) => {
         setCopyFeedback(msg);
@@ -257,31 +298,74 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     )}
                 </div>
 
-                {/* Tabs Header */}
-                <div className="flex items-center gap-1 overflow-x-auto px-6 pt-3 border-b border-slate-800 bg-slate-900/30 scrollbar-none">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
-                                activeTab === tab.id
-                                    ? 'border-indigo-500 text-indigo-400 bg-slate-800/60'
-                                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
-                            }`}
-                        >
-                            <span>{tab.icon}</span>
-                            <span>{tab.label}</span>
-                            {tab.count !== undefined && (
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                {/* Tabs Header with Horizontal Scroll Controls & Visual Indicators */}
+                <div className="relative border-b border-slate-800 bg-slate-900/50 flex items-center">
+                    {/* Left Scroll Button */}
+                    {canScrollLeft && (
+                        <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 pl-1.5 bg-gradient-to-r from-slate-900 via-slate-900/95 to-transparent">
+                            <button
+                                onClick={() => scrollTabs('left')}
+                                className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-lg transition-all hover:scale-105 active:scale-95"
+                                title="Scroll tabs left"
+                                type="button"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Scrollable Tabs List */}
+                    <div
+                        ref={tabsContainerRef}
+                        onScroll={updateScrollButtons}
+                        onWheel={handleWheelScroll}
+                        className="flex items-center gap-1.5 overflow-x-auto px-4 pt-2.5 pb-1 w-full scroll-smooth select-none focus:outline-none [scrollbar-width:thin] [scrollbar-color:#334155_transparent]"
+                    >
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={(e) => {
+                                    setActiveTab(tab.id);
+                                    e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                }}
+                                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
                                     activeTab === tab.id
-                                        ? 'bg-indigo-500/20 text-indigo-300'
-                                        : 'bg-slate-800 text-slate-400'
-                                }`}>
-                                    {tab.count}
-                                </span>
-                            )}
-                        </button>
-                    ))}
+                                        ? 'border-indigo-500 text-indigo-400 bg-slate-800/80 shadow-sm'
+                                        : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                                }`}
+                            >
+                                <span className="text-sm">{tab.icon}</span>
+                                <span>{tab.label}</span>
+                                {tab.count !== undefined && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                        activeTab === tab.id
+                                            ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
+                                            : 'bg-slate-800 text-slate-400'
+                                    }`}>
+                                        {tab.count}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Right Scroll Button */}
+                    {canScrollRight && (
+                        <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 pr-1.5 bg-gradient-to-l from-slate-900 via-slate-900/95 to-transparent">
+                            <button
+                                onClick={() => scrollTabs('right')}
+                                className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-lg transition-all hover:scale-105 active:scale-95"
+                                title="Scroll tabs right"
+                                type="button"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Tab Contents */}
