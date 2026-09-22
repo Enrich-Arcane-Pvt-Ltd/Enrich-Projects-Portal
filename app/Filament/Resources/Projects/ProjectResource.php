@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Projects;
 
-use App\Filament\Resources\Projects\Pages\CreateProject;
-use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\BackgroundServicesRelationManager;
@@ -72,9 +70,7 @@ class ProjectResource extends Resource
     {
         return [
             'index' => ListProjects::route('/'),
-            'create' => CreateProject::route('/create'),
             'view' => ViewProject::route('/{record}'),
-            'edit' => EditProject::route('/{record}/edit'),
         ];
     }
 

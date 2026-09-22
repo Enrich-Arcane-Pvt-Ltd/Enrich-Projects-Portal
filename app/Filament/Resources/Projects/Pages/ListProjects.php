@@ -13,7 +13,7 @@ class ListProjects extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            // Create action removed: developer role is the creator & controller
         ];
     }
 }
