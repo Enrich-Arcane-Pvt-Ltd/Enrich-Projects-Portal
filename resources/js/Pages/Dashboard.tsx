@@ -79,20 +79,19 @@ export default function Dashboard({
 
             <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
                 {/* Hero / Welcome Banner */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800/90 p-6 sm:p-8 shadow-2xl">
-                    <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="rounded-2xl bg-slate-900/70 border border-slate-800/80 p-6 sm:p-8 shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400/90">
                                     Developer Vault Active • Role: {auth.user.role}
                                 </span>
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                                 Welcome back, {auth.user.name}
                             </h1>
-                            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
+                            <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
                                 Browse all company projects, view your assigned project teams, inspect server infrastructure, and decrypt credentials with real-time audit logging.
                             </p>
                         </div>
@@ -104,10 +103,10 @@ export default function Dashboard({
                                         setEditingProject(null);
                                         setIsFormModalOpen(true);
                                     }}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 shrink-0"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-colors shadow-sm shrink-0"
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                     </svg>
                                     <span>New Project</span>
                                 </button>
@@ -116,13 +115,13 @@ export default function Dashboard({
                             {auth.user.role === 'admin' && (
                                 <a
                                     href="/admin"
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20 shrink-0"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-sm transition-colors shrink-0"
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    Switch to Filament Admin Panel
+                                    Switch to Admin Panel
                                 </a>
                             )}
                         </div>
@@ -130,71 +129,71 @@ export default function Dashboard({
                 </div>
 
                 {/* Metric Counter Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                     <div
                         onClick={() => setScopeFilter('all')}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all space-y-1 ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-colors space-y-1 ${
                             scopeFilter === 'all'
-                                ? 'bg-indigo-950/40 border-indigo-500/60 ring-1 ring-indigo-500/30'
-                                : 'bg-slate-900/80 border-slate-800/80 hover:border-slate-700'
+                                ? 'bg-slate-800/90 border-indigo-500/60 ring-1 ring-indigo-500/30'
+                                : 'bg-slate-900/70 border-slate-800/80 hover:border-slate-700'
                         }`}
                     >
-                        <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                        <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>All Projects</span>
-                            <span className="text-indigo-400">📁</span>
+                            <span className="text-slate-400">📁</span>
                         </div>
-                        <div className="text-2xl font-black text-white">{stats.total_projects}</div>
-                        <div className="text-[11px] text-slate-400">Total company vault</div>
+                        <div className="text-2xl font-bold text-white">{stats.total_projects}</div>
+                        <div className="text-[11px] text-slate-500">Total company vault</div>
                     </div>
 
                     <div
                         onClick={() => setScopeFilter('my_created')}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all space-y-1 ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-colors space-y-1 ${
                             scopeFilter === 'my_created'
-                                ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/30'
-                                : 'bg-slate-900/80 border-slate-800/80 hover:border-slate-700'
+                                ? 'bg-slate-800/90 border-indigo-500/60 ring-1 ring-indigo-500/30'
+                                : 'bg-slate-900/70 border-slate-800/80 hover:border-slate-700'
                         }`}
                     >
-                        <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                        <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>My Created</span>
-                            <span className="text-emerald-400">⭐</span>
+                            <span className="text-slate-400">⭐</span>
                         </div>
-                        <div className="text-2xl font-black text-emerald-400">{stats.my_created_projects || 0}</div>
-                        <div className="text-[11px] text-emerald-500/80 font-semibold">Full controller ownership</div>
+                        <div className="text-2xl font-bold text-white">{stats.my_created_projects || 0}</div>
+                        <div className="text-[11px] text-slate-500">Controller ownership</div>
                     </div>
 
                     <div
                         onClick={() => setScopeFilter('other_developers')}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all space-y-1 ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-colors space-y-1 ${
                             scopeFilter === 'other_developers'
-                                ? 'bg-indigo-950/40 border-indigo-500/60 ring-1 ring-indigo-500/30'
-                                : 'bg-slate-900/80 border-slate-800/80 hover:border-slate-700'
+                                ? 'bg-slate-800/90 border-indigo-500/60 ring-1 ring-indigo-500/30'
+                                : 'bg-slate-900/70 border-slate-800/80 hover:border-slate-700'
                         }`}
                     >
-                        <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                        <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>Other Developers</span>
-                            <span className="text-sky-400">👥</span>
+                            <span className="text-slate-400">👥</span>
                         </div>
-                        <div className="text-2xl font-black text-sky-300">{stats.other_developers_projects || 0}</div>
-                        <div className="text-[11px] text-slate-400">View & vault access</div>
+                        <div className="text-2xl font-bold text-white">{stats.other_developers_projects || 0}</div>
+                        <div className="text-[11px] text-slate-500">View & vault access</div>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 shadow-sm space-y-1">
-                        <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                    <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1">
+                        <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>Active In-Dev</span>
-                            <span className="text-sky-400">⚡</span>
+                            <span className="text-slate-400">⚡</span>
                         </div>
-                        <div className="text-2xl font-black text-sky-400">{stats.active_projects}</div>
-                        <div className="text-[11px] text-slate-400">Active sprints</div>
+                        <div className="text-2xl font-bold text-white">{stats.active_projects}</div>
+                        <div className="text-[11px] text-slate-500">Active sprints</div>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/80 shadow-sm space-y-1 col-span-2 lg:col-span-1">
-                        <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                    <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1 col-span-2 lg:col-span-1">
+                        <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>Secured Secrets</span>
-                            <span className="text-amber-400">🔑</span>
+                            <span className="text-slate-400">🔑</span>
                         </div>
-                        <div className="text-2xl font-black text-amber-400">{stats.total_credentials}</div>
-                        <div className="text-[11px] text-slate-400">AES-256 Vault keys</div>
+                        <div className="text-2xl font-bold text-white">{stats.total_credentials}</div>
+                        <div className="text-[11px] text-slate-500">AES-256 Vault keys</div>
                     </div>
                 </div>
 
@@ -216,7 +215,7 @@ export default function Dashboard({
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search by name, code, stack (e.g. ESP32, MQTT, Flutter)..."
-                                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
                             />
                             {searchQuery && (
                                 <button
@@ -233,7 +232,7 @@ export default function Dashboard({
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value)}
-                                className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-medium text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                             >
                                 <option value="all">All Statuses</option>
                                 <option value="in_progress">In Progress</option>
@@ -246,7 +245,7 @@ export default function Dashboard({
                             <select
                                 value={selectedPriority}
                                 onChange={(e) => setSelectedPriority(e.target.value)}
-                                className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="px-3 py-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs font-medium text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                             >
                                 <option value="all">All Priorities</option>
                                 <option value="critical">Critical</option>
@@ -263,7 +262,7 @@ export default function Dashboard({
                                         setSelectedStatus('all');
                                         setSelectedPriority('all');
                                     }}
-                                    className="text-xs text-indigo-400 hover:underline px-2"
+                                    className="text-xs text-indigo-400 hover:text-indigo-300 px-2 font-medium"
                                 >
                                     Reset Filters
                                 </button>
@@ -277,10 +276,10 @@ export default function Dashboard({
                             <button
                                 key={type.id}
                                 onClick={() => setSelectedType(type.id)}
-                                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                                     selectedType === type.id
-                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                                        : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800'
+                                        ? 'bg-indigo-600 text-white shadow-sm'
+                                        : 'bg-slate-900/70 text-slate-400 hover:text-slate-200 border border-slate-800/80'
                                 }`}
                             >
                                 {type.label}
@@ -292,12 +291,12 @@ export default function Dashboard({
                 {/* Projects Grid */}
                 <div className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 p-1 bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto scrollbar-none">
+                        <div className="flex items-center gap-1.5 p-1 bg-slate-900/90 border border-slate-800/80 rounded-xl overflow-x-auto scrollbar-none">
                             <button
                                 onClick={() => setScopeFilter('all')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                                     scopeFilter === 'all'
-                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                                        ? 'bg-indigo-600 text-white shadow-sm'
                                         : 'text-slate-400 hover:text-white'
                                 }`}
                             >
@@ -311,15 +310,15 @@ export default function Dashboard({
 
                             <button
                                 onClick={() => setScopeFilter('my_created')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                                     scopeFilter === 'my_created'
-                                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
+                                        ? 'bg-indigo-600 text-white shadow-sm'
                                         : 'text-slate-400 hover:text-white'
                                 }`}
                             >
                                 <span>⭐ My Created</span>
                                 <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                                    scopeFilter === 'my_created' ? 'bg-white/20 text-white' : 'bg-slate-800 text-emerald-400 font-bold'
+                                    scopeFilter === 'my_created' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
                                 }`}>
                                     {stats.my_created_projects || 0}
                                 </span>
@@ -327,15 +326,15 @@ export default function Dashboard({
 
                             <button
                                 onClick={() => setScopeFilter('other_developers')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                                     scopeFilter === 'other_developers'
-                                        ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
+                                        ? 'bg-indigo-600 text-white shadow-sm'
                                         : 'text-slate-400 hover:text-white'
                                 }`}
                             >
                                 <span>👥 Other Developers</span>
                                 <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                                    scopeFilter === 'other_developers' ? 'bg-white/20 text-white' : 'bg-slate-800 text-sky-400 font-bold'
+                                    scopeFilter === 'other_developers' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
                                 }`}>
                                     {stats.other_developers_projects || 0}
                                 </span>
@@ -343,9 +342,9 @@ export default function Dashboard({
 
                             <button
                                 onClick={() => setScopeFilter('assigned')}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                                     scopeFilter === 'assigned'
-                                        ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
+                                        ? 'bg-indigo-600 text-white shadow-sm'
                                         : 'text-slate-400 hover:text-white'
                                 }`}
                             >
@@ -359,7 +358,7 @@ export default function Dashboard({
                         </div>
 
                         <div className="text-xs text-slate-400 font-medium">
-                            Showing <strong className="text-white">{filteredProjects.length}</strong> {scopeFilter === 'all' ? 'total' : scopeFilter.replace('_', ' ')} {filteredProjects.length === 1 ? 'project' : 'projects'}
+                            Showing <strong className="text-slate-200">{filteredProjects.length}</strong> {scopeFilter === 'all' ? 'total' : scopeFilter.replace('_', ' ')} {filteredProjects.length === 1 ? 'project' : 'projects'}
                         </div>
                     </div>
 
@@ -376,30 +375,27 @@ export default function Dashboard({
                             {filteredProjects.map((project) => (
                                 <div
                                     key={project.id}
-                                    className={`rounded-2xl bg-slate-900 border transition-all duration-300 shadow-lg flex flex-col justify-between group overflow-hidden ${
-                                        project.is_owner
-                                            ? 'border-emerald-500/40 hover:border-emerald-400 hover:shadow-emerald-500/10'
-                                            : 'border-slate-800 hover:border-indigo-500/50 hover:shadow-indigo-500/10'
-                                    }`}
+                                    className="rounded-2xl bg-slate-900/70 border border-slate-800/80 hover:border-slate-700 transition-colors shadow-sm flex flex-col justify-between group overflow-hidden"
                                 >
                                     <div className="p-6 space-y-4">
                                         {/* Top Badges */}
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <span className="font-mono text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                                <span className="font-mono text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60">
                                                     {project.code}
                                                 </span>
                                                 {project.is_owner ? (
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shadow-sm">
-                                                        ⭐ Created by You
+                                                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                                                        Created by You
                                                     </span>
                                                 ) : (
-                                                    <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
+                                                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-400 border border-slate-700/60 flex items-center gap-1.5">
                                                         👤 {project.creator?.name || 'Developer'}
                                                     </span>
                                                 )}
                                                 {project.is_assigned && !project.is_owner && (
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                                                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60">
                                                         ✓ Assigned
                                                     </span>
                                                 )}
@@ -414,7 +410,7 @@ export default function Dashboard({
                                                                 setEditingProject(project);
                                                                 setIsFormModalOpen(true);
                                                             }}
-                                                            className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                                                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
                                                             title="Edit Project Details"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -428,7 +424,7 @@ export default function Dashboard({
                                                                     router.delete(`/developer/projects/${project.id}`);
                                                                 }
                                                             }}
-                                                            className="p-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors"
+                                                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
                                                             title="Delete Project"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -438,19 +434,18 @@ export default function Dashboard({
                                                     </div>
                                                 )}
 
-                                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                                                    project.status === 'in_progress' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                                    project.status === 'planning' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
-                                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                                }`}>
+                                                <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
+                                                    <span className={`h-1.5 w-1.5 rounded-full ${
+                                                        project.status === 'in_progress' ? 'bg-emerald-400' :
+                                                        project.status === 'planning' ? 'bg-indigo-400' :
+                                                        'bg-slate-400'
+                                                    }`}></span>
                                                     {project.status.replace('_', ' ')}
                                                 </span>
 
-                                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                                                    project.priority === 'critical' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                                                    project.priority === 'high' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                                                    'bg-slate-800 text-slate-400'
-                                                }`}>
+                                                <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
+                                                    {project.priority === 'critical' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span>}
+                                                    {project.priority === 'high' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400/60"></span>}
                                                     {project.priority}
                                                 </span>
                                             </div>
@@ -458,7 +453,7 @@ export default function Dashboard({
 
                                         {/* Title & Description */}
                                         <div className="space-y-1.5">
-                                            <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">
+                                            <h3 className="text-base font-semibold text-white group-hover:text-indigo-300 transition-colors">
                                                 {project.name}
                                             </h3>
                                             <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
@@ -472,7 +467,7 @@ export default function Dashboard({
                                                 {project.tech_stack.split(',').map((tech, idx) => (
                                                     <span
                                                         key={idx}
-                                                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/50"
+                                                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-700/40"
                                                     >
                                                         {tech.trim()}
                                                     </span>
@@ -518,11 +513,11 @@ export default function Dashboard({
                                     </div>
 
                                     {/* Action Footer */}
-                                    <div className="p-4 bg-slate-900/60 border-t border-slate-800 flex items-center justify-between">
+                                    <div className="p-4 bg-slate-900/40 border-t border-slate-800/80 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             {project.lead_developer ? (
                                                 <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                                                    <div className="h-6 w-6 rounded-full bg-indigo-500 text-white font-bold text-[10px] flex items-center justify-center">
+                                                    <div className="h-6 w-6 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-medium text-[10px] flex items-center justify-center">
                                                         {project.lead_developer.name.charAt(0)}
                                                     </div>
                                                     <span className="truncate max-w-[110px]">{project.lead_developer.name}</span>
@@ -534,7 +529,7 @@ export default function Dashboard({
 
                                         <button
                                             onClick={() => setSelectedProjectId(project.id)}
-                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-600/20 group-hover:scale-105"
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-sm"
                                         >
                                             <span>Open Vault</span>
                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -550,24 +545,20 @@ export default function Dashboard({
 
                 {/* Audit Transparency Log (Developer's personal recent activity) */}
                 {recentAuditActivity && recentAuditActivity.length > 0 && (
-                    <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                    <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800/80 space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <span className="text-amber-400">🛡️</span>
-                                <h3 className="text-sm font-bold text-white">Your Recent Vault Audit Activity</h3>
+                                <span className="text-slate-400">🛡️</span>
+                                <h3 className="text-sm font-semibold text-white">Your Recent Vault Audit Activity</h3>
                             </div>
                             <span className="text-xs text-slate-500">Tracked for SOC2 / ISO-27001 compliance</span>
                         </div>
 
-                        <div className="divide-y divide-slate-800">
+                        <div className="divide-y divide-slate-800/80">
                             {recentAuditActivity.map((log) => (
                                 <div key={log.id} className="py-2.5 flex items-center justify-between text-xs gap-4">
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                        <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
-                                            log.action_type === 'VIEWED_SECRET' ? 'bg-amber-500/10 text-amber-400' :
-                                            log.action_type === 'COPIED_KEY' ? 'bg-rose-500/10 text-rose-400' :
-                                            'bg-indigo-500/10 text-indigo-400'
-                                        }`}>
+                                        <span className="px-2 py-0.5 rounded font-medium uppercase text-[10px] bg-slate-800/80 text-slate-300 border border-slate-700/50">
                                             {log.action_type}
                                         </span>
                                         <span className="text-slate-300 font-mono truncate">{log.target_field}</span>

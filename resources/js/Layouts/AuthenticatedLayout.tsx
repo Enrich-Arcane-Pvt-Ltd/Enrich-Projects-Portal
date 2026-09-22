@@ -48,15 +48,11 @@ export default function Authenticated({
                                             type="button"
                                             className="inline-flex items-center gap-2.5 rounded-lg border border-slate-700/60 bg-slate-800/80 px-3 py-1.5 text-sm font-medium text-slate-200 transition duration-150 ease-in-out hover:border-slate-600 hover:bg-slate-800 focus:outline-none"
                                         >
-                                            <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-cyan-400 text-[11px] font-bold text-white flex items-center justify-center">
+                                            <div className="h-6 w-6 rounded-full bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold flex items-center justify-center">
                                                 {user.name.charAt(0)}
                                             </div>
                                             <span>{user.name}</span>
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                                user.role === 'admin'
-                                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                            }`}>
+                                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700/60">
                                                 {user.role}
                                             </span>
                                             <svg

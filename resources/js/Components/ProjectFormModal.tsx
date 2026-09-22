@@ -226,7 +226,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                            className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50"
                         >
                             {processing ? 'Saving...' : isEditing ? 'Update Project' : 'Create Project'}
                         </button>

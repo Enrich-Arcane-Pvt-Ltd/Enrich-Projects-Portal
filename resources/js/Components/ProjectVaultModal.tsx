@@ -332,33 +332,31 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                 {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b border-slate-800/80 bg-slate-900/60">
                     <div className="space-y-1.5">
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                            <span className="font-mono text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
                                 {project.code}
                             </span>
-                            <span className="text-xs uppercase font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                            <span className="text-xs uppercase font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                                 {project.type.replace('_', ' ')}
                             </span>
-                            <span className={`text-xs uppercase font-semibold px-2 py-0.5 rounded ${
-                                project.status === 'in_progress' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                project.status === 'planning' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
-                                'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            }`}>
+                            <span className="text-xs uppercase font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
+                                <span className={`h-1.5 w-1.5 rounded-full ${
+                                    project.status === 'in_progress' ? 'bg-emerald-400' :
+                                    project.status === 'planning' ? 'bg-indigo-400' :
+                                    'bg-slate-400'
+                                }`}></span>
                                 {project.status.replace('_', ' ')}
                             </span>
-                            <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded ${
-                                project.priority === 'critical' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                                project.priority === 'high' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                                'bg-slate-800 text-slate-400'
-                            }`}>
+                            <span className="text-xs uppercase font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5">
+                                {project.priority === 'critical' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span>}
                                 {project.priority} priority
                             </span>
                             {project.is_owner ? (
-                                <span className="text-xs uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                                    <span>⭐</span> You Control This Project
+                                <span className="text-xs font-medium px-2.5 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> You Control This Project
                                 </span>
                             ) : (
-                                <span className="text-xs uppercase font-semibold px-2.5 py-0.5 rounded bg-slate-800/90 text-slate-400 border border-slate-700 flex items-center gap-1">
+                                <span className="text-xs font-medium px-2.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
                                     <span>👤</span> Created by {project.creator?.name || 'Developer'} (Read-Only)
                                 </span>
                             )}
@@ -385,15 +383,15 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                 </div>
 
                 {/* Audit notification banner */}
-                <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-2 flex items-center justify-between text-xs text-amber-300">
+                <div className="bg-slate-900/90 border-b border-slate-800 px-6 py-2 flex items-center justify-between text-xs text-slate-400">
                     <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span className="h-2 w-2 rounded-full bg-amber-400/80"></span>
                         <span>
-                            <strong>Security Protocol Active:</strong> Decrypted secret revelations and clipboard copies are recorded in immutable audit logs.
+                            <strong className="text-slate-300">Security Protocol Active:</strong> Decrypted secret revelations and clipboard copies are recorded in immutable audit logs.
                         </span>
                     </div>
                     {copyFeedback && (
-                        <span className="font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 animate-fade-in">
+                        <span className="font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                             ✓ {copyFeedback}
                         </span>
                     )}
