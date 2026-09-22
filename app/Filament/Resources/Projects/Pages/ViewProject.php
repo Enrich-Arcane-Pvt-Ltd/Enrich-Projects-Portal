@@ -13,7 +13,7 @@ class ViewProject extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+            // Edit action removed: developer role is the controller
         ];
     }
 }
