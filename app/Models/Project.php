@@ -74,6 +74,11 @@ class Project extends Model
         return $this->hasMany(ProjectDocument::class);
     }
 
+    public function clientAccessCredentials(): HasMany
+    {
+        return $this->hasMany(ClientAccessCredential::class);
+    }
+
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);

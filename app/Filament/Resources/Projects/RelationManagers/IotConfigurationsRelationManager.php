@@ -56,8 +56,6 @@ class IotConfigurationsRelationManager extends RelationManager
                     ->columnSpanFull(),
                 Textarea::make('auth_token_or_certs')
                     ->label('Device Authentication Token / SSL Cert (Encrypted at Rest)')
-                    ->password()
-                    ->revealable()
                     ->rows(3)
                     ->columnSpanFull(),
             ]);

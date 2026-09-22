@@ -64,8 +64,6 @@ class ServerEnvironmentsRelationManager extends RelationManager
                     ->columnSpanFull(),
                 Textarea::make('ssh_credential')
                     ->label('SSH Private Key / Password (Encrypted at Rest)')
-                    ->password()
-                    ->revealable()
                     ->rows(4)
                     ->columnSpanFull(),
                 Textarea::make('env_backup')

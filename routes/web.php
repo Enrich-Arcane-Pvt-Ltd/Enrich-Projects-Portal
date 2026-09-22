@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('developer')->name('developer.')->group(function () {
         Route::post('/reveal-secret/{credential}', [DeveloperProjectController::class, 'revealSecret'])->name('reveal-secret');
         Route::post('/reveal-account/{id}', [DeveloperProjectController::class, 'revealAccountPassword'])->name('reveal-account');
+        Route::post('/reveal-client-credential/{id}', [DeveloperProjectController::class, 'revealClientCredential'])->name('reveal-client-credential');
         Route::post('/reveal-server/{id}', [DeveloperProjectController::class, 'revealServerSecret'])->name('reveal-server');
         Route::post('/log-copy', [DeveloperProjectController::class, 'logCopy'])->name('log-copy');
     });

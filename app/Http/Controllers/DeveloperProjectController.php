@@ -35,6 +35,7 @@ class DeveloperProjectController extends Controller
                 'backgroundServices',
                 'iotConfigurations',
                 'documents',
+                'clientAccessCredentials',
             ]);
 
         // Search and Filters
@@ -172,6 +173,31 @@ class DeveloperProjectController extends Controller
         return response()->json([
             'id' => $account->id,
             'login_password' => $account->login_password,
+        ]);
+    }
+
+    /**
+     * Reveal client access credential password with audit logging
+     */
+    public function revealClientCredential(Request $request, int $id): JsonResponse
+    {
+        $cred = \App\Models\ClientAccessCredential::findOrFail($id);
+        $user = $request->user();
+
+        if (! $this->userCanAccessProject($user, $cred->project_id)) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $desc = "Client Credential: {$cred->username}" . ($cred->email ? " ({$cred->email})" : "");
+        AuditService::log(
+            $cred->project_id,
+            'VIEWED_SECRET',
+            $desc
+        );
+
+        return response()->json([
+            'id' => $cred->id,
+            'password' => $cred->password,
         ]);
     }
 

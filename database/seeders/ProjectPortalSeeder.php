@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\AuditLog;
 use App\Models\BackgroundService;
+use App\Models\ClientAccessCredential;
 use App\Models\IotConfiguration;
 use App\Models\Project;
 use App\Models\ProjectCredential;
@@ -270,6 +271,38 @@ class ProjectPortalSeeder extends Seeder
             'file_path' => 'documents/SP-TAXI-2026/esp32_schematic.png',
             'file_type' => 'png',
             'file_size' => 1120000,
+        ]);
+
+        // Client Access Credentials
+        ClientAccessCredential::create([
+            'project_id' => $p1->id,
+            'username' => 'school_admin',
+            'email' => 'principal@colomboschool.edu',
+            'password' => 'SchoolPrincipal#2026Secure!',
+            'role' => 'Primary School Administrator',
+            'login_url' => 'https://portal.schoolpickup.app/login',
+            'environment' => 'production',
+            'notes' => 'Principal office portal account. Has permissions to add student RFID tags and broadcast school-wide pickup alerts.',
+        ]);
+        ClientAccessCredential::create([
+            'project_id' => $p1->id,
+            'username' => 'transport_manager',
+            'email' => 'fleet@colomboschool.edu',
+            'password' => 'FleetTransport#9921!',
+            'role' => 'Transport & Fleet Coordinator',
+            'login_url' => 'https://portal.schoolpickup.app/login',
+            'environment' => 'production',
+            'notes' => 'Vehicle assignment and route dispatch operator.',
+        ]);
+        ClientAccessCredential::create([
+            'project_id' => $p1->id,
+            'username' => 'qa_test_client',
+            'email' => 'test-client@enrich.com',
+            'password' => 'TestClientPass#2026',
+            'role' => 'QA Test Client',
+            'login_url' => 'https://staging.schoolpickup.app/login',
+            'environment' => 'staging',
+            'notes' => 'Staging sandbox testing account for verifying parent/driver notifications.',
         ]);
 
         // 3. Project 2: Enterprise B2B Logistics API
