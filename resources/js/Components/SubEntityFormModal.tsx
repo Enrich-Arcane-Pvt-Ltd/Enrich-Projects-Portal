@@ -755,7 +755,7 @@ export default function SubEntityFormModal({
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-5 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/30 transition-all disabled:opacity-50"
+                            className="px-5 py-2 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50"
                         >
                             {processing ? 'Saving...' : isEditing ? 'Update Entry' : 'Add to Vault'}
                         </button>
