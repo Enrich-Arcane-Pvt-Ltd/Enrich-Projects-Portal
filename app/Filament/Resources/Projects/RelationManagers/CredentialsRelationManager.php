@@ -23,7 +23,7 @@ class CredentialsRelationManager extends RelationManager
 {
     protected static string $relationship = 'credentials';
 
-    protected static ?string $title = 'Credentials Vault';
+    protected static ?string $title = 'Credential Vault';
 
     public function form(Schema $schema): Schema
     {

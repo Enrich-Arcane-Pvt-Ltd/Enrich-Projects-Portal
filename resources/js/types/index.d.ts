@@ -118,10 +118,12 @@ export interface Project {
     priority: 'low' | 'medium' | 'high' | 'critical';
     lead_developer_id?: number;
     manager_id?: number;
+    created_by_id?: number;
     tech_stack?: string;
     description?: string;
     created_at?: string;
     updated_at?: string;
+    creator?: User;
     lead_developer?: User;
     manager?: User;
     developers?: User[];
@@ -135,10 +137,13 @@ export interface Project {
     iot_configurations?: IotConfiguration[];
     documents?: ProjectDocument[];
     is_assigned?: boolean;
+    is_owner?: boolean;
 }
 
 export interface DashboardStats {
     total_projects: number;
+    my_created_projects: number;
+    other_developers_projects: number;
     my_assigned_projects: number;
     active_projects: number;
     critical_projects: number;

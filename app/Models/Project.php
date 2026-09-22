@@ -18,11 +18,17 @@ class Project extends Model
         'type',
         'status',
         'priority',
+        'created_by_id',
         'lead_developer_id',
         'manager_id',
         'tech_stack',
         'description',
     ];
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
 
     public function leadDeveloper(): BelongsTo
     {

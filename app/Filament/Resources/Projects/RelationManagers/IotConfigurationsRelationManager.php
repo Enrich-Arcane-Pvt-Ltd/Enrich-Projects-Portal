@@ -23,7 +23,7 @@ class IotConfigurationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'iotConfigurations';
 
-    protected static ?string $title = 'IoT Hardware & Telemetry';
+    protected static ?string $title = 'IOT Hardware & Telemetry';
 
     public function form(Schema $schema): Schema
     {

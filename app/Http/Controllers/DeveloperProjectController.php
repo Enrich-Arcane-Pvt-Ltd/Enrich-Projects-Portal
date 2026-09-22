@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Project;
 use App\Models\ProjectCredential;
 use App\Models\ProjectDocument;
+use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class DeveloperProjectController extends Controller
         // Query projects: Developers and admins see all projects in the company vault
         $query = Project::query()
             ->with([
+                'creator:id,name,email,avatar_url',
                 'leadDeveloper:id,name,email,avatar_url',
                 'manager:id,name,email,avatar_url',
                 'developers:id,name,email,role,avatar_url',
@@ -61,6 +63,7 @@ class DeveloperProjectController extends Controller
         }
 
         $projects = $query->latest('updated_at')->get()->map(function ($project) use ($user) {
+            $project->is_owner = $project->created_by_id === $user->id;
             $project->is_assigned = $project->lead_developer_id === $user->id
                 || $project->manager_id === $user->id
                 || $project->developers->contains('id', $user->id);
@@ -78,6 +81,8 @@ class DeveloperProjectController extends Controller
 
         $stats = [
             'total_projects' => $allProjects->count(),
+            'my_created_projects' => $allProjects->where('created_by_id', $user->id)->count(),
+            'other_developers_projects' => $allProjects->filter(fn ($p) => $p->created_by_id !== $user->id)->count(),
             'my_assigned_projects' => $assignedCount,
             'active_projects' => $allProjects->where('status', 'in_progress')->count(),
             'critical_projects' => $allProjects->where('priority', 'critical')->count(),
@@ -95,6 +100,7 @@ class DeveloperProjectController extends Controller
             'projects' => $projects,
             'stats' => $stats,
             'recentAuditActivity' => $recentAuditActivity,
+            'availableDevelopers' => User::select('id', 'name', 'email', 'role')->orderBy('name')->get(),
             'filters' => $request->only(['search', 'type', 'status', 'priority']),
         ]);
     }

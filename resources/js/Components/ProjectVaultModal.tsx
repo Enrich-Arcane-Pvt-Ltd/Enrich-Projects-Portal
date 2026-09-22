@@ -1,16 +1,19 @@
-import { AuditLog, ClientAccessCredential, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount } from '@/types';
+import { AuditLog, ClientAccessCredential, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount, User } from '@/types';
 import axios from 'axios';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { router } from '@inertiajs/react';
+import SubEntityFormModal, { SubEntityType } from '@/Components/SubEntityFormModal';
 
 interface ProjectVaultModalProps {
     project: Project | null;
     isOpen: boolean;
     onClose: () => void;
+    availableDevelopers?: User[];
 }
 
 type TabType = 'overview' | 'credentials' | 'client_credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
 
-export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectVaultModalProps) {
+export default function ProjectVaultModal({ project, isOpen, onClose, availableDevelopers = [] }: ProjectVaultModalProps) {
     if (!isOpen || !project) return null;
 
     const [activeTab, setActiveTab] = useState<TabType>('credentials');
@@ -21,6 +24,95 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
     const [revealedIot, setRevealedIot] = useState<Record<number, string>>({});
     const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
     const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+
+    const [subEntityModal, setSubEntityModal] = useState<{ type: SubEntityType; item?: any } | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    // Developer assignment & leadership state
+    const [isAssignDevModalOpen, setIsAssignDevModalOpen] = useState(false);
+    const [isEditLeadsModalOpen, setIsEditLeadsModalOpen] = useState(false);
+    const [selectedDevId, setSelectedDevId] = useState<string>('');
+    const [leadDevId, setLeadDevId] = useState<string>('');
+    const [projectManagerId, setProjectManagerId] = useState<string>('');
+    const [isSubmittingDev, setIsSubmittingDev] = useState(false);
+
+    const assignedDevIds = useMemo(() => new Set((project.developers || []).map((d) => d.id)), [project.developers]);
+    const unassignedDevelopers = useMemo(() => {
+        return (availableDevelopers || []).filter((dev) => !assignedDevIds.has(dev.id));
+    }, [availableDevelopers, assignedDevIds]);
+
+    const handleAssignDeveloper = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedDevId) return;
+        setIsSubmittingDev(true);
+        router.post(
+            `/developer/projects/${project.id}/assign-developer`,
+            { user_id: selectedDevId },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsAssignDevModalOpen(false);
+                    setSelectedDevId('');
+                    triggerCopyFeedback('Developer assigned to project team');
+                },
+                onFinish: () => setIsSubmittingDev(false),
+            }
+        );
+    };
+
+    const handleUnassignDeveloper = (userId: number, devName: string) => {
+        if (!confirm(`Are you sure you want to remove ${devName} from this project?`)) return;
+        setIsSubmittingDev(true);
+        router.delete(`/developer/projects/${project.id}/unassign-developer/${userId}`, {
+            preserveScroll: true,
+            onSuccess: () => triggerCopyFeedback(`Removed ${devName} from team`),
+            onFinish: () => setIsSubmittingDev(false),
+        });
+    };
+
+    const handleUpdateLeads = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmittingDev(true);
+        router.post(
+            `/developer/projects/${project.id}/update-leads`,
+            {
+                lead_developer_id: leadDevId ? Number(leadDevId) : null,
+                manager_id: projectManagerId ? Number(projectManagerId) : null,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsEditLeadsModalOpen(false);
+                    triggerCopyFeedback('Leadership updated successfully');
+                },
+                onFinish: () => setIsSubmittingDev(false),
+            }
+        );
+    };
+
+    const handleDeleteSubEntity = (type: SubEntityType, id: number, label: string) => {
+        if (!confirm(`Are you sure you want to delete ${label}? This cannot be undone.`)) {
+            return;
+        }
+        const routeMap: Record<string, string> = {
+            credentials: `/developer/projects/${project.id}/credentials/${id}`,
+            client_credentials: `/developer/projects/${project.id}/client-credentials/${id}`,
+            links: `/developer/projects/${project.id}/links/${id}`,
+            servers: `/developer/projects/${project.id}/servers/${id}`,
+            accounts: `/developer/projects/${project.id}/accounts/${id}`,
+            services: `/developer/projects/${project.id}/services/${id}`,
+            iot: `/developer/projects/${project.id}/iot/${id}`,
+            documents: `/developer/projects/${project.id}/documents/${id}`,
+        };
+        const endpoint = routeMap[type];
+        if (!endpoint) return;
+
+        setDeletingId(`${type}_${id}`);
+        router.delete(endpoint, {
+            preserveScroll: true,
+            onFinish: () => setDeletingId(null),
+        });
+    };
 
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -223,15 +315,15 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
     };
 
     const tabs: { id: TabType; label: string; count?: number; icon: string }[] = [
-        { id: 'credentials', label: 'Credentials Vault', count: project.credentials?.length || 0, icon: '🔑' },
+        { id: 'credentials', label: 'Credential Vault', count: project.credentials?.length || 0, icon: '🔑' },
         { id: 'client_credentials', label: 'Client Access Credentials', count: (project.client_access_credentials || project.clientAccessCredentials)?.length || 0, icon: '👤' },
-        { id: 'links', label: 'Repositories & Git', count: project.links?.length || 0, icon: '🔗' },
-        { id: 'servers', label: 'Servers & Environments', count: project.server_environments?.length || 0, icon: '🖥️' },
-        { id: 'accounts', label: 'Third-Party Accounts', count: project.third_party_accounts?.length || 0, icon: '☁️' },
-        { id: 'services', label: 'Background Daemons', count: project.background_services?.length || 0, icon: '⚙️' },
-        { id: 'iot', label: 'IoT & Telemetry', count: project.iot_configurations?.length || 0, icon: '📡' },
-        { id: 'documents', label: 'Documents Vault', count: project.documents?.length || 0, icon: '📄' },
-        { id: 'overview', label: 'Architecture & Scope', icon: '📋' },
+        { id: 'links', label: 'Repositories & External Links', count: project.links?.length || 0, icon: '🔗' },
+        { id: 'servers', label: 'Server & Hosting Environments', count: project.server_environments?.length || 0, icon: '🖥️' },
+        { id: 'accounts', label: 'Third-Party & Cloud Accounts', count: project.third_party_accounts?.length || 0, icon: '☁️' },
+        { id: 'services', label: 'Background Daemons & Workers', count: project.background_services?.length || 0, icon: '⚙️' },
+        { id: 'iot', label: 'IOT Hardware & Telemetry', count: project.iot_configurations?.length || 0, icon: '📡' },
+        { id: 'documents', label: 'Documentation & Diagrams Vault', count: project.documents?.length || 0, icon: '📄' },
+        { id: 'overview', label: 'Assigned Developers', count: project.developers?.length || 0, icon: '👥' },
     ];
 
     return (
@@ -261,6 +353,15 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                             }`}>
                                 {project.priority} priority
                             </span>
+                            {project.is_owner ? (
+                                <span className="text-xs uppercase font-bold px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                    <span>⭐</span> You Control This Project
+                                </span>
+                            ) : (
+                                <span className="text-xs uppercase font-semibold px-2.5 py-0.5 rounded bg-slate-800/90 text-slate-400 border border-slate-700 flex items-center gap-1">
+                                    <span>👤</span> Created by {project.creator?.name || 'Developer'} (Read-Only)
+                                </span>
+                            )}
                         </div>
                         <h2 className="text-xl font-bold text-white tracking-tight">
                             {project.name}
@@ -374,12 +475,22 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {activeTab === 'credentials' && (
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-200">
-                                    Project API Keys & Secrets Vault ({project.credentials?.length || 0})
-                                </h3>
-                                <span className="text-xs text-slate-400">
-                                    Click <strong>Reveal</strong> to decrypt with automated audit stamp.
-                                </span>
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-200">
+                                        Credential Vault ({project.credentials?.length || 0})
+                                    </h3>
+                                    <span className="text-xs text-slate-400">
+                                        Click <strong>Reveal</strong> to decrypt with automated audit stamp.
+                                    </span>
+                                </div>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'credentials' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add Credential
+                                    </button>
+                                )}
                             </div>
 
                             {(!project.credentials || project.credentials.length === 0) ? (
@@ -468,6 +579,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                         </svg>
                                                         Copy
                                                     </button>
+
+                                                    {project.is_owner && (
+                                                        <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                            <button
+                                                                onClick={() => setSubEntityModal({ type: 'credentials', item: cred })}
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                title="Edit credential"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteSubEntity('credentials', cred.id, cred.key_name)}
+                                                                disabled={deletingId === `credentials_${cred.id}`}
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                title="Delete credential"
+                                                            >
+                                                                {deletingId === `credentials_${cred.id}` ? '...' : 'Delete'}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -481,12 +612,22 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {activeTab === 'client_credentials' && (
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-200">
-                                    Client Access Credentials & App Logins ({((project.client_access_credentials || project.clientAccessCredentials)?.length || 0)})
-                                </h3>
-                                <span className="text-xs text-slate-400">
-                                    Click <strong>Reveal Password</strong> to decrypt with automated audit logging.
-                                </span>
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-200">
+                                        Client Access Credentials & App Logins ({((project.client_access_credentials || project.clientAccessCredentials)?.length || 0)})
+                                    </h3>
+                                    <span className="text-xs text-slate-400">
+                                        Click <strong>Reveal Password</strong> to decrypt with automated audit logging.
+                                    </span>
+                                </div>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'client_credentials' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add Client Access
+                                    </button>
+                                )}
                             </div>
 
                             {(!((project.client_access_credentials || project.clientAccessCredentials)?.length)) ? (
@@ -591,6 +732,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                             </svg>
                                                             Copy Password
                                                         </button>
+
+                                                        {project.is_owner && (
+                                                            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                                <button
+                                                                    onClick={() => setSubEntityModal({ type: 'client_credentials', item: clientCred })}
+                                                                    className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                    title="Edit client access"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteSubEntity('client_credentials', clientCred.id, clientCred.username)}
+                                                                    disabled={deletingId === `client_credentials_${clientCred.id}`}
+                                                                    className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                    title="Delete client access"
+                                                                >
+                                                                    {deletingId === `client_credentials_${clientCred.id}` ? '...' : 'Delete'}
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -639,9 +800,19 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {/* TAB: REPOSITORIES & GIT */}
                     {activeTab === 'links' && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-slate-200">
-                                Source Code Repositories & External Workspaces ({project.links?.length || 0})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    Repositories & External Links ({project.links?.length || 0})
+                                </h3>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'links' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add Repository
+                                    </button>
+                                )}
+                            </div>
 
                             {(!project.links || project.links.length === 0) ? (
                                 <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -689,6 +860,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                                     </svg>
                                                 </a>
+
+                                                {project.is_owner && (
+                                                    <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                        <button
+                                                            onClick={() => setSubEntityModal({ type: 'links', item: link })}
+                                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                            title="Edit repository"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteSubEntity('links', link.id, link.title)}
+                                                            disabled={deletingId === `links_${link.id}`}
+                                                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                            title="Delete repository"
+                                                        >
+                                                            {deletingId === `links_${link.id}` ? '...' : 'Delete'}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -700,9 +891,19 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {/* TAB: SERVERS */}
                     {activeTab === 'servers' && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-slate-200">
-                                Server Infrastructure & Runtime Environments ({project.server_environments?.length || 0})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    Server & Hosting Environments ({project.server_environments?.length || 0})
+                                </h3>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'servers' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add Server
+                                    </button>
+                                )}
+                            </div>
 
                             {(!project.server_environments || project.server_environments.length === 0) ? (
                                 <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -755,6 +956,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                         >
                                                             {envRevealed ? 'Hide .env' : 'View .env Backup'}
                                                         </button>
+
+                                                        {project.is_owner && (
+                                                            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                                <button
+                                                                    onClick={() => setSubEntityModal({ type: 'servers', item: server })}
+                                                                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                    title="Edit server"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteSubEntity('servers', server.id, `${server.hosting_provider} (${server.environment_type})`)}
+                                                                    disabled={deletingId === `servers_${server.id}`}
+                                                                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                    title="Delete server"
+                                                                >
+                                                                    {deletingId === `servers_${server.id}` ? '...' : 'Delete'}
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -815,9 +1036,19 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {/* TAB: THIRD-PARTY ACCOUNTS */}
                     {activeTab === 'accounts' && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-slate-200">
-                                Third-Party Cloud Providers & Platform Accounts ({project.third_party_accounts?.length || 0})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    Third-Party & Cloud Accounts ({project.third_party_accounts?.length || 0})
+                                </h3>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'accounts' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add Cloud Account
+                                    </button>
+                                )}
+                            </div>
 
                             {(!project.third_party_accounts || project.third_party_accounts.length === 0) ? (
                                 <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -866,6 +1097,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                                 </svg>
                                                             </a>
                                                         )}
+
+                                                        {project.is_owner && (
+                                                            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                                <button
+                                                                    onClick={() => setSubEntityModal({ type: 'accounts', item: acc })}
+                                                                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                    title="Edit account"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteSubEntity('accounts', acc.id, acc.service_provider)}
+                                                                    disabled={deletingId === `accounts_${acc.id}`}
+                                                                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                    title="Delete account"
+                                                                >
+                                                                    {deletingId === `accounts_${acc.id}` ? '...' : 'Delete'}
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -897,9 +1148,19 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {/* TAB: BACKGROUND DAEMONS */}
                     {activeTab === 'services' && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-slate-200">
-                                Background Workers, Cron Schedules & Daemons ({project.background_services?.length || 0})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    Background Daemons & Workers ({project.background_services?.length || 0})
+                                </h3>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'services' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add Daemon
+                                    </button>
+                                )}
+                            </div>
 
                             {(!project.background_services || project.background_services.length === 0) ? (
                                 <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -924,12 +1185,34 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                     )}
                                                 </div>
 
-                                                <button
-                                                    onClick={() => handleCopyText(svc.command, `Service command: ${svc.command}`)}
-                                                    className="px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
-                                                >
-                                                    Copy Command
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleCopyText(svc.command, `Service command: ${svc.command}`)}
+                                                        className="px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
+                                                    >
+                                                        Copy Command
+                                                    </button>
+
+                                                    {project.is_owner && (
+                                                        <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                            <button
+                                                                onClick={() => setSubEntityModal({ type: 'services', item: svc })}
+                                                                className="px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                title="Edit daemon"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteSubEntity('services', svc.id, svc.service_type)}
+                                                                disabled={deletingId === `services_${svc.id}`}
+                                                                className="px-2.5 py-1 text-xs font-semibold rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                title="Delete daemon"
+                                                            >
+                                                                {deletingId === `services_${svc.id}` ? '...' : 'Delete'}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div className="font-mono text-xs text-emerald-400 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
@@ -951,9 +1234,19 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {/* TAB: IOT & TELEMETRY */}
                     {activeTab === 'iot' && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-slate-200">
-                                IoT Hardware, Edge Controllers & Protocols ({project.iot_configurations?.length || 0})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    IOT Hardware & Telemetry ({project.iot_configurations?.length || 0})
+                                </h3>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'iot' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Add IoT Device
+                                    </button>
+                                )}
+                            </div>
 
                             {(!project.iot_configurations || project.iot_configurations.length === 0) ? (
                                 <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -985,6 +1278,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                         </div>
                                                     )}
                                                 </div>
+
+                                                {project.is_owner && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            onClick={() => setSubEntityModal({ type: 'iot', item: iot })}
+                                                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                            title="Edit IoT device"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteSubEntity('iot', iot.id, iot.hardware_model)}
+                                                            disabled={deletingId === `iot_${iot.id}`}
+                                                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                            title="Delete IoT device"
+                                                        >
+                                                            {deletingId === `iot_${iot.id}` ? '...' : 'Delete'}
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {iot.topic_structure && (
@@ -1003,9 +1316,19 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     {/* TAB: DOCUMENTS */}
                     {activeTab === 'documents' && (
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-slate-200">
-                                Architecture Blueprints & Documents Vault ({project.documents?.length || 0})
-                            </h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-200">
+                                    Documentation & Diagrams Vault ({project.documents?.length || 0})
+                                </h3>
+                                {project.is_owner && (
+                                    <button
+                                        onClick={() => setSubEntityModal({ type: 'documents' })}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        + Upload Document
+                                    </button>
+                                )}
+                            </div>
 
                             {(!project.documents || project.documents.length === 0) ? (
                                 <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
@@ -1028,17 +1351,30 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                                 </div>
                                             </div>
 
-                                            <a
-                                                href={`/storage/${doc.file_path}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
-                                            >
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
-                                                Download
-                                            </a>
+                                            <div className="flex items-center gap-2">
+                                                <a
+                                                    href={`/storage/${doc.file_path}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                    Download
+                                                </a>
+
+                                                {project.is_owner && (
+                                                    <button
+                                                        onClick={() => handleDeleteSubEntity('documents', doc.id, doc.title)}
+                                                        disabled={deletingId === `documents_${doc.id}`}
+                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                        title="Delete document"
+                                                    >
+                                                        {deletingId === `documents_${doc.id}` ? '...' : 'Delete'}
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1046,22 +1382,144 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                         </div>
                     )}
 
-                    {/* TAB: OVERVIEW */}
+                    {/* TAB: ASSIGNED DEVELOPERS */}
                     {activeTab === 'overview' && (
                         <div className="space-y-6">
-                            <div className="p-5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
-                                <h3 className="text-sm font-semibold text-slate-200">Architecture Scope & Specifications</h3>
-                                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
-                                    {project.description || 'No detailed architecture description provided.'}
-                                </p>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-200">
+                                        Assigned Developers ({project.developers?.length || 0})
+                                    </h3>
+                                    <p className="text-xs text-slate-400">
+                                        Team members assigned to contribute, develop, and inspect this project.
+                                    </p>
+                                </div>
+                                {project.is_owner && (
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLeadDevId(project.lead_developer_id ? String(project.lead_developer_id) : '');
+                                                setProjectManagerId(project.manager_id ? String(project.manager_id) : '');
+                                                setIsEditLeadsModalOpen(true);
+                                            }}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center gap-1.5"
+                                        >
+                                            <span>⚙️</span> Manage Roles / Leads
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedDevId('');
+                                                setIsAssignDevModalOpen(true);
+                                            }}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        >
+                                            <span>+</span> Assign Developer
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Assigned Developers Team */}
+                            <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                        Project Developers Team
+                                    </h4>
+                                    {project.is_owner && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedDevId('');
+                                                setIsAssignDevModalOpen(true);
+                                            }}
+                                            className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                                        >
+                                            + Add Member
+                                        </button>
+                                    )}
+                                </div>
+
+                                {project.developers && project.developers.length > 0 ? (
+                                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                                        {project.developers.map((dev) => {
+                                            const isCreator = dev.id === project.created_by_id;
+                                            const isLead = dev.id === project.lead_developer_id;
+
+                                            return (
+                                                <div
+                                                    key={dev.id}
+                                                    className="p-3 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between gap-2 text-xs group hover:border-slate-700 transition-colors"
+                                                >
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <div className="relative shrink-0">
+                                                            <div className="h-7 w-7 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold flex items-center justify-center text-xs">
+                                                                {dev.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-slate-900"></span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="text-slate-200 font-medium truncate flex items-center gap-1.5">
+                                                                <span>{dev.name}</span>
+                                                                {isCreator && (
+                                                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+                                                                        Creator
+                                                                    </span>
+                                                                )}
+                                                                {isLead && (
+                                                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                                                                        Lead
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-slate-500 truncate text-[11px]">{dev.email}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {project.is_owner && !isCreator && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleUnassignDeveloper(dev.id, dev.name)}
+                                                            disabled={isSubmittingDev}
+                                                            className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
+                                                            title={`Remove ${dev.name} from project`}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-slate-500">No developers assigned yet.</p>
+                                )}
                             </div>
 
                             <div className="grid sm:grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-2">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lead Developer</h4>
+                                <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lead Developer</h4>
+                                        {project.is_owner && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setLeadDevId(project.lead_developer_id ? String(project.lead_developer_id) : '');
+                                                    setProjectManagerId(project.manager_id ? String(project.manager_id) : '');
+                                                    setIsEditLeadsModalOpen(true);
+                                                }}
+                                                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                                            >
+                                                Change
+                                            </button>
+                                        )}
+                                    </div>
                                     {project.lead_developer ? (
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-indigo-500 text-white font-bold text-xs flex items-center justify-center">
+                                            <div className="h-8 w-8 rounded-full bg-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
                                                 {project.lead_developer.name.charAt(0)}
                                             </div>
                                             <div>
@@ -1074,11 +1532,26 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                     )}
                                 </div>
 
-                                <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-2">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Manager / Lead</h4>
+                                <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Manager / Lead</h4>
+                                        {project.is_owner && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setLeadDevId(project.lead_developer_id ? String(project.lead_developer_id) : '');
+                                                    setProjectManagerId(project.manager_id ? String(project.manager_id) : '');
+                                                    setIsEditLeadsModalOpen(true);
+                                                }}
+                                                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+                                            >
+                                                Change
+                                            </button>
+                                        )}
+                                    </div>
                                     {project.manager ? (
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-amber-500 text-white font-bold text-xs flex items-center justify-center">
+                                            <div className="h-8 w-8 rounded-full bg-amber-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
                                                 {project.manager.name.charAt(0)}
                                             </div>
                                             <div>
@@ -1092,25 +1565,12 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                                 </div>
                             </div>
 
-                            {project.developers && project.developers.length > 0 && (
-                                <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                        Assigned Developers Team ({project.developers.length})
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {project.developers.map((dev) => (
-                                            <div
-                                                key={dev.id}
-                                                className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2 text-xs"
-                                            >
-                                                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                                                <span className="text-slate-200 font-medium">{dev.name}</span>
-                                                <span className="text-slate-500">({dev.email})</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            <div className="p-5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
+                                <h3 className="text-sm font-semibold text-slate-200">Architecture Scope & Specifications</h3>
+                                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                    {project.description || 'No detailed architecture description provided.'}
+                                </p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -1128,6 +1588,157 @@ export default function ProjectVaultModal({ project, isOpen, onClose }: ProjectV
                     </button>
                 </div>
             </div>
+
+            {/* Sub-Entity Modal for Adding / Editing Details */}
+            {project.is_owner && subEntityModal && (
+                <SubEntityFormModal
+                    isOpen={Boolean(subEntityModal)}
+                    onClose={() => setSubEntityModal(null)}
+                    projectId={project.id}
+                    type={subEntityModal.type}
+                    itemToEdit={subEntityModal.item}
+                />
+            )}
+
+            {/* Assign Developer Modal */}
+            {project.is_owner && isAssignDevModalOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+                    <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Team Management</span>
+                                <h3 className="text-base font-bold text-white">Assign Developer to Project</h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsAssignDevModalOpen(false)}
+                                className="p-1 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAssignDeveloper} className="space-y-4 text-xs">
+                            {unassignedDevelopers.length > 0 ? (
+                                <div className="space-y-1.5">
+                                    <label className="font-bold text-slate-300">Select Developer to Assign *</label>
+                                    <select
+                                        value={selectedDevId}
+                                        onChange={(e) => setSelectedDevId(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="">-- Choose a developer --</option>
+                                        {unassignedDevelopers.map((dev) => (
+                                            <option key={dev.id} value={dev.id}>
+                                                {dev.name} ({dev.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[11px] text-slate-500">
+                                        Assigned developers will be able to view project parameters and credentials.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-800 text-center text-slate-400">
+                                    All registered developers are already assigned to this project team.
+                                </div>
+                            )}
+
+                            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAssignDevModalOpen(false)}
+                                    className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                {unassignedDevelopers.length > 0 && (
+                                    <button
+                                        type="submit"
+                                        disabled={!selectedDevId || isSubmittingDev}
+                                        className="px-4 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all disabled:opacity-50"
+                                    >
+                                        {isSubmittingDev ? 'Assigning...' : 'Assign to Team'}
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Manage Leadership Roles Modal */}
+            {project.is_owner && isEditLeadsModalOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+                    <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Project Roles</span>
+                                <h3 className="text-base font-bold text-white">Manage Leadership Roles</h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsEditLeadsModalOpen(false)}
+                                className="p-1 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateLeads} className="space-y-4 text-xs">
+                            <div className="space-y-1.5">
+                                <label className="font-bold text-slate-300">Lead Developer</label>
+                                <select
+                                    value={leadDevId}
+                                    onChange={(e) => setLeadDevId(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="">-- None (Unassigned) --</option>
+                                    {(availableDevelopers || []).map((dev) => (
+                                        <option key={dev.id} value={dev.id}>
+                                            {dev.name} ({dev.email})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="font-bold text-slate-300">Project Manager / Lead</label>
+                                <select
+                                    value={projectManagerId}
+                                    onChange={(e) => setProjectManagerId(e.target.value)}
+                                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="">-- None (Unassigned) --</option>
+                                    {(availableDevelopers || []).map((dev) => (
+                                        <option key={dev.id} value={dev.id}>
+                                            {dev.name} ({dev.email})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditLeadsModalOpen(false)}
+                                    className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingDev}
+                                    className="px-4 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all disabled:opacity-50"
+                                >
+                                    {isSubmittingDev ? 'Saving...' : 'Save Roles'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
