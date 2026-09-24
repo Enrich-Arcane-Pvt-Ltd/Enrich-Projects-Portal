@@ -91,9 +91,9 @@ export default function Dashboard({
                             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
                                 Welcome back, {auth.user.name}
                             </h1>
-                            <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
+                            {/* <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
                                 Browse all company projects, view your assigned project teams, inspect server infrastructure, and decrypt credentials with real-time audit logging.
-                            </p>
+                            </p> */}
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -112,7 +112,7 @@ export default function Dashboard({
                                 </button>
                             )}
 
-                            {auth.user.role === 'admin' && (
+                            {/* {auth.user.role === 'admin' && (
                                 <a
                                     href="/admin"
                                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-sm transition-colors shrink-0"
@@ -123,7 +123,7 @@ export default function Dashboard({
                                     </svg>
                                     Switch to Admin Panel
                                 </a>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@ export default function Dashboard({
                     >
                         <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>All Projects</span>
-                            <span className="text-slate-400">📁</span>
+                            {/* <span className="text-slate-400">📁</span> */}
                         </div>
                         <div className="text-2xl font-bold text-white">{stats.total_projects}</div>
                         <div className="text-[11px] text-slate-500">Total company vault</div>
@@ -156,7 +156,7 @@ export default function Dashboard({
                     >
                         <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>My Created</span>
-                            <span className="text-slate-400">⭐</span>
+                            {/* <span className="text-slate-400">⭐</span> */}
                         </div>
                         <div className="text-2xl font-bold text-white">{stats.my_created_projects || 0}</div>
                         <div className="text-[11px] text-slate-500">Controller ownership</div>
@@ -172,7 +172,7 @@ export default function Dashboard({
                     >
                         <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>Other Developers</span>
-                            <span className="text-slate-400">👥</span>
+                            {/* <span className="text-slate-400">👥</span> */}
                         </div>
                         <div className="text-2xl font-bold text-white">{stats.other_developers_projects || 0}</div>
                         <div className="text-[11px] text-slate-500">View & vault access</div>
@@ -181,7 +181,7 @@ export default function Dashboard({
                     <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1">
                         <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>Active In-Dev</span>
-                            <span className="text-slate-400">⚡</span>
+                            {/* <span className="text-slate-400">⚡</span> */}
                         </div>
                         <div className="text-2xl font-bold text-white">{stats.active_projects}</div>
                         <div className="text-[11px] text-slate-500">Active sprints</div>
@@ -190,7 +190,7 @@ export default function Dashboard({
                     <div className="p-4 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-1 col-span-2 lg:col-span-1">
                         <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
                             <span>Secured Secrets</span>
-                            <span className="text-slate-400">🔑</span>
+                            {/* <span className="text-slate-400">🔑</span> */}
                         </div>
                         <div className="text-2xl font-bold text-white">{stats.total_credentials}</div>
                         <div className="text-[11px] text-slate-500">AES-256 Vault keys</div>
@@ -381,10 +381,10 @@ export default function Dashboard({
                                         {/* Top Badges */}
                                         <div className="flex items-center justify-between gap-2 flex-wrap">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <span className="font-mono text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60">
+                                                {/* <span className="font-mono text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60">
                                                     {project.code}
-                                                </span>
-                                                {project.is_owner ? (
+                                                </span> */}
+                                                {/* {project.is_owner ? (
                                                     <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                                                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
                                                         Created by You
@@ -393,12 +393,12 @@ export default function Dashboard({
                                                     <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-400 border border-slate-700/60 flex items-center gap-1.5">
                                                         👤 {project.creator?.name || 'Developer'}
                                                     </span>
-                                                )}
-                                                {project.is_assigned && !project.is_owner && (
+                                                )} */}
+                                                {/* {project.is_assigned && !project.is_owner && (
                                                     <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60">
                                                         ✓ Assigned
                                                     </span>
-                                                )}
+                                                )} */}
                                             </div>
 
                                             <div className="flex items-center gap-1.5">
@@ -443,11 +443,11 @@ export default function Dashboard({
                                                     {project.status.replace('_', ' ')}
                                                 </span>
 
-                                                <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
+                                                {/* <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
                                                     {project.priority === 'critical' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span>}
                                                     {project.priority === 'high' && <span className="h-1.5 w-1.5 rounded-full bg-amber-400/60"></span>}
                                                     {project.priority}
-                                                </span>
+                                                </span> */}
                                             </div>
                                         </div>
 
@@ -456,9 +456,9 @@ export default function Dashboard({
                                             <h3 className="text-base font-semibold text-white group-hover:text-indigo-300 transition-colors">
                                                 {project.name}
                                             </h3>
-                                            <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                                            {/* <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
                                                 {project.description || 'No project description recorded.'}
-                                            </p>
+                                            </p> */}
                                         </div>
 
                                         {/* Tech Stack Chips */}
@@ -478,35 +478,35 @@ export default function Dashboard({
                                         {/* Vault Resource Counters */}
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-800/80 text-[11px] text-slate-400">
                                             <div className="flex items-center gap-1.5" title="Credential Vault">
-                                                <span>🔑</span>
+                                                {/* <span>🔑</span> */}
                                                 <span>{project.credentials?.length || 0} Secrets</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Client Access Credentials">
-                                                <span>👤</span>
+                                                {/* <span>👤</span> */}
                                                 <span>{(project.client_access_credentials || project.clientAccessCredentials)?.length || 0} Clients</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Server & Hosting Environments">
-                                                <span>🖥️</span>
+                                                {/* <span>🖥️</span> */}
                                                 <span>{project.server_environments?.length || 0} Servers</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Repositories & External Links">
-                                                <span>🔗</span>
+                                                {/* <span>🔗</span> */}
                                                 <span>{project.links?.length || 0} Repos</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Background Daemons & Workers">
-                                                <span>⚙️</span>
+                                                {/* <span>⚙️</span> */}
                                                 <span>{project.background_services?.length || 0} Daemons</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="IOT Hardware & Telemetry">
-                                                <span>📡</span>
+                                                {/* <span>📡</span> */}
                                                 <span>{project.iot_configurations?.length || 0} IoT</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Documentation & Diagrams Vault">
-                                                <span>📄</span>
+                                                {/* <span>📄</span> */}
                                                 <span>{project.documents?.length || 0} Docs</span>
                                             </div>
                                             <div className="flex items-center gap-1.5" title="Assigned Developers">
-                                                <span>👥</span>
+                                                {/* <span>👥</span> */}
                                                 <span>{project.developers?.length || 0} Devs</span>
                                             </div>
                                         </div>
