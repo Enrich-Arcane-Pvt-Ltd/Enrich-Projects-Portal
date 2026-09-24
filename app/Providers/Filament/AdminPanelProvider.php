@@ -27,7 +27,6 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
             ->brandLogo(asset('images/logo.png'))
             ->brandLogoHeight('2.75rem')
             ->brandName('Enrich Project Vault')
@@ -58,8 +57,8 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                \App\Http\Middleware\FilamentAuthenticate::class,
             ])
-            ->authGuard('admin');
+            ->authGuard('web');
     }
 }

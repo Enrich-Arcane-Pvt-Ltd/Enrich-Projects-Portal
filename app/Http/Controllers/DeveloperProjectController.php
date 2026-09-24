@@ -13,15 +13,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class DeveloperProjectController extends Controller
 {
     /**
      * Display the developer's assigned projects dashboard
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response | SymfonyResponse
     {
         $user = $request->user();
+
+        if (in_array($user->role, ['admin', 'superadmin'])) {
+            return Inertia::location('/admin');
+        }
 
         // Query projects: Developers and admins see all projects in the company vault
         $query = Project::query()
