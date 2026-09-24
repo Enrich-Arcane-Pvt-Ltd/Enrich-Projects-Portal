@@ -57,16 +57,16 @@ export default function Welcome({ auth }: PageProps) {
                                 <>
                                     <Link
                                         href={route('login')}
-                                        className="rounded-lg px-4 py-2 text-sm font-medium text-slate-200 transition hover:text-white hover:bg-white/10"
+                                        className="rounded-lg bg-blue-600/90 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     >
                                         Log in
                                     </Link>
-                                    <Link
+                                    {/* <Link
                                         href={route('register')}
                                         className="rounded-lg bg-blue-600/90 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     >
                                         Register
-                                    </Link>
+                                    </Link> */}
                                 </>
                             )}
                         </nav>

@@ -20,56 +20,49 @@ class ProjectPortalSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Users
-        $admin = User::updateOrCreate(
-            ['email' => 'enrich7788@gmail.com'],
+        $users = [
             [
-                'name' => 'EnrichAdmin',
-                'password' => Hash::make('Enrich@7788'),
+                'name' => 'Super Admin',
+                'email' => 'admin@enricharcane.com',
+                'password' => Hash::make('Enrich@1qaz'),
+                'role' => 'superadmin',
+                'avatar_url' => 'https://ui-avatars.com/api/?name=Super+Admin&background=4f46e5&color=fff',
+            ],
+            [
+                'name' => 'Piumi Sam',
+                'email' => 'teamsales@enricharcane.com',
+                'password' => Hash::make('Password@123'),
                 'role' => 'admin',
-                'avatar_url' => 'https://ui-avatars.com/api/?name=Enrich+Admin&background=4f46e5&color=fff',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'admin@enrich.com'],
+                'avatar_url' => 'https://ui-avatars.com/api/?name=Piumi+Sam&background=4f46e5&color=fff',
+            ],
             [
-                'name' => 'Enrich Administrator',
-                'password' => Hash::make('password'),
+                'name' => 'Sunimal Opatha',
+                'email' => 'sunimal@enricharcane.com',
+                'password' => Hash::make('Password@123'),
                 'role' => 'admin',
-                'avatar_url' => 'https://ui-avatars.com/api/?name=Admin+Enrich&background=4f46e5&color=fff',
-            ]
-        );
-
-        $alex = User::updateOrCreate(
-            ['email' => 'dev@enrich.com'],
+                'avatar_url' => 'https://ui-avatars.com/api/?name=Sunimal+Opatha&background=4f46e5&color=fff',
+            ],
             [
-                'name' => 'Alex Rivera (Lead Dev)',
-                'password' => Hash::make('password'),
+                'name' => 'Lakshitha Sankalpa',
+                'email' => 'lakshitha.enrich@gmail.com',
+                'password' => Hash::make('Password@123'),
                 'role' => 'developer',
-                'avatar_url' => 'https://ui-avatars.com/api/?name=Alex+Rivera&background=0284c7&color=fff',
-            ]
-        );
-
-        $pasindu = User::updateOrCreate(
-            ['email' => 'pasindu@enrich.com'],
+                'avatar_url' => 'https://ui-avatars.com/api/?name=Lakshitha+Sankalpa&background=4f46e5&color=fff',
+            ],
             [
-                'name' => 'Pasindu Developer',
-                'password' => Hash::make('password'),
+                'name' => 'Tharindu perera',
+                'email' => 'tharindu.enrich@gmail.com',
+                'password' => Hash::make('Password@123'),
                 'role' => 'developer',
-                'avatar_url' => 'https://ui-avatars.com/api/?name=Pasindu+Dev&background=10b981&color=fff',
-            ]
-        );
+                'avatar_url' => 'https://ui-avatars.com/api/?name=Tharindu+Perera&background=4f46e5&color=fff',
+            ],
+        ];
 
-        $sarah = User::updateOrCreate(
-            ['email' => 'sarah@enrich.com'],
-            [
-                'name' => 'Sarah Jenkins (Fullstack)',
-                'password' => Hash::make('password'),
-                'role' => 'developer',
-                'avatar_url' => 'https://ui-avatars.com/api/?name=Sarah+Jenkins&background=f59e0b&color=fff',
-            ]
-        );
+        foreach ($users as $userData) {
+            User::updateOrCreate(
+                ['email' => $userData['email']],
+                $userData
+            );
 
         // 2. Project 1: School Pickup Taxi & Attendance System
         $p1 = Project::updateOrCreate(
