@@ -20,6 +20,7 @@ class ProjectPortalSeeder extends Seeder
 {
     public function run(): void
     {
+        // 1. Users
         $users = [
             [
                 'name' => 'Super Admin',
@@ -63,6 +64,12 @@ class ProjectPortalSeeder extends Seeder
                 ['email' => $userData['email']],
                 $userData
             );
+        }
+
+        // Real users from the list above, referenced by the projects below
+        $admin     = User::where('email', 'admin@enricharcane.com')->firstOrFail();
+        $lakshitha = User::where('email', 'lakshitha.enrich@gmail.com')->firstOrFail();
+        $tharindu  = User::where('email', 'tharindu.enrich@gmail.com')->firstOrFail();
 
         // 2. Project 1: School Pickup Taxi & Attendance System
         $p1 = Project::updateOrCreate(
@@ -72,14 +79,14 @@ class ProjectPortalSeeder extends Seeder
                 'type' => 'hybrid',
                 'status' => 'in_progress',
                 'priority' => 'critical',
-                'lead_developer_id' => $alex->id,
+                'lead_developer_id' => $lakshitha->id,
                 'manager_id' => $admin->id,
                 'tech_stack' => 'Laravel 12, Flutter, ESP32, MQTT, MySQL 8.0, Redis, Docker',
                 'description' => 'Real-time telemetry and student attendance tracking system integrating vehicle-mounted ESP32 hardware, RFID card scanners, and cross-platform Flutter parent/driver apps with automated SMS and push alerts.',
             ]
         );
 
-        $p1->developers()->syncWithoutDetaching([$alex->id, $pasindu->id]);
+        $p1->developers()->syncWithoutDetaching([$lakshitha->id, $tharindu->id]);
 
         // Links
         ProjectLink::create([
@@ -316,13 +323,13 @@ class ProjectPortalSeeder extends Seeder
                 'type' => 'api_service',
                 'status' => 'in_progress',
                 'priority' => 'high',
-                'lead_developer_id' => $alex->id,
+                'lead_developer_id' => $lakshitha->id,
                 'manager_id' => $admin->id,
                 'tech_stack' => 'Laravel 12, Go Microservice, PostgreSQL 16, Redis, Docker',
                 'description' => 'High-throughput logistics orchestration API powering parcel tracking, automated waybill generation, carrier dispatch routing, and multi-tenant billing.',
             ]
         );
-        $p2->developers()->syncWithoutDetaching([$alex->id, $pasindu->id, $sarah->id]);
+        $p2->developers()->syncWithoutDetaching([$lakshitha->id, $tharindu->id]);
 
         ProjectLink::create([
             'project_id' => $p2->id,
@@ -374,13 +381,13 @@ class ProjectPortalSeeder extends Seeder
                 'type' => 'iot_embedded',
                 'status' => 'planning',
                 'priority' => 'medium',
-                'lead_developer_id' => $pasindu->id,
+                'lead_developer_id' => $tharindu->id,
                 'manager_id' => $admin->id,
                 'tech_stack' => 'ESP32, FreeRTOS, MQTT, Node.js, TimescaleDB',
                 'description' => 'Automated climate, pH balance, and nutrient dosing control system for greenhouse commercial hydroponics.',
             ]
         );
-        $p3->developers()->syncWithoutDetaching([$pasindu->id, $sarah->id]);
+        $p3->developers()->syncWithoutDetaching([$tharindu->id, $lakshitha->id]);
 
         ProjectLink::create([
             'project_id' => $p3->id,
@@ -410,7 +417,7 @@ class ProjectPortalSeeder extends Seeder
             'created_at' => now()->subHours(2),
         ]);
         AuditLog::create([
-            'user_id' => $alex->id,
+            'user_id' => $lakshitha->id,
             'project_id' => $p1->id,
             'action_type' => 'COPIED_KEY',
             'target_field' => 'PROD_RDS_MYSQL_PASSWORD [production]',
