@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Projects\Tables;
 
+use App\Enums\ProjectPriority;
+use App\Enums\ProjectStatus;
+use App\Enums\ProjectType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -24,56 +27,16 @@ class ProjectsTable
                     ->description(fn ($record) => $record->code),
                 TextColumn::make('type')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'web_app' => 'Web App',
-                        'mobile_app' => 'Mobile App',
-                        'iot_embedded' => 'IOT Embedded',
-                        'api_service' => 'Api Service',
-                        'hybrid' => 'Hybrid',
-                        default => $state ?? '',
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'web_app' => 'info',
-                        'mobile_app' => 'success',
-                        'iot_embedded' => 'warning',
-                        'api_service' => 'danger',
-                        'hybrid' => 'primary',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(fn (?string $state): string => ProjectType::tryFrom($state ?? '')?->label() ?? ($state ?? ''))
+                    ->color(fn (?string $state): string => ProjectType::tryFrom($state ?? '')?->color() ?? 'gray'),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'in_progress' => 'In Progress',
-                        'planning' => 'Planning',
-                        'maintenance' => 'Maintenance',
-                        'completed' => 'Completed',
-                        'archived' => 'Archived',
-                        default => $state ?? '',
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'in_progress' => 'success',
-                        'planning' => 'info',
-                        'maintenance' => 'warning',
-                        'completed' => 'primary',
-                        'archived' => 'gray',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(fn (?string $state): string => ProjectStatus::tryFrom($state ?? '')?->label() ?? ($state ?? ''))
+                    ->color(fn (?string $state): string => ProjectStatus::tryFrom($state ?? '')?->color() ?? 'gray'),
                 TextColumn::make('priority')
                     ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'critical' => 'Critical',
-                        'high' => 'High',
-                        'medium' => 'Medium',
-                        'low' => 'Low',
-                        default => $state ?? '',
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'critical' => 'danger',
-                        'high' => 'warning',
-                        'medium' => 'info',
-                        'low' => 'gray',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(fn (?string $state): string => ProjectPriority::tryFrom($state ?? '')?->label() ?? ($state ?? ''))
+                    ->color(fn (?string $state): string => ProjectPriority::tryFrom($state ?? '')?->color() ?? 'gray'),
                 TextColumn::make('leadDeveloper.name')
                     ->label('Lead Dev')
                     ->searchable(),
@@ -94,28 +57,11 @@ class ProjectsTable
             ])
             ->filters([
                 SelectFilter::make('type')
-                    ->options([
-                        'web_app' => 'Web App',
-                        'mobile_app' => 'Mobile App',
-                        'iot_embedded' => 'IoT / Embedded',
-                        'api_service' => 'API Service',
-                        'hybrid' => 'Hybrid',
-                    ]),
+                    ->options(ProjectType::options()),
                 SelectFilter::make('status')
-                    ->options([
-                        'planning' => 'Planning',
-                        'in_progress' => 'In Progress',
-                        'maintenance' => 'Maintenance',
-                        'completed' => 'Completed',
-                        'archived' => 'Archived',
-                    ]),
+                    ->options(ProjectStatus::options()),
                 SelectFilter::make('priority')
-                    ->options([
-                        'low' => 'Low',
-                        'medium' => 'Medium',
-                        'high' => 'High',
-                        'critical' => 'Critical',
-                    ]),
+                    ->options(ProjectPriority::options()),
             ])
             ->recordActions([
                 ViewAction::make(),

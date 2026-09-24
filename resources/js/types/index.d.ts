@@ -1,3 +1,6 @@
+import type { ProjectType, ProjectStatus, ProjectPriority } from './enums';
+export type { ProjectType, ProjectStatus, ProjectPriority };
+
 export interface User {
     id: number;
     name: string;
@@ -113,9 +116,9 @@ export interface Project {
     id: number;
     name: string;
     code: string;
-    type: 'web_app' | 'mobile_app' | 'iot_embedded' | 'api_service' | 'hybrid';
-    status: 'planning' | 'in_progress' | 'maintenance' | 'completed' | 'archived';
-    priority: 'low' | 'medium' | 'high' | 'critical';
+    type: ProjectType | 'web_app' | 'mobile_app' | 'iot_embedded' | 'api_service' | 'hybrid';
+    status: ProjectStatus | 'planning' | 'in_progress' | 'maintenance' | 'completed' | 'archived';
+    priority: ProjectPriority | 'low' | 'medium' | 'high' | 'critical';
     lead_developer_id?: number;
     manager_id?: number;
     created_by_id?: number;

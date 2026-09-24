@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProjectPriority;
+use App\Enums\ProjectStatus;
+use App\Enums\ProjectType;
 use App\Models\BackgroundService;
 use App\Models\ClientAccessCredential;
 use App\Models\IotConfiguration;
@@ -39,9 +42,9 @@ class ProjectManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:projects,code',
-            'type' => ['required', Rule::in(['web_app', 'mobile_app', 'iot_embedded', 'api_service', 'hybrid'])],
-            'status' => ['required', Rule::in(['planning', 'in_progress', 'maintenance', 'completed', 'archived'])],
-            'priority' => ['required', Rule::in(['low', 'medium', 'high', 'critical'])],
+            'type' => ['required', Rule::enum(ProjectType::class)],
+            'status' => ['required', Rule::enum(ProjectStatus::class)],
+            'priority' => ['required', Rule::enum(ProjectPriority::class)],
             'tech_stack' => 'nullable|string|max:500',
             'description' => 'nullable|string',
         ]);
@@ -73,9 +76,9 @@ class ProjectManagementController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => ['required', 'string', 'max:50', Rule::unique('projects', 'code')->ignore($project->id)],
-            'type' => ['required', Rule::in(['web_app', 'mobile_app', 'iot_embedded', 'api_service', 'hybrid'])],
-            'status' => ['required', Rule::in(['planning', 'in_progress', 'maintenance', 'completed', 'archived'])],
-            'priority' => ['required', Rule::in(['low', 'medium', 'high', 'critical'])],
+            'type' => ['required', Rule::enum(ProjectType::class)],
+            'status' => ['required', Rule::enum(ProjectStatus::class)],
+            'priority' => ['required', Rule::enum(ProjectPriority::class)],
             'tech_stack' => 'nullable|string|max:500',
             'description' => 'nullable|string',
         ]);

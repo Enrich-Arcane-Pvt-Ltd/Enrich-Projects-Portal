@@ -1,4 +1,5 @@
-import { Project } from '@/types';
+import { PROJECT_TYPE_OPTIONS, PROJECT_PRIORITY_OPTIONS, PROJECT_STATUS_OPTIONS } from '@/types/enums';
+import type { Project } from '@/types';
 import { useForm } from '@inertiajs/react';
 import React, { useEffect } from 'react';
 
@@ -141,11 +142,11 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 onChange={(e) => setData('type', e.target.value as any)}
                                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="web_app">Web Application</option>
-                                <option value="mobile_app">Mobile App</option>
-                                <option value="iot_embedded">IoT & Embedded Hardware</option>
-                                <option value="api_service">Backend API Service</option>
-                                <option value="hybrid">Hybrid Ecosystem</option>
+                                {PROJECT_TYPE_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
                             </select>
                             {errors.type && <p className="text-xs text-rose-400">{errors.type}</p>}
                         </div>
@@ -160,10 +161,11 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 onChange={(e) => setData('priority', e.target.value as any)}
                                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="low">Low Priority</option>
-                                <option value="medium">Medium Priority</option>
-                                <option value="high">High Priority</option>
-                                <option value="critical">Critical Priority</option>
+                                {PROJECT_PRIORITY_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
                             </select>
                             {errors.priority && <p className="text-xs text-rose-400">{errors.priority}</p>}
                         </div>
@@ -175,11 +177,11 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 onChange={(e) => setData('status', e.target.value as any)}
                                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="planning">Planning Phase</option>
-                                <option value="in_progress">Active In-Progress</option>
-                                <option value="maintenance">Maintenance</option>
-                                <option value="completed">Completed</option>
-                                <option value="archived">Archived</option>
+                                {PROJECT_STATUS_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
                             </select>
                             {errors.status && <p className="text-xs text-rose-400">{errors.status}</p>}
                         </div>

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Projects\Schemas;
 
+use App\Enums\ProjectPriority;
+use App\Enums\ProjectStatus;
+use App\Enums\ProjectType;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -31,33 +34,16 @@ class ProjectForm
                         ]),
                         Grid::make(3)->schema([
                             Select::make('type')
-                                ->options([
-                                    'web_app' => 'Web App',
-                                    'mobile_app' => 'Mobile App',
-                                    'iot_embedded' => 'IoT / Embedded Hardware',
-                                    'api_service' => 'Backend API Microservice',
-                                    'hybrid' => 'Hybrid Multi-Platform',
-                                ])
-                                ->default('web_app')
+                                ->options(ProjectType::options())
+                                ->default(ProjectType::WEB_APP->value)
                                 ->required(),
                             Select::make('status')
-                                ->options([
-                                    'planning' => 'Planning',
-                                    'in_progress' => 'In Progress',
-                                    'maintenance' => 'Maintenance',
-                                    'completed' => 'Completed',
-                                    'archived' => 'Archived',
-                                ])
-                                ->default('in_progress')
+                                ->options(ProjectStatus::options())
+                                ->default(ProjectStatus::IN_PROGRESS->value)
                                 ->required(),
                             Select::make('priority')
-                                ->options([
-                                    'low' => 'Low',
-                                    'medium' => 'Medium',
-                                    'high' => 'High',
-                                    'critical' => 'Critical',
-                                ])
-                                ->default('medium')
+                                ->options(ProjectPriority::options())
+                                ->default(ProjectPriority::MEDIUM->value)
                                 ->required(),
                         ]),
                         Grid::make(2)->schema([

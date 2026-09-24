@@ -1,7 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProjectVaultModal from '@/Components/ProjectVaultModal';
 import ProjectFormModal from '@/Components/ProjectFormModal';
-import { AuditLog, DashboardStats, PageProps, Project, User } from '@/types';
+import {
+    PROJECT_PRIORITY_OPTIONS,
+    PROJECT_STATUS_LABELS,
+    PROJECT_STATUS_OPTIONS,
+    PROJECT_TYPE_OPTIONS,
+    ProjectStatus,
+} from '@/types/enums';
+import type { AuditLog, DashboardStats, PageProps, Project, User } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -52,12 +59,16 @@ const stackList = (project: Project) =>
 
 const statusStyle = (status: string) => {
     switch (status) {
-        case 'in_progress':
+        case ProjectStatus.IN_PROGRESS:
             return 'text-emerald-400 border-emerald-500/30';
-        case 'planning':
+        case ProjectStatus.PLANNING:
             return 'text-indigo-400 border-indigo-500/30';
-        case 'maintenance':
+        case ProjectStatus.MAINTENANCE:
             return 'text-amber-400 border-amber-500/30';
+        case ProjectStatus.COMPLETED:
+            return 'text-sky-400 border-sky-500/30';
+        case ProjectStatus.ARCHIVED:
+            return 'text-slate-400 border-slate-700';
         default:
             return 'text-slate-400 border-slate-700';
     }
@@ -86,14 +97,7 @@ const resourceCounts = (p: Project) => [
     { label: 'Devs', value: p.developers?.length || 0 },
 ];
 
-const projectTypes = [
-    { id: 'all', label: 'All types' },
-    { id: 'web_app', label: 'Web apps' },
-    { id: 'mobile_app', label: 'Mobile apps' },
-    { id: 'iot_embedded', label: 'IoT & hardware' },
-    { id: 'api_service', label: 'API services' },
-    { id: 'hybrid', label: 'Hybrid' },
-];
+
 
 const selectClass =
     'px-3 py-2 rounded-md bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50';
@@ -144,9 +148,10 @@ const getUserInitials = (name: string, allNames: string[] = []): string => {
 /* ------------------------------------------------------------------ */
 
 function StatusPill({ status }: { status: string }) {
+    const label = PROJECT_STATUS_LABELS[status as ProjectStatus] || status.replace('_', ' ');
     return (
         <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border capitalize whitespace-nowrap ${statusStyle(status)}`}>
-            {status.replace('_', ' ')}
+            {label}
         </span>
     );
 }
@@ -489,24 +494,22 @@ export default function Dashboard({
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2 sm:gap-2.5 w-full lg:w-auto min-w-0">
                                     <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className={`${selectClass} w-full sm:w-auto min-w-0`}>
-                                        {projectTypes.map((t) => (
+                                        <option value="all">All types</option>
+                                        {PROJECT_TYPE_OPTIONS.map((t) => (
                                             <option key={t.id} value={t.id}>{t.label}</option>
                                         ))}
                                     </select>
                                     <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className={`${selectClass} w-full sm:w-auto min-w-0`}>
                                         <option value="all">All statuses</option>
-                                        <option value="in_progress">In progress</option>
-                                        <option value="planning">Planning</option>
-                                        <option value="maintenance">Maintenance</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="archived">Archived</option>
+                                        {PROJECT_STATUS_OPTIONS.map((s) => (
+                                            <option key={s.id} value={s.id}>{s.label}</option>
+                                        ))}
                                     </select>
                                     <select value={selectedPriority} onChange={(e) => setSelectedPriority(e.target.value)} className={`${selectClass} w-full sm:w-auto min-w-0`}>
                                         <option value="all">All priorities</option>
-                                        <option value="critical">Critical</option>
-                                        <option value="high">High</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="low">Low</option>
+                                        {PROJECT_PRIORITY_OPTIONS.map((p) => (
+                                            <option key={p.id} value={p.id}>{p.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
