@@ -191,6 +191,7 @@ export default function Authenticated({
             )}
 
             <main>{children}</main>
+
         </div>
     );
 }
