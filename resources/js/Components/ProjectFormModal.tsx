@@ -163,7 +163,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 <option value="low">Low Priority</option>
                                 <option value="medium">Medium Priority</option>
                                 <option value="high">High Priority</option>
-                                <option value="critical">Critical Priority 🔥</option>
+                                <option value="critical">Critical Priority</option>
                             </select>
                             {errors.priority && <p className="text-xs text-rose-400">{errors.priority}</p>}
                         </div>
@@ -176,7 +176,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                                 <option value="planning">Planning Phase</option>
-                                <option value="in_progress">Active In-Progress ⚡</option>
+                                <option value="in_progress">Active In-Progress</option>
                                 <option value="maintenance">Maintenance</option>
                                 <option value="completed">Completed</option>
                                 <option value="archived">Archived</option>

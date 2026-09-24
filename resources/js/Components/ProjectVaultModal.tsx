@@ -329,6 +329,7 @@ export default function ProjectVaultModal({
         { id: 'accounts', label: 'Third-Party & Cloud Accounts', count: project.third_party_accounts?.length || 0, icon: '☁️' },
         { id: 'services', label: 'Background Daemons & Workers', count: project.background_services?.length || 0, icon: '⚙️' },
         { id: 'iot', label: 'IOT Hardware & Telemetry', count: project.iot_configurations?.length || 0, icon: '📡' },
+        { id: 'documents', label: 'Documents & Uploads', count: project.documents?.length || 0, icon: '📁' },
         { id: 'overview', label: 'Assigned Developers', count: project.developers?.length || 0, icon: '👥' },
     ];
 
@@ -1286,70 +1287,193 @@ export default function ProjectVaultModal({
                         </div>
                     )}
 
-                    {/* TAB: DOCUMENTS */}
+                    {/* TAB: DOCUMENTS & UPLOADS */}
                     {activeTab === 'documents' && (
                         <div className="space-y-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                                <h3 className="text-sm font-semibold text-slate-200">
-                                    Documentation & Diagrams Vault ({project.documents?.length || 0})
-                                </h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-200">
+                                        Documents & Uploads Vault ({project.documents?.length || 0})
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Specifications, architecture SRS, source code archives (.zip), firmware binaries, or external Google Drive assets.
+                                    </p>
+                                </div>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'documents' })}
-                                        className="self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
                                     >
-                                        + Upload Document
+                                        <span>+</span>
+                                        <span>Upload Document / Link</span>
                                     </button>
                                 )}
                             </div>
 
                             {(!project.documents || project.documents.length === 0) ? (
-                                <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
-                                    No project documents uploaded yet.
+                                <div className="p-8 text-center rounded-xl border border-slate-800 bg-slate-900/40 space-y-2">
+                                    <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl">
+                                        📁
+                                    </div>
+                                    <p className="text-sm font-medium text-slate-300">No project documents uploaded yet</p>
+                                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                                        Upload documentation (.pdf, .docx), source code files, project backups (.zip up to 50MB), or add external Google Drive links.
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="grid gap-3">
-                                    {project.documents.map((doc) => (
-                                        <div
-                                            key={doc.id}
-                                            className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
-                                        >
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="h-10 w-10 shrink-0 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase">
-                                                    {doc.file_type || 'DOC'}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <h4 className="font-semibold text-slate-100 text-sm truncate">{doc.title}</h4>
-                                                    <p className="text-xs text-slate-400 font-mono truncate">{doc.file_path}</p>
-                                                </div>
-                                            </div>
+                                    {project.documents.map((doc) => {
+                                        const isExternal = doc.file_type === 'external' || doc.file_path.startsWith('http://') || doc.file_path.startsWith('https://');
+                                        const isDrive = isExternal && (doc.file_path.includes('drive.google.com') || doc.file_path.includes('docs.google.com'));
+                                        const ext = (doc.file_type || '').toLowerCase();
 
-                                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                                                <a
-                                                    href={`/storage/${doc.file_path}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
-                                                >
-                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                    </svg>
-                                                    Download
-                                                </a>
+                                        let typeLabel = ext ? ext.toUpperCase() : 'DOC';
+                                        let badgeStyle = 'bg-slate-800 text-slate-300 border-slate-700';
+                                        let fileIcon = '📄';
 
-                                                {project.is_owner && (
+                                        if (isDrive) {
+                                            typeLabel = 'Google Drive';
+                                            badgeStyle = 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+                                            fileIcon = '📂';
+                                        } else if (isExternal) {
+                                            typeLabel = 'External Link';
+                                            badgeStyle = 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30';
+                                            fileIcon = '🔗';
+                                        } else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) {
+                                            typeLabel = 'ZIP / Archive';
+                                            badgeStyle = 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+                                            fileIcon = '📦';
+                                        } else if (ext === 'pdf') {
+                                            typeLabel = 'PDF Spec';
+                                            badgeStyle = 'bg-rose-500/10 text-rose-300 border-rose-500/30';
+                                            fileIcon = '📕';
+                                        } else if (['doc', 'docx'].includes(ext)) {
+                                            typeLabel = 'Word Doc';
+                                            badgeStyle = 'bg-blue-500/10 text-blue-300 border-blue-500/30';
+                                            fileIcon = '📘';
+                                        } else if (['js', 'ts', 'jsx', 'tsx', 'py', 'php', 'cpp', 'c', 'h', 'ino', 'json', 'sql', 'sh', 'html', 'css'].includes(ext)) {
+                                            typeLabel = `Code (${ext.toUpperCase()})`;
+                                            badgeStyle = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+                                            fileIcon = '💻';
+                                        } else if (['png', 'jpg', 'jpeg', 'svg', 'webp'].includes(ext)) {
+                                            typeLabel = 'Diagram / Image';
+                                            badgeStyle = 'bg-purple-500/10 text-purple-300 border-purple-500/30';
+                                            fileIcon = '🖼️';
+                                        }
+
+                                        const resourceUrl = isExternal
+                                            ? (doc.file_path.startsWith('http://') || doc.file_path.startsWith('https://') ? doc.file_path : `https://${doc.file_path}`)
+                                            : `/storage/${doc.file_path}`;
+
+                                        const formattedSize = doc.file_size && doc.file_size > 0
+                                            ? doc.file_size > 1024 * 1024
+                                                ? `${(doc.file_size / (1024 * 1024)).toFixed(1)} MB`
+                                                : `${Math.round(doc.file_size / 1024)} KB`
+                                            : null;
+
+                                        return (
+                                            <div
+                                                key={doc.id}
+                                                className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5"
+                                            >
+                                                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-900 border border-slate-700/60 flex items-center justify-center text-lg shadow-inner">
+                                                        {fileIcon}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1 space-y-1">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <h4 className="font-semibold text-slate-100 text-sm break-words">
+                                                                {doc.title}
+                                                            </h4>
+                                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}>
+                                                                {typeLabel}
+                                                            </span>
+                                                            {formattedSize && (
+                                                                <span className="text-[11px] font-mono text-slate-400 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
+                                                                    {formattedSize}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 font-mono break-all line-clamp-1">
+                                                            {doc.file_path}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap items-center gap-2 shrink-0 self-end sm:self-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/80 w-full md:w-auto justify-end">
+                                                    {/* Primary Action Button */}
+                                                    {isExternal ? (
+                                                        <a
+                                                            href={resourceUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 transition-colors flex items-center gap-1.5 shadow-sm"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                            {isDrive ? 'Open Drive' : 'Open Link'}
+                                                        </a>
+                                                    ) : (
+                                                        <a
+                                                            href={resourceUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            download
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 shadow-sm"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                            Download
+                                                        </a>
+                                                    )}
+
+                                                    {/* Copy Link Button */}
                                                     <button
-                                                        onClick={() => handleDeleteSubEntity('documents', doc.id, doc.title)}
-                                                        disabled={deletingId === `documents_${doc.id}`}
-                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
-                                                        title="Delete document"
+                                                        onClick={() => {
+                                                            const copyUrl = isExternal ? resourceUrl : `${window.location.origin}${resourceUrl}`;
+                                                            navigator.clipboard.writeText(copyUrl);
+                                                            triggerCopyFeedback(`Copied resource link: ${doc.title}`);
+                                                            axios.post('/developer/log-copy', {
+                                                                project_id: project.id,
+                                                                target_field: `Document URL: ${doc.title}`,
+                                                                action_type: 'COPIED_KEY',
+                                                            }).catch(() => {});
+                                                        }}
+                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-600/20 transition-colors flex items-center gap-1.5"
+                                                        title="Copy link to clipboard"
                                                     >
-                                                        {deletingId === `documents_${doc.id}` ? '...' : 'Delete'}
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                        </svg>
+                                                        Copy Link
                                                     </button>
-                                                )}
+
+                                                    {/* Owner Actions */}
+                                                    {project.is_owner && (
+                                                        <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-700">
+                                                            <button
+                                                                onClick={() => setSubEntityModal({ type: 'documents', item: doc })}
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                title="Edit document title or resource link"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteSubEntity('documents', doc.id, doc.title)}
+                                                                disabled={deletingId === `documents_${doc.id}`}
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                title="Delete document"
+                                                            >
+                                                                {deletingId === `documents_${doc.id}` ? '...' : 'Delete'}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

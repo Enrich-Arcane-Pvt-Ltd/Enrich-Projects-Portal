@@ -315,6 +315,36 @@ class ProjectPortalSeeder extends Seeder
             'notes' => 'Staging sandbox testing account for verifying parent/driver notifications.',
         ]);
 
+        // Documents & Uploads
+        ProjectDocument::create([
+            'project_id' => $p1->id,
+            'title' => 'Software Requirements Specification (SRS) v2.4.pdf',
+            'file_path' => 'documents/SP-TAXI-2026/school_taxi_srs_v2.4.pdf',
+            'file_type' => 'pdf',
+            'file_size' => 4521984,
+        ]);
+        ProjectDocument::create([
+            'project_id' => $p1->id,
+            'title' => 'ESP32 Vehicle Telemetry Firmware & C++ Drivers.zip',
+            'file_path' => 'documents/SP-TAXI-2026/esp32_firmware_drivers.zip',
+            'file_type' => 'zip',
+            'file_size' => 14680064,
+        ]);
+        ProjectDocument::create([
+            'project_id' => $p1->id,
+            'title' => 'Hardware Wiring & Pinout Diagram.docx',
+            'file_path' => 'documents/SP-TAXI-2026/hardware_pinout_diagram.docx',
+            'file_type' => 'docx',
+            'file_size' => 1845248,
+        ]);
+        ProjectDocument::create([
+            'project_id' => $p1->id,
+            'title' => 'Project Architecture & UI Design Assets (Google Drive)',
+            'file_path' => 'https://drive.google.com/drive/folders/1A2b3C4d5E6F7G8H9_school_taxi_specs',
+            'file_type' => 'external',
+            'file_size' => 0,
+        ]);
+
         // 3. Project 2: Enterprise B2B Logistics API
         $p2 = Project::updateOrCreate(
             ['code' => 'LOGIX-B2B-2026'],
