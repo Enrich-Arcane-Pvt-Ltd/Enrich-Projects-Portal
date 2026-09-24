@@ -72,12 +72,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/projects/{project}/documents', [ProjectManagementController::class, 'storeDocument'])->name('documents.store');
         Route::match(['put', 'post'], '/projects/{project}/documents/{document}', [ProjectManagementController::class, 'updateDocument'])->name('documents.update');
         Route::delete('/projects/{project}/documents/{document}', [ProjectManagementController::class, 'deleteDocument'])->name('documents.destroy');
+        Route::get('/projects/{project}/documents/{document}/download', [ProjectManagementController::class, 'downloadDocument'])->name('documents.download');
 
         // Developer Assignments & Team Management
         Route::post('/projects/{project}/assign-developer', [ProjectManagementController::class, 'assignDeveloper'])->name('developers.assign');
         Route::delete('/projects/{project}/unassign-developer/{user}', [ProjectManagementController::class, 'unassignDeveloper'])->name('developers.unassign');
         Route::post('/projects/{project}/update-leads', [ProjectManagementController::class, 'updateLeads'])->name('developers.update-leads');
     });
+
+    // Universal public storage fallback
+    Route::get('/storage/{path}', function (string $path) {
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->response($path);
+        }
+        abort(404);
+    })->where('path', '.*');
 });
 
 Route::middleware('auth')->group(function () {
