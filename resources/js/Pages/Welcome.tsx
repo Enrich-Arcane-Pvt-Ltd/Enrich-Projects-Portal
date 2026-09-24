@@ -21,35 +21,45 @@ export default function Welcome({ auth }: PageProps) {
                 <div className="absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-indigo-600/15 blur-[140px] pointer-events-none" />
 
                 {/* Content Container */}
-                <div className="relative z-10 flex min-h-screen flex-col justify-between px-6 py-6 lg:px-16">
+                <div className="relative z-10 flex min-h-screen flex-col justify-between px-4 py-4 sm:px-6 sm:py-6 lg:px-16">
                     {/* Header / Navbar */}
-                    <header className="flex items-center justify-between border-b border-white/10 pb-5">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/20 shadow-lg">
+                    <header className="flex items-center justify-between border-b border-white/10 pb-4 sm:pb-5 gap-3">
+                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                            <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/20 shadow-lg shrink-0">
                                 <img
                                     src="/images/logo.jpg"
                                     alt="Enrich Arcane Logo"
                                     className="h-full w-full object-contain rounded-lg"
                                 />
                             </div>
-                            <div>
-                                <span className="text-base font-bold tracking-tight text-white block leading-tight">
+                            <div className="min-w-0">
+                                <span className="text-sm sm:text-base font-bold tracking-tight text-white block leading-tight truncate">
                                     Enrich Arcane
                                 </span>
-                                <span className="text-[11px] uppercase tracking-widest text-blue-400 font-medium">
-                                    Project Information Management System
+                                <span className="text-[10px] sm:text-[11px] uppercase tracking-wider sm:tracking-widest text-blue-400 font-medium truncate block">
+                                    <span className="hidden xs:inline">Project Information </span>Management System
                                 </span>
                             </div>
                         </div>
 
-                        <nav className="flex items-center gap-3">
+                        <nav className="flex items-center gap-2 sm:gap-3 shrink-0">
                             {auth.user ? (
                                 <Link
                                     href={auth.user.role === 'admin' || auth.user.role === 'superadmin' ? '/admin' : route('dashboard')}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-blue-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 >
-                                    {auth.user.role === 'admin' || auth.user.role === 'superadmin' ? 'Go to Admin Portal' : 'Go to Dashboard'}
-                                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <span>
+                                        {auth.user.role === 'admin' || auth.user.role === 'superadmin' ? (
+                                            <>
+                                                <span className="hidden sm:inline">Go to </span>Admin Portal
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="hidden sm:inline">Go to </span>Dashboard
+                                            </>
+                                        )}
+                                    </span>
+                                    <svg className="size-3.5 sm:size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                     </svg>
                                 </Link>
@@ -57,23 +67,17 @@ export default function Welcome({ auth }: PageProps) {
                                 <>
                                     <Link
                                         href={route('login')}
-                                        className="rounded-lg bg-blue-600/90 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        className="rounded-lg bg-blue-600/90 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white shadow transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     >
                                         Log in
                                     </Link>
-                                    {/* <Link
-                                        href={route('register')}
-                                        className="rounded-lg bg-blue-600/90 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                    >
-                                        Register
-                                    </Link> */}
                                 </>
                             )}
                         </nav>
                     </header>
 
                     {/* Main Hero & Grid Section */}
-                    <main className="my-auto py-12">
+                    <main className="my-auto py-8 sm:py-12">
                         <div className="mx-auto max-w-6xl">
                             {/* Headline */}
                             <div className="mb-10 text-center sm:text-left">

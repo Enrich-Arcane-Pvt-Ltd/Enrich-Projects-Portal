@@ -10,7 +10,7 @@ export default function Edit({
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
     // Utility classes applied to form children for contrast and spacing
     const formSectionStyles = `
-        overflow-hidden rounded-2xl border border-white/10 bg-slate-900/85 p-6 sm:p-8 
+        overflow-hidden rounded-2xl border border-white/10 bg-slate-900/85 p-4 sm:p-8 
         shadow-2xl shadow-black/70 backdrop-blur-xl transition hover:border-white/20
         [&_header_h2]:text-lg [&_header_h2]:font-bold [&_header_h2]:!text-white
         [&_header_p]:!text-slate-400 [&_header_p]:text-xs [&_header_p]:mt-1
@@ -39,9 +39,9 @@ export default function Edit({
                 <div className="fixed -bottom-32 -right-32 h-[450px] w-[450px] rounded-full bg-indigo-600/10 blur-[150px] pointer-events-none" />
 
                 {/* Header */}
-                <header className="relative z-10 border-b border-white/10 bg-slate-950/40 backdrop-blur-md px-6 py-5 lg:px-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/20 shadow transition group-hover:border-blue-400">
+                <header className="relative z-10 border-b border-white/10 bg-slate-950/40 backdrop-blur-md px-4 py-3.5 sm:px-6 sm:py-5 lg:px-16 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
+                        <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/20 shadow transition group-hover:border-blue-400 shrink-0">
                             <img
                                 src="/images/logo.jpg"
                                 alt="Enrich Arcane Logo"
@@ -49,10 +49,10 @@ export default function Edit({
                             />
                         </div>
                         <div>
-                            <span className="text-sm font-bold tracking-tight text-white block leading-tight">
+                            <span className="text-xs sm:text-sm font-bold tracking-tight text-white block leading-tight">
                                 Enrich Arcane
                             </span>
-                            <span className="text-[10px] uppercase tracking-widest text-blue-400 font-semibold">
+                            <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-blue-400 font-semibold">
                                 PIMS Portal
                             </span>
                         </div>
@@ -60,17 +60,18 @@ export default function Edit({
 
                     <Link
                         href={route('dashboard')}
-                        className="inline-flex items-center gap-2 rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/15 transition focus:outline-none"
+                        className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-white/10 border border-white/10 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/15 transition focus:outline-none"
                     >
                         <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to Dashboard
+                        <span className="hidden sm:inline">Back to Dashboard</span>
+                        <span className="sm:hidden">Dashboard</span>
                     </Link>
                 </header>
 
                 {/* Main Content Area */}
-                <main className="relative z-10 flex-1 py-10 px-4 sm:px-6 lg:px-8">
+                <main className="relative z-10 flex-1 py-6 sm:py-10 px-3.5 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-4xl space-y-8">
                         <div>
                             <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-0.5 text-xs font-semibold text-blue-300 backdrop-blur-md mb-2">

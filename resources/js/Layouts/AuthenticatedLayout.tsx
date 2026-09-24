@@ -15,27 +15,27 @@ export default function Authenticated({
         useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
-            <nav className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md">
+        <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white w-full max-w-full overflow-x-hidden">
+            <nav className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md w-full">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between items-center">
-                        <div className="flex items-center gap-8">
-                            <Link href="/dashboard" className="flex items-center gap-3 group">
-                                <div className="h-10 w-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg shadow-indigo-500/20 ring-1 ring-white/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden shrink-0">
+                        <div className="flex items-center gap-4 sm:gap-8 min-w-0">
+                            <Link href="/dashboard" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
+                                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white p-1 flex items-center justify-center shadow-lg shadow-indigo-500/20 ring-1 ring-white/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden shrink-0">
                                     <img
                                         src="/images/logo.png"
                                         alt="Enrich Arcane"
                                         className="h-full w-full object-contain"
                                     />
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-base tracking-tight text-white flex items-center gap-2">
+                                <div className="flex flex-col min-w-0">
+                                    <span className="font-bold text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5 sm:gap-2 truncate">
                                         Enrich Vault
-                                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                        <span className="hidden sm:inline-flex text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                                             Developer Portal
                                         </span>
                                     </span>
-                                    <span className="text-xs text-slate-400">Enrich Arcane (Pvt) Ltd</span>
+                                    <span className="text-[11px] sm:text-xs text-slate-400 truncate">Enrich Arcane (Pvt) Ltd</span>
                                 </div>
                             </Link>
                         </div>
@@ -109,6 +109,7 @@ export default function Authenticated({
                                     )
                                 }
                                 className="inline-flex items-center justify-center rounded-md p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-300 focus:outline-none"
+                                aria-label="Toggle navigation menu"
                             >
                                 <svg
                                     className="h-6 w-6"
@@ -147,35 +148,50 @@ export default function Authenticated({
                 <div
                     className={
                         (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden border-b border-slate-800 bg-slate-900 px-4 pt-2 pb-3 space-y-1'
+                        ' sm:hidden border-b border-slate-800 bg-slate-900 px-4 pt-3 pb-4 space-y-2'
                     }
                 >
+                    {/* User identifier card in mobile menu */}
+                    <div className="px-3 py-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center shrink-0">
+                            {user.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-white truncate flex items-center gap-2">
+                                <span>{user.name}</span>
+                                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-900 text-slate-300 border border-slate-700">
+                                    {user.role}
+                                </span>
+                            </div>
+                            <div className="text-xs text-slate-400 truncate">{user.email}</div>
+                        </div>
+                    </div>
+
                     <ResponsiveNavLink
                         href={route('dashboard')}
                         active={route().current('dashboard')}
-                        className="text-slate-200"
                     >
                         My Projects
                     </ResponsiveNavLink>
                     {user.role === 'admin' && (
                         <a
                             href="/admin"
-                            className="block px-3 py-2 rounded-md text-base font-medium text-amber-400 hover:bg-slate-800"
+                            className="flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-amber-400 hover:bg-slate-800/80 transition"
                         >
                             Admin Portal
                         </a>
                     )}
                     <ResponsiveNavLink
                         href={route('profile.edit')}
-                        className="text-slate-300"
+                        active={route().current('profile.edit')}
                     >
-                        Profile
+                        Profile Settings
                     </ResponsiveNavLink>
                     <ResponsiveNavLink
                         method="post"
                         href={route('logout')}
                         as="button"
-                        className="text-rose-400"
+                        className="!text-rose-400 hover:!bg-rose-500/10"
                     >
                         Log Out
                     </ResponsiveNavLink>
@@ -190,7 +206,7 @@ export default function Authenticated({
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className="w-full max-w-full min-w-0">{children}</main>
 
         </div>
     );

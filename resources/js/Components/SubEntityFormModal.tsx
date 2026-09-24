@@ -156,22 +156,22 @@ export default function SubEntityFormModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 md:p-6 animate-in fade-in duration-200">
+            <div className="relative w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/80">
-                    <div className="space-y-0.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900/80">
+                    <div className="space-y-0.5 min-w-0 pr-2">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-400">
                             Vault Configuration
                         </span>
-                        <h3 className="text-lg font-bold text-white tracking-tight">
+                        <h3 className="text-base sm:text-lg font-bold text-white tracking-tight truncate">
                             {getTitle()}
                         </h3>
                     </div>
 
                     <button
                         onClick={onClose}
-                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
                         type="button"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -181,7 +181,7 @@ export default function SubEntityFormModal({
                 </div>
 
                 {/* Form Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
                     {/* CREDENTIALS FORM */}
                     {type === 'credentials' && (
                         <>
@@ -743,11 +743,11 @@ export default function SubEntityFormModal({
                     )}
 
                     {/* Action Buttons */}
-                    <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+                    <div className="pt-4 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="px-4 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-center"
                         >
                             Cancel
                         </button>
@@ -755,7 +755,7 @@ export default function SubEntityFormModal({
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-5 py-2 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50"
+                            className="px-5 py-2.5 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50 text-center"
                         >
                             {processing ? 'Saving...' : isEditing ? 'Update Entry' : 'Add to Vault'}
                         </button>
