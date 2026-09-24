@@ -32,7 +32,7 @@ export default function Authenticated({
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white w-full max-w-full overflow-x-hidden flex flex-col justify-between">
             <nav className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md w-full">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between items-center">
                         <div className="flex items-center gap-4 sm:gap-8 min-w-0">
                             <Link href="/dashboard" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">

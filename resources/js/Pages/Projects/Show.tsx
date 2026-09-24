@@ -13,7 +13,7 @@ export default function ProjectShow({ auth, project, availableDevelopers = [] }:
         <AuthenticatedLayout>
             <Head title={`${project.name} - Project Vault`} />
 
-            <div className="py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-4 sm:space-y-6 min-w-0">
+            <div className="py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto space-y-4 sm:space-y-6 min-w-0">
                 {/* Breadcrumbs Navigation */}
                 <nav className="flex items-center gap-2 text-xs text-slate-400 overflow-hidden">
                     <Link
