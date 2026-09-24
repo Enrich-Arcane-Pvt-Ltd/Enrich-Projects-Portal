@@ -67,11 +67,19 @@ class DeveloperProjectController extends Controller
             $query->where('priority', $priority);
         }
 
-        $projects = $query->latest('updated_at')->get()->map(function ($project) use ($user) {
+        // Count user audit log interactions per project to gauge historical access frequency
+        $userAuditAccessCounts = AuditLog::where('user_id', $user->id)
+            ->whereNotNull('project_id')
+            ->selectRaw('project_id, count(*) as count')
+            ->groupBy('project_id')
+            ->pluck('count', 'project_id');
+
+        $projects = $query->latest('updated_at')->get()->map(function ($project) use ($user, $userAuditAccessCounts) {
             $project->is_owner = $project->created_by_id === $user->id;
             $project->is_assigned = $project->lead_developer_id === $user->id
                 || $project->manager_id === $user->id
                 || $project->developers->contains('id', $user->id);
+            $project->access_count = (int) ($userAuditAccessCounts[$project->id] ?? 0);
 
             return $project;
         });

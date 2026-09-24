@@ -2,7 +2,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'developer';
+    role: 'admin' | 'developer' | 'superadmin';
     avatar_url?: string;
     email_verified_at?: string;
 }
@@ -138,6 +138,7 @@ export interface Project {
     documents?: ProjectDocument[];
     is_assigned?: boolean;
     is_owner?: boolean;
+    access_count?: number;
 }
 
 export interface DashboardStats {
