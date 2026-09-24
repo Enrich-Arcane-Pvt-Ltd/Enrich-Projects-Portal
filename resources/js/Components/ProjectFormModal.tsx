@@ -60,25 +60,25 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 md:p-6 animate-in fade-in duration-200">
+            <div className="relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/80">
-                    <div className="space-y-1">
+                <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800 bg-slate-900/80">
+                    <div className="space-y-1 min-w-0 pr-2">
                         <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                            <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500 animate-pulse"></span>
+                            <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-indigo-400">
                                 {isEditing ? 'Project Management' : 'New Project Node'}
                             </span>
                         </div>
-                        <h2 className="text-xl font-black text-white tracking-tight">
-                            {isEditing ? `Edit Project: ${projectToEdit?.name}` : 'Create New Project'}
+                        <h2 className="text-lg sm:text-xl font-black text-white tracking-tight truncate">
+                            {isEditing ? `Edit: ${projectToEdit?.name}` : 'Create New Project'}
                         </h2>
                     </div>
 
                     <button
                         onClick={onClose}
-                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
                         type="button"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,7 +88,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                     {/* Project Name */}
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-300">
@@ -116,7 +116,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                     </div>
 
                     {/* Project Code & Type */}
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-300">
                                 Project Code / Identifier <span className="text-rose-400">*</span>
@@ -152,7 +152,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                     </div>
 
                     {/* Priority & Status */}
-                    <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-300">Priority Level</label>
                             <select
@@ -163,7 +163,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 <option value="low">Low Priority</option>
                                 <option value="medium">Medium Priority</option>
                                 <option value="high">High Priority</option>
-                                <option value="critical">Critical Priority 🔥</option>
+                                <option value="critical">Critical Priority</option>
                             </select>
                             {errors.priority && <p className="text-xs text-rose-400">{errors.priority}</p>}
                         </div>
@@ -176,7 +176,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                                 <option value="planning">Planning Phase</option>
-                                <option value="in_progress">Active In-Progress ⚡</option>
+                                <option value="in_progress">Active In-Progress</option>
                                 <option value="maintenance">Maintenance</option>
                                 <option value="completed">Completed</option>
                                 <option value="archived">Archived</option>
@@ -214,11 +214,11 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+                    <div className="pt-4 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-center"
                         >
                             Cancel
                         </button>
@@ -226,7 +226,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50"
+                            className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50 text-center"
                         >
                             {processing ? 'Saving...' : isEditing ? 'Update Project' : 'Create Project'}
                         </button>

@@ -360,19 +360,21 @@ export default function Dashboard({
         <AuthenticatedLayout>
             <Head title="Developer Vault Dashboard" />
 
-            <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div className="py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-w-0">
                 {/* ---------------- Organization-style header ---------------- */}
-                <header className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-                    <div className="flex items-center gap-5 min-w-0">
-                        <div className="h-20 w-20 rounded-xl bg-indigo-600 text-white text-3xl font-bold flex items-center justify-center shrink-0 tracking-wider">
+                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 min-w-0 w-full">
+                    <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+                        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-xl bg-indigo-600 text-white text-xl sm:text-3xl font-bold flex items-center justify-center shrink-0 tracking-wider shadow-lg shadow-indigo-600/20">
                             {userInitials}
                         </div>
-                        <div className="min-w-0 space-y-2">
-                            <h1 className="text-2xl font-semibold text-white truncate">{auth.user.name}</h1>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+                        <div className="min-w-0 space-y-1 sm:space-y-2">
+                            <h1 className="text-lg sm:text-2xl font-semibold text-white truncate">{auth.user.name}</h1>
+                            <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-1 text-xs text-slate-400">
                                 
-                                <span className="capitalize">{auth.user.role}</span>
+                                <span className="capitalize font-medium text-slate-300">{auth.user.role}</span>
+                                <span>•</span>
                                 <span>{stats.total_projects} projects</span>
+                                <span>•</span>
                                 <span>{stats.total_credentials} secured secrets</span>
                             </div>
                         </div>
@@ -381,7 +383,7 @@ export default function Dashboard({
                     {auth.user.role === 'developer' && (
                         <button
                             onClick={openCreate}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-colors shrink-0"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-colors w-full sm:w-auto shadow-sm shrink-0"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -392,21 +394,21 @@ export default function Dashboard({
                 </header>
 
                 {/* ---------------- Tab navigation (scope filter) ---------------- */}
-                <nav className="mt-8 border-b border-slate-800 flex gap-1 overflow-x-auto scrollbar-none">
+                <nav className="mt-6 sm:mt-8 border-b border-slate-800 flex gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-0.5 w-full max-w-full min-w-0">
                     {tabs.map((tab) => {
                         const active = scopeFilter === tab.id;
                         return (
                             <button
                                 key={tab.id}
                                 onClick={() => setScopeFilter(tab.id)}
-                                className={`flex items-center gap-2 px-3 py-3 text-sm whitespace-nowrap border-b-2 -mb-px transition-colors ${
+                                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 sm:py-3 text-xs sm:text-sm whitespace-nowrap border-b-2 -mb-px transition-colors shrink-0 ${
                                     active
                                         ? 'border-indigo-500 text-white font-semibold'
                                         : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'
                                 }`}
                             >
                                 {tab.label}
-                                <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-medium">
+                                <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] sm:text-[11px] font-medium">
                                     {tab.count}
                                 </span>
                             </button>
@@ -415,14 +417,14 @@ export default function Dashboard({
                 </nav>
 
                 {/* ---------------- Two-column body ---------------- */}
-                <div className="mt-8 grid lg:grid-cols-[minmax(0,1fr)_296px] gap-10">
+                <div className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_296px] gap-8 lg:gap-10 w-full min-w-0">
                     {/* ===== Main column ===== */}
-                    <main className="space-y-10 min-w-0">
+                    <main className="space-y-8 sm:space-y-10 min-w-0 w-full">
                         {/* Popular projects */}
                         {popularProjects.length > 0 && (
-                            <section className="space-y-3">
+                            <section className="space-y-3 w-full min-w-0">
                                 <h2 className="text-base font-normal text-slate-100">Popular projects</h2>
-                                <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 w-full min-w-0">
                                     {popularProjects.map((project) => {
                                         const stack = stackList(project);
                                         return (
@@ -432,18 +434,20 @@ export default function Dashboard({
                                                 onClick={() => {
                                                     recordProjectAccess(project.id);
                                                 }}
-                                                className="text-left rounded-md border border-slate-800 bg-slate-900/50 hover:border-slate-600 transition-colors p-4 flex flex-col gap-3 min-h-[112px]"
+                                                className="text-left rounded-md border border-slate-800 bg-slate-900/50 hover:border-slate-600 transition-colors p-3.5 sm:p-4 flex flex-col gap-3 min-h-[112px] min-w-0 w-full"
                                             >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <span className="text-sm font-semibold text-sky-400 hover:underline">
+                                                <div className="flex items-start justify-between gap-2.5 min-w-0">
+                                                    <span className="text-sm font-semibold text-sky-400 hover:underline break-words min-w-0 flex-1">
                                                         {project.name}
                                                     </span>
-                                                    <StatusPill status={project.status} />
+                                                    <div className="shrink-0">
+                                                        <StatusPill status={project.status} />
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-slate-400 line-clamp-2 flex-1">
+                                                <p className="text-xs text-slate-400 line-clamp-2 flex-1 break-words">
                                                     {project.description || project.code}
                                                 </p>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
                                                     <StackDot tech={stack[0]} />
                                                     {stack[1] && <StackDot tech={stack[1]} />}
                                                 </div>
@@ -455,7 +459,7 @@ export default function Dashboard({
                         )}
 
                         {/* Project list */}
-                        <section className="space-y-4">
+                        <section className="space-y-4 w-full min-w-0">
                             <div className="flex items-center gap-2 text-slate-100">
                                 <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
@@ -464,8 +468,8 @@ export default function Dashboard({
                             </div>
 
                             {/* Toolbar */}
-                            <div className="flex flex-col lg:flex-row gap-2.5">
-                                <div className="relative flex-1">
+                            <div className="flex flex-col lg:flex-row gap-2.5 w-full min-w-0">
+                                <div className="relative flex-1 w-full min-w-0">
                                     <svg
                                         className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"
                                         fill="none"
@@ -479,17 +483,17 @@ export default function Dashboard({
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Find a project by name, code or stack..."
-                                        className="w-full pl-9 pr-4 py-2 rounded-md bg-slate-900 border border-slate-700 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                                        className="w-full pl-9 pr-4 py-2 sm:py-2.5 rounded-md bg-slate-900 border border-slate-700 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                                     />
                                 </div>
 
-                                <div className="flex flex-wrap gap-2.5">
-                                    <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className={selectClass}>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2 sm:gap-2.5 w-full lg:w-auto min-w-0">
+                                    <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} className={`${selectClass} w-full sm:w-auto min-w-0`}>
                                         {projectTypes.map((t) => (
                                             <option key={t.id} value={t.id}>{t.label}</option>
                                         ))}
                                     </select>
-                                    <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className={selectClass}>
+                                    <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className={`${selectClass} w-full sm:w-auto min-w-0`}>
                                         <option value="all">All statuses</option>
                                         <option value="in_progress">In progress</option>
                                         <option value="planning">Planning</option>
@@ -497,21 +501,13 @@ export default function Dashboard({
                                         <option value="completed">Completed</option>
                                         <option value="archived">Archived</option>
                                     </select>
-                                    <select value={selectedPriority} onChange={(e) => setSelectedPriority(e.target.value)} className={selectClass}>
+                                    <select value={selectedPriority} onChange={(e) => setSelectedPriority(e.target.value)} className={`${selectClass} w-full sm:w-auto min-w-0`}>
                                         <option value="all">All priorities</option>
                                         <option value="critical">Critical</option>
                                         <option value="high">High</option>
                                         <option value="medium">Medium</option>
                                         <option value="low">Low</option>
                                     </select>
-                                    {auth.user.role === 'developer' && (
-                                        <button
-                                            onClick={openCreate}
-                                            className="px-3.5 py-2 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
-                                        >
-                                            New
-                                        </button>
-                                    )}
                                 </div>
                             </div>
 
@@ -529,25 +525,25 @@ export default function Dashboard({
 
                             {/* Rows */}
                             {filteredProjects.length === 0 ? (
-                                <div className="rounded-md border border-slate-800 p-12 text-center space-y-1">
+                                <div className="rounded-md border border-slate-800 p-8 sm:p-12 text-center space-y-1">
                                     <h3 className="text-sm font-semibold text-slate-200">No projects match these filters</h3>
                                     <p className="text-xs text-slate-500">Clear the filters or switch tabs to see more projects.</p>
                                 </div>
                             ) : (
-                                <ul className="rounded-md border border-slate-800 divide-y divide-slate-800 overflow-hidden">
+                                <ul className="rounded-md border border-slate-800 divide-y divide-slate-800 overflow-hidden w-full min-w-0">
                                     {paginatedProjects.map((project) => {
                                         const stack = stackList(project);
                                         const updated = timeAgo((project as { updated_at?: string }).updated_at);
                                         return (
-                                            <li key={project.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 hover:bg-slate-900/40 transition-colors">
-                                                <div className="min-w-0 space-y-2">
-                                                    <div className="flex items-center gap-2 flex-wrap">
+                                            <li key={project.id} className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 hover:bg-slate-900/40 transition-colors w-full min-w-0">
+                                                <div className="min-w-0 space-y-2 flex-1 w-full">
+                                                    <div className="flex items-center gap-2 flex-wrap min-w-0">
                                                         <Link
                                                             href={route('projects.show', project.id)}
                                                             onClick={() => {
                                                                 recordProjectAccess(project.id);
                                                             }}
-                                                            className="text-base font-semibold text-sky-400 hover:underline text-left"
+                                                            className="text-base font-semibold text-sky-400 hover:underline text-left break-words min-w-0"
                                                         >
                                                             {project.name}
                                                         </Link>
@@ -555,28 +551,28 @@ export default function Dashboard({
                                                     </div>
 
                                                     {project.description && (
-                                                        <p className="text-sm text-slate-400 line-clamp-2 max-w-2xl">{project.description}</p>
+                                                        <p className="text-sm text-slate-400 line-clamp-2 max-w-2xl break-words min-w-0">{project.description}</p>
                                                     )}
 
-                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-400">
+                                                    <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5 text-xs text-slate-400 min-w-0">
                                                         {stack.slice(0, 3).map((t) => (
                                                             <StackDot key={t} tech={t} />
                                                         ))}
                                                         {resourceCounts(project)
                                                             .filter((r) => r.value > 0)
                                                             .map((r) => (
-                                                                <span key={r.label}>
+                                                                <span key={r.label} className="shrink-0">
                                                                     {r.value} {r.label}
                                                                 </span>
                                                             ))}
-                                                        {project.lead_developer && <span>Lead: {project.lead_developer.name}</span>}
-                                                        {updated && <span>Updated {updated}</span>}
+                                                        {project.lead_developer && <span className="break-words">Lead: {project.lead_developer.name}</span>}
+                                                        {updated && <span className="shrink-0">Updated {updated}</span>}
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 shrink-0">
+                                                <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-800/80 w-full sm:w-auto min-w-0">
                                                     {project.is_owner && (
-                                                        <>
+                                                        <div className="flex items-center gap-1.5">
                                                             <button
                                                                 onClick={() => {
                                                                     setEditingProject(project);
@@ -602,7 +598,7 @@ export default function Dashboard({
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                 </svg>
                                                             </button>
-                                                        </>
+                                                        </div>
                                                     )}
                                                     <Link
                                                         href={route('projects.show', project.id)}
@@ -622,14 +618,14 @@ export default function Dashboard({
 
                             {/* Pagination (8 per page) */}
                             {totalPages > 1 && (
-                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-slate-400">
-                                    <div>
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs text-slate-400 w-full min-w-0">
+                                    <div className="text-center sm:text-left">
                                         Showing <span className="font-semibold text-slate-200">{(currentPage - 1) * PROJECTS_PER_PAGE + 1}</span> to{' '}
                                         <span className="font-semibold text-slate-200">{Math.min(currentPage * PROJECTS_PER_PAGE, filteredProjects.length)}</span> of{' '}
                                         <span className="font-semibold text-slate-200">{filteredProjects.length}</span> projects
                                     </div>
 
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center gap-1.5 flex-wrap justify-center">
                                         <button
                                             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                                             disabled={currentPage === 1}
@@ -666,12 +662,12 @@ export default function Dashboard({
                     </main>
 
                     {/* ===== Sidebar ===== */}
-                    <aside className="space-y-8">
+                    <aside className="space-y-8 w-full min-w-0">
                         {/* People */}
                         {people.length > 0 && (
-                            <section className="space-y-3 pb-8 border-b border-slate-800">
+                            <section className="space-y-3 pb-8 border-b border-slate-800 w-full min-w-0">
                                 <h2 className="text-base font-normal text-slate-100">People</h2>
-                                <div className="flex flex-wrap gap-1.5">
+                                <div className="flex flex-wrap gap-1.5 min-w-0">
                                     {people.map((name) => (
                                         <Avatar key={name} name={name} allNames={allUserNames} />
                                     ))}
@@ -680,7 +676,7 @@ export default function Dashboard({
                         )}
 
                         {/* Vault overview */}
-                        <section className="space-y-3 pb-8 border-b border-slate-800">
+                        <section className="space-y-3 pb-8 border-b border-slate-800 w-full min-w-0">
                             <h2 className="text-base font-normal text-slate-100">Vault overview</h2>
                             <dl className="space-y-2 text-sm">
                                 {[
@@ -689,9 +685,9 @@ export default function Dashboard({
                                     { label: 'Created by you', value: stats.my_created_projects || 0 },
                                     { label: 'Assigned to you', value: stats.my_assigned_projects },
                                 ].map((row) => (
-                                    <div key={row.label} className="flex items-center justify-between gap-3">
-                                        <dt className="text-slate-400">{row.label}</dt>
-                                        <dd className="font-semibold text-slate-100">{row.value}</dd>
+                                    <div key={row.label} className="flex items-center justify-between gap-3 min-w-0">
+                                        <dt className="text-slate-400 truncate min-w-0 flex-1">{row.label}</dt>
+                                        <dd className="font-semibold text-slate-100 shrink-0">{row.value}</dd>
                                     </div>
                                 ))}
                             </dl>
@@ -699,9 +695,9 @@ export default function Dashboard({
 
                         {/* Top stacks */}
                         {topStacks.length > 0 && (
-                            <section className="space-y-3 pb-8 border-b border-slate-800">
+                            <section className="space-y-3 pb-8 border-b border-slate-800 w-full min-w-0">
                                 <h2 className="text-base font-normal text-slate-100">Top stacks</h2>
-                                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                                <div className="flex flex-wrap gap-x-4 gap-y-2 min-w-0">
                                     {topStacks.map((t) => (
                                         <button
                                             key={t}
@@ -718,18 +714,20 @@ export default function Dashboard({
 
                         {/* Recent activity */}
                         {recentAuditActivity && recentAuditActivity.length > 0 && (
-                            <section className="space-y-3">
+                            <section className="space-y-3 w-full min-w-0">
                                 <h2 className="text-base font-normal text-slate-100">Your recent activity</h2>
-                                <ul className="space-y-3">
+                                <ul className="space-y-3 w-full min-w-0">
                                     {recentAuditActivity.map((log) => (
-                                        <li key={log.id} className="text-xs space-y-0.5">
-                                            <div className="flex items-center gap-2">
-                                                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-medium uppercase">
+                                        <li key={log.id} className="text-xs space-y-1 w-full min-w-0">
+                                            <div className="flex items-start gap-2 w-full min-w-0">
+                                                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-medium uppercase shrink-0 mt-0.5">
                                                     {log.action_type}
                                                 </span>
-                                                <span className="text-slate-300 font-mono truncate">{log.target_field}</span>
+                                                <span className="text-slate-300 font-mono text-[11px] break-words min-w-0 flex-1" title={log.target_field}>
+                                                    {log.target_field}
+                                                </span>
                                             </div>
-                                            <div className="text-slate-500">{new Date(log.created_at).toLocaleString()}</div>
+                                            <div className="text-slate-500 text-[11px]">{new Date(log.created_at).toLocaleString()}</div>
                                         </li>
                                     ))}
                                 </ul>

@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export type SubEntityType = 'credentials' | 'client_credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
 
@@ -21,6 +21,8 @@ export default function SubEntityFormModal({
     if (!isOpen) return null;
 
     const isEditing = Boolean(itemToEdit);
+    const [docMode, setDocMode] = useState<'file' | 'link'>('file');
+    const [localDocError, setLocalDocError] = useState<string | null>(null);
 
     // Initial state based on entity type
     const getInitialData = () => {
@@ -92,7 +94,7 @@ export default function SubEntityFormModal({
             case 'documents':
                 return {
                     title: itemToEdit?.title || '',
-                    file_url: itemToEdit?.file_path || '',
+                    file_url: (itemToEdit?.file_type === 'external' || (itemToEdit?.file_path && itemToEdit.file_path.startsWith('http'))) ? (itemToEdit?.file_path || '') : '',
                     file: null as File | null,
                 };
             default:
@@ -105,6 +107,14 @@ export default function SubEntityFormModal({
     useEffect(() => {
         setData(getInitialData());
         clearErrors();
+        setLocalDocError(null);
+        if (type === 'documents') {
+            if (itemToEdit?.file_type === 'external' || (itemToEdit?.file_path && itemToEdit.file_path.startsWith('http'))) {
+                setDocMode('link');
+            } else {
+                setDocMode('file');
+            }
+        }
     }, [itemToEdit, type, isOpen]);
 
     const getEndpoint = () => {
@@ -122,17 +132,44 @@ export default function SubEntityFormModal({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setLocalDocError(null);
+
+        if (type === 'documents') {
+            if (docMode === 'file' && !isEditing && !(data as any).file) {
+                setLocalDocError('Please select a file to upload (.zip, code files, .docx, .pdf, etc.).');
+                return;
+            }
+            if (docMode === 'link' && !(data as any).file_url?.trim()) {
+                setLocalDocError('Please provide an external link URL (e.g. Google Drive link).');
+                return;
+            }
+        }
+
         const endpoint = getEndpoint();
 
         if (isEditing) {
-            put(`/developer/projects/${projectId}/${endpoint}/${itemToEdit.id}`, {
-                onSuccess: () => {
-                    reset();
-                    onClose();
-                },
-            });
+            if (type === 'documents') {
+                post(`/developer/projects/${projectId}/documents/${itemToEdit.id}`, {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        reset();
+                        onClose();
+                    },
+                });
+            } else {
+                put(`/developer/projects/${projectId}/${endpoint}/${itemToEdit.id}`, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        reset();
+                        onClose();
+                    },
+                });
+            }
         } else {
             post(`/developer/projects/${projectId}/${endpoint}`, {
+                forceFormData: true,
+                preserveScroll: true,
                 onSuccess: () => {
                     reset();
                     onClose();
@@ -156,22 +193,22 @@ export default function SubEntityFormModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-            <div className="relative w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 md:p-6 animate-in fade-in duration-200">
+            <div className="relative w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/80">
-                    <div className="space-y-0.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-900/80">
+                    <div className="space-y-0.5 min-w-0 pr-2">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-400">
                             Vault Configuration
                         </span>
-                        <h3 className="text-lg font-bold text-white tracking-tight">
+                        <h3 className="text-base sm:text-lg font-bold text-white tracking-tight truncate">
                             {getTitle()}
                         </h3>
                     </div>
 
                     <button
                         onClick={onClose}
-                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors shrink-0"
                         type="button"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -181,7 +218,7 @@ export default function SubEntityFormModal({
                 </div>
 
                 {/* Form Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+                <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
                     {/* CREDENTIALS FORM */}
                     {type === 'credentials' && (
                         <>
@@ -701,53 +738,172 @@ export default function SubEntityFormModal({
 
                     {/* DOCUMENTS FORM */}
                     {type === 'documents' && (
-                        <>
+                        <div className="space-y-4">
                             <div className="space-y-1">
-                                <label className="font-bold text-slate-300">Document / File Title *</label>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                    Document / Resource Title <span className="text-rose-400">*</span>
+                                </label>
                                 <input
                                     type="text"
                                     value={(data as any).title}
                                     onChange={(e) => setData('title' as any, e.target.value)}
-                                    placeholder="e.g. System Architecture SRS.pdf, main.py, or Source_Code.zip"
+                                    placeholder="e.g. System Architecture SRS, main_firmware.zip, or Drive Asset Folder"
                                     required
-                                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
                                 />
+                                {errors.title && (
+                                    <p className="text-xs text-rose-400 mt-1">{errors.title}</p>
+                                )}
                             </div>
 
+                            {/* Mode Toggle: File Upload vs External Link */}
                             <div className="space-y-1.5">
-                                <label className="font-bold text-slate-300">Upload File (Documents, Code Files, or .zip Archive)</label>
-                                <input
-                                    type="file"
-                                    onChange={(e) => setData('file' as any, e.target.files ? e.target.files[0] : null)}
-                                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"
-                                />
-                                <p className="text-xs text-indigo-400/90 flex items-start gap-1.5 pt-0.5">
-                                    <span className="text-sm">💡</span>
-                                    <span>
-                                        You can upload documentation (.pdf, .docx), source code files (.js, .py, .php, .cpp, .ino, etc.), or <strong>.zip / .tar.gz</strong> archives (up to 50MB).
-                                    </span>
-                                </p>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                    Resource Upload Type
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setDocMode('file'); setLocalDocError(null); }}
+                                        className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                            docMode === 'file'
+                                                ? 'bg-indigo-600 text-white shadow-md'
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                                        }`}
+                                    >
+                                        <span>📁</span>
+                                        <span>Upload File (.zip, code, pdf)</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setDocMode('link'); setLocalDocError(null); }}
+                                        className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                                            docMode === 'link'
+                                                ? 'bg-indigo-600 text-white shadow-md'
+                                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                                        }`}
+                                    >
+                                        <span>🔗</span>
+                                        <span>External Link (Google Drive)</span>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="space-y-1">
-                                <label className="font-bold text-slate-300">Or External Documentation URL</label>
-                                <input
-                                    type="text"
-                                    value={(data as any).file_url}
-                                    onChange={(e) => setData('file_url' as any, e.target.value)}
-                                    placeholder="https://docs.google.com/... or /documents/..."
-                                    className="w-full px-3 py-2 font-mono rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
-                                />
-                            </div>
-                        </>
+                            {/* Mode: FILE UPLOAD */}
+                            {docMode === 'file' && (
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                        Select File to Upload {isEditing ? '(Optional: Leave blank to keep current file)' : ''}
+                                    </label>
+                                    <div className="relative border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 transition-colors bg-slate-950/60 text-center group cursor-pointer">
+                                        <input
+                                            type="file"
+                                            id="document_file_input"
+                                            accept=".zip,.tar,.gz,.tar.gz,.rar,.7z,.pdf,.doc,.docx,.txt,.md,.json,.csv,.xlsx,.xls,.ppt,.pptx,.js,.jsx,.ts,.tsx,.py,.php,.java,.c,.cpp,.h,.ino,.sql,.sh,image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files ? e.target.files[0] : null;
+                                                setData('file' as any, file);
+                                                if (file && !(data as any).title) {
+                                                    const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                                                    setData('title' as any, cleanName || file.name);
+                                                }
+                                                setLocalDocError(null);
+                                            }}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                                📁
+                                            </div>
+                                            {(data as any).file ? (
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1.5">
+                                                        <span>✓ Selected:</span> {((data as any).file as File).name}
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-400 font-mono">
+                                                        {(((data as any).file as File).size / (1024 * 1024)).toFixed(2)} MB
+                                                    </p>
+                                                    <span className="text-[10px] text-indigo-400 underline">
+                                                        Click or drop another file to replace
+                                                    </span>
+                                                </div>
+                                            ) : isEditing && itemToEdit?.file_path ? (
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-semibold text-slate-300">
+                                                        Current File: <span className="font-mono text-indigo-300">{itemToEdit.file_path}</span>
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-400">
+                                                        Click or drag a new file here to replace it
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-xs font-semibold text-slate-200">
+                                                        Click to browse or drag & drop file here
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                                        Supports <strong>.zip archives</strong>, <strong>code files (.py, .js, .cpp, .ino, etc.)</strong>, <strong>.docx</strong>, <strong>.pdf</strong> up to 50MB
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-slate-400">
+                                        <span className="text-slate-500 font-bold uppercase text-[10px]">Formats:</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">.zip</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">.pdf</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">.docx</span>
+                                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">code (.py,.js,.ino,...)</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Mode: EXTERNAL LINK */}
+                            {docMode === 'link' && (
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                                        External Resource / Cloud Storage Link <span className="text-rose-400">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                            🔗
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={(data as any).file_url}
+                                            onChange={(e) => {
+                                                setData('file_url' as any, e.target.value);
+                                                setLocalDocError(null);
+                                            }}
+                                            placeholder="https://drive.google.com/drive/folders/... or https://..."
+                                            className="w-full pl-9 pr-3.5 py-2.5 font-mono text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                        />
+                                    </div>
+                                    <p className="text-[11px] text-slate-400 flex items-start gap-1.5">
+                                        <span className="text-amber-400 font-bold">💡</span>
+                                        <span>
+                                            Paste your <strong>Google Drive</strong> share link, OneDrive file, Figma diagram, or Notion specification URL.
+                                        </span>
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Error Alert */}
+                            {(localDocError || errors.file || errors.file_url) && (
+                                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+                                    <span>⚠️</span>
+                                    <span>{localDocError || errors.file || errors.file_url}</span>
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {/* Action Buttons */}
-                    <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+                    <div className="pt-4 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="px-4 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-center"
                         >
                             Cancel
                         </button>
@@ -755,7 +911,7 @@ export default function SubEntityFormModal({
                         <button
                             type="submit"
                             disabled={processing}
-                            className="px-5 py-2 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50"
+                            className="px-5 py-2.5 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-colors disabled:opacity-50 text-center"
                         >
                             {processing ? 'Saving...' : isEditing ? 'Update Entry' : 'Add to Vault'}
                         </button>

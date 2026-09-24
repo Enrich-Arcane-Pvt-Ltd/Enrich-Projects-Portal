@@ -562,17 +562,27 @@ class ProjectManagementController extends Controller
             'file_url' => 'nullable|string|max:500',
         ]);
 
+        if (! $request->hasFile('file') && empty(trim($validated['file_url'] ?? ''))) {
+            return redirect()->back()->withErrors([
+                'file' => 'Please either upload a document/archive file or provide an external link.',
+            ]);
+        }
+
         $filePath = '';
-        $fileType = 'link';
+        $fileType = 'external';
         $fileSize = 0;
 
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $filePath = $file->store("documents/{$project->code}", 'public');
-            $fileType = $file->getClientOriginalExtension();
+            $fileType = strtolower($file->getClientOriginalExtension() ?: 'file');
             $fileSize = $file->getSize();
         } else {
-            $filePath = $validated['file_url'] ?? '';
+            $url = trim($validated['file_url'] ?? '');
+            if (! preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                $url = 'https://' . $url;
+            }
+            $filePath = $url;
             $fileType = 'external';
         }
 
@@ -587,6 +597,47 @@ class ProjectManagementController extends Controller
         AuditService::log($project->id, 'UPLOADED_DOC', "Added document: {$validated['title']}");
 
         return redirect()->back()->with('success', 'Document registered.');
+    }
+
+    public function updateDocument(Request $request, Project $project, ProjectDocument $document): RedirectResponse
+    {
+        $this->authorizeCreator($request, $project);
+        abort_if($document->project_id !== $project->id, 404);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'file' => 'nullable|file|max:51200',
+            'file_url' => 'nullable|string|max:500',
+        ]);
+
+        $updateData = [
+            'title' => $validated['title'],
+        ];
+
+        if ($request->hasFile('file')) {
+            // Delete old file if it was locally stored
+            if ($document->file_type !== 'external' && Storage::disk('public')->exists($document->file_path)) {
+                Storage::disk('public')->delete($document->file_path);
+            }
+            $file = $request->file('file');
+            $updateData['file_path'] = $file->store("documents/{$project->code}", 'public');
+            $updateData['file_type'] = strtolower($file->getClientOriginalExtension() ?: 'file');
+            $updateData['file_size'] = $file->getSize();
+        } elseif (! empty(trim($validated['file_url'] ?? ''))) {
+            $url = trim($validated['file_url']);
+            if (! preg_match('~^(?:f|ht)tps?://~i', $url)) {
+                $url = 'https://' . $url;
+            }
+            $updateData['file_path'] = $url;
+            $updateData['file_type'] = 'external';
+            $updateData['file_size'] = 0;
+        }
+
+        $document->update($updateData);
+
+        AuditService::log($project->id, 'UPDATED_DOC', "Updated document: {$document->title}");
+
+        return redirect()->back()->with('success', 'Document updated successfully.');
     }
 
     public function deleteDocument(Request $request, Project $project, ProjectDocument $document): RedirectResponse

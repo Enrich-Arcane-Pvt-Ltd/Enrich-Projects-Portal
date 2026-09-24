@@ -72,13 +72,13 @@ class DocumentsRelationManager extends RelationManager
             ])
             ->recordActions([
                 Action::make('download')
-                    ->label('Download')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
+                    ->label(fn (ProjectDocument $record) => str_starts_with($record->file_path, 'http') || $record->file_type === 'external' ? 'Open Link' : 'Download')
+                    ->icon(fn (ProjectDocument $record) => str_starts_with($record->file_path, 'http') || $record->file_type === 'external' ? 'heroicon-o-arrow-top-right-on-square' : 'heroicon-o-arrow-down-tray')
+                    ->color(fn (ProjectDocument $record) => str_starts_with($record->file_path, 'http') || $record->file_type === 'external' ? 'info' : 'success')
                     ->action(function (ProjectDocument $record) {
                         AuditService::log($record->project_id, 'DOWNLOADED_DOC', "Document: {$record->title}");
                     })
-                    ->url(fn (ProjectDocument $record) => asset('storage/' . $record->file_path), true),
+                    ->url(fn (ProjectDocument $record) => str_starts_with($record->file_path, 'http') ? $record->file_path : asset('storage/' . $record->file_path), true),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

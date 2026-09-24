@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/projects/{project}/iot/{iot}', [ProjectManagementController::class, 'deleteIotConfiguration'])->name('iot.destroy');
 
         Route::post('/projects/{project}/documents', [ProjectManagementController::class, 'storeDocument'])->name('documents.store');
+        Route::match(['put', 'post'], '/projects/{project}/documents/{document}', [ProjectManagementController::class, 'updateDocument'])->name('documents.update');
         Route::delete('/projects/{project}/documents/{document}', [ProjectManagementController::class, 'deleteDocument'])->name('documents.destroy');
 
         // Developer Assignments & Team Management

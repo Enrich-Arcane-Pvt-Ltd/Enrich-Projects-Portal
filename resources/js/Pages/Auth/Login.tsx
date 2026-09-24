@@ -45,9 +45,9 @@ export default function Login({
                 <div className="absolute -bottom-32 -right-32 h-[450px] w-[450px] rounded-full bg-indigo-600/15 blur-[140px] pointer-events-none" />
 
                 {/* Top Navigation Bar */}
-                <header className="relative z-10 px-6 py-6 lg:px-16 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/20 shadow transition group-hover:border-blue-400">
+                <header className="relative z-10 px-4 py-4 sm:px-6 sm:py-6 lg:px-16 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
+                        <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 backdrop-blur-md border border-white/20 shadow transition group-hover:border-blue-400 shrink-0">
                             <img
                                 src="/images/logo.jpg"
                                 alt="Enrich Arcane Logo"
@@ -55,10 +55,10 @@ export default function Login({
                             />
                         </div>
                         <div>
-                            <span className="text-sm font-bold tracking-tight text-white block leading-tight">
+                            <span className="text-xs sm:text-sm font-bold tracking-tight text-white block leading-tight">
                                 Enrich Arcane
                             </span>
-                            <span className="text-[10px] uppercase tracking-widest text-blue-400 font-semibold">
+                            <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-blue-400 font-semibold">
                                 PIMS Portal
                             </span>
                         </div>
@@ -71,25 +71,26 @@ export default function Login({
                         <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to Home
+                        <span className="hidden sm:inline">Back to Home</span>
+                        <span className="sm:hidden">Home</span>
                     </Link>
                 </header>
 
                 {/* Central Form Card */}
-                <main className="relative z-10 flex flex-col items-center justify-center px-4 py-8 sm:px-6">
+                <main className="relative z-10 flex flex-col items-center justify-center px-3.5 py-6 sm:px-6 sm:py-8">
                     <div className="w-full sm:max-w-md">
-                        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-black/70 backdrop-blur-xl">
+                        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 p-5 sm:p-8 shadow-2xl shadow-black/70 backdrop-blur-xl">
                             
                             {/* Card Header & Brand Icon */}
                             <div className="mb-6 flex flex-col items-center text-center">
-                                <div className="mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white/10 p-1.5 backdrop-blur-md border border-white/20 shadow-lg">
+                                <div className="mb-3 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center overflow-hidden rounded-2xl bg-white/10 p-1.5 backdrop-blur-md border border-white/20 shadow-lg">
                                     <img
                                         src="/images/logo.jpg"
                                         alt="Enrich Arcane Logo"
                                         className="h-full w-full object-contain rounded-xl"
                                     />
                                 </div>
-                                <h2 className="text-xl font-bold tracking-tight text-white">
+                                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
                                     Sign In to PIMS
                                 </h2>
                                 <p className="mt-1 text-xs text-slate-400">

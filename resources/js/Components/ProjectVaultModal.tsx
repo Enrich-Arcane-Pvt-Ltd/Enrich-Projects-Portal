@@ -329,62 +329,50 @@ export default function ProjectVaultModal({
         { id: 'accounts', label: 'Third-Party & Cloud Accounts', count: project.third_party_accounts?.length || 0, icon: '☁️' },
         { id: 'services', label: 'Background Daemons & Workers', count: project.background_services?.length || 0, icon: '⚙️' },
         { id: 'iot', label: 'IOT Hardware & Telemetry', count: project.iot_configurations?.length || 0, icon: '📡' },
+        { id: 'documents', label: 'Documents & Uploads', count: project.documents?.length || 0, icon: '📁' },
         { id: 'overview', label: 'Assigned Developers', count: project.developers?.length || 0, icon: '👥' },
     ];
 
     return (
-        <div className={isPage ? "w-full" : "fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"}>
-            <div className={`relative w-full ${isPage ? 'rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col' : 'max-w-5xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]'}`}>
+        <div className={isPage ? "w-full min-w-0" : "fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"}>
+            <div className={`relative w-full ${isPage ? 'rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col min-w-0' : 'max-w-5xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] min-w-0'}`}>
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 border-b border-slate-800/80 bg-slate-900/60">
-                    <div className="space-y-1.5">
-                        <h2 className="text-xl font-bold text-white tracking-tight">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-slate-800/80 bg-slate-900/60 gap-3">
+                    <div className="space-y-1 min-w-0">
+                        <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight break-words">
                             {project.name}
                         </h2>
                         {project.tech_stack && (
-                            <p className="text-xs font-mono text-slate-400">
+                            <p className="text-xs font-mono text-slate-400 break-words">
                                 <span className="text-slate-500">Stack:</span> {project.tech_stack}
                             </p>
                         )}
                     </div>
 
-                    {isPage ? (
-                        <Link
-                            href={route('dashboard')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                            Back to Dashboard
-                        </Link>
-                    ) : (
-                        <button
-                            onClick={onClose}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
-                            title="Close modal"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    )}
-                </div>
-
-                {/* Audit notification banner */}
-                {/* <div className="bg-slate-900/90 border-b border-slate-800 px-6 py-2 flex items-center justify-between text-xs text-slate-400">
-                    <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-400/80"></span>
-                        <span>
-                            <strong className="text-slate-300">Security Protocol Active:</strong> Decrypted secret revelations and clipboard copies are recorded in immutable audit logs.
-                        </span>
+                    <div className="flex items-center justify-end shrink-0">
+                        {isPage ? (
+                            <Link
+                                href={route('dashboard')}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                Back to Dashboard
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={onClose}
+                                className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                                title="Close modal"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
-                    {copyFeedback && (
-                        <span className="font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                            ✓ {copyFeedback}
-                        </span>
-                    )}
-                </div> */}
+                </div>
 
                 {/* Tabs Header with Horizontal Scroll Controls & Visual Indicators */}
                 <div className="relative border-b border-slate-800 bg-slate-900/50 flex items-center">
@@ -409,7 +397,7 @@ export default function ProjectVaultModal({
                         ref={tabsContainerRef}
                         onScroll={updateScrollButtons}
                         onWheel={handleWheelScroll}
-                        className="flex items-center gap-1.5 overflow-x-auto px-4 pt-2.5 pb-1 w-full scroll-smooth select-none focus:outline-none [scrollbar-width:thin] [scrollbar-color:#334155_transparent]"
+                        className="flex items-center gap-1.5 overflow-x-auto px-3 sm:px-4 pt-2.5 pb-1 w-full scroll-smooth select-none focus:outline-none [scrollbar-width:thin] [scrollbar-color:#334155_transparent]"
                     >
                         {tabs.map((tab) => (
                             <button
@@ -418,13 +406,12 @@ export default function ProjectVaultModal({
                                     setActiveTab(tab.id);
                                     e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                                 }}
-                                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
                                     activeTab === tab.id
                                         ? 'border-indigo-500 text-indigo-400 bg-slate-800/80 shadow-sm'
                                         : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                                 }`}
                             >
-                                {/* <span className="text-sm">{tab.icon}</span> */}
                                 <span>{tab.label}</span>
                                 {tab.count !== undefined && (
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
@@ -457,11 +444,11 @@ export default function ProjectVaultModal({
                 </div>
 
                 {/* Tab Contents */}
-                <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-6">
                     {/* TAB: CREDENTIALS VAULT */}
                     {activeTab === 'credentials' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-200">
                                         Credential Vault ({project.credentials?.length || 0})
@@ -473,7 +460,7 @@ export default function ProjectVaultModal({
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'credentials' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
                                     >
                                         + Add Credential
                                     </button>
@@ -494,11 +481,11 @@ export default function ProjectVaultModal({
                                         return (
                                             <div
                                                 key={cred.id}
-                                                className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                                                className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
                                             >
                                                 <div className="space-y-1.5 flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-mono font-bold text-sm text-slate-100 truncate">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="font-mono font-bold text-sm text-slate-100 break-all">
                                                             {cred.key_name}
                                                         </span>
                                                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
@@ -515,7 +502,7 @@ export default function ProjectVaultModal({
 
                                                     <div className="flex items-center gap-2">
                                                         {isRevealed ? (
-                                                            <div className="font-mono text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-3 py-1.5 rounded-lg select-all break-all">
+                                                            <div className="font-mono text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-2.5 py-1.5 rounded-lg select-all break-all max-w-full overflow-x-auto">
                                                                 {val}
                                                             </div>
                                                         ) : (
@@ -526,7 +513,7 @@ export default function ProjectVaultModal({
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2 shrink-0">
+                                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-700/40 w-full sm:w-auto justify-end">
                                                     <button
                                                         onClick={() => handleRevealSecret(cred)}
                                                         disabled={isLoading}
@@ -568,7 +555,7 @@ export default function ProjectVaultModal({
                                                     </button>
 
                                                     {project.is_owner && (
-                                                        <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                        <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                             <button
                                                                 onClick={() => setSubEntityModal({ type: 'credentials', item: cred })}
                                                                 className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -598,7 +585,7 @@ export default function ProjectVaultModal({
                     {/* TAB: CLIENT ACCESS CREDENTIALS */}
                     {activeTab === 'client_credentials' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-200">
                                         Client Access Credentials & App Logins ({((project.client_access_credentials || project.clientAccessCredentials)?.length || 0)})
@@ -610,7 +597,7 @@ export default function ProjectVaultModal({
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'client_credentials' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
                                     >
                                         + Add Client Access
                                     </button>
@@ -622,7 +609,7 @@ export default function ProjectVaultModal({
                                     No client access credentials configured for this application yet.
                                 </div>
                             ) : (
-                                <div className="grid gap-4">
+                                <div className="grid gap-3.5 sm:gap-4">
                                     {(project.client_access_credentials || project.clientAccessCredentials)!.map((clientCred) => {
                                         const isRevealed = Boolean(revealedClients[clientCred.id]);
                                         const isLoading = Boolean(loadingIds[`client_${clientCred.id}`]);
@@ -630,12 +617,12 @@ export default function ProjectVaultModal({
                                         return (
                                             <div
                                                 key={clientCred.id}
-                                                className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3 hover:border-slate-700 transition-colors"
+                                                className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3 hover:border-slate-700 transition-colors"
                                             >
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                                    <div className="space-y-1">
+                                                    <div className="space-y-1 min-w-0 flex-1">
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <span className="font-bold text-slate-100 text-sm">{clientCred.username}</span>
+                                                            <span className="font-bold text-slate-100 text-sm break-all">{clientCred.username}</span>
                                                             {clientCred.role && (
                                                                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                                                                     {clientCred.role}
@@ -652,8 +639,8 @@ export default function ProjectVaultModal({
                                                             )}
                                                         </div>
                                                         {clientCred.email && (
-                                                            <p className="text-xs text-slate-400 flex items-center gap-2">
-                                                                <span>Email: <strong className="text-slate-200">{clientCred.email}</strong></span>
+                                                            <p className="text-xs text-slate-400 flex items-center gap-2 flex-wrap">
+                                                                <span>Email: <strong className="text-slate-200 break-all">{clientCred.email}</strong></span>
                                                                 <button
                                                                     onClick={() => handleCopyText(clientCred.email!, `Client Email: ${clientCred.username}`)}
                                                                     className="text-[11px] text-indigo-400 hover:text-indigo-300 hover:underline"
@@ -664,7 +651,7 @@ export default function ProjectVaultModal({
                                                         )}
                                                     </div>
 
-                                                    <div className="flex items-center gap-2 shrink-0">
+                                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-700/40 w-full sm:w-auto justify-end">
                                                         {clientCred.login_url && (
                                                             <a
                                                                 href={clientCred.login_url}
@@ -721,7 +708,7 @@ export default function ProjectVaultModal({
                                                         </button>
 
                                                         {project.is_owner && (
-                                                            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                            <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                                 <button
                                                                     onClick={() => setSubEntityModal({ type: 'client_credentials', item: clientCred })}
                                                                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -743,7 +730,7 @@ export default function ProjectVaultModal({
                                                 </div>
 
                                                 {/* Details Row: Username, Email, Password */}
-                                                <div className="grid sm:grid-cols-3 gap-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 break-words">
                                                     <div>
                                                         <span className="text-slate-500">UserName:</span>{' '}
                                                         <span className="text-slate-200 font-mono font-medium">{clientCred.username}</span>
@@ -756,11 +743,11 @@ export default function ProjectVaultModal({
                                                     </div>
                                                     <div>
                                                         <span className="text-slate-500">Email:</span>{' '}
-                                                        <span className="text-slate-200 font-mono">{clientCred.email || '-'}</span>
+                                                        <span className="text-slate-200 font-mono break-all">{clientCred.email || '-'}</span>
                                                     </div>
                                                     <div>
                                                         <span className="text-slate-500">Password:</span>{' '}
-                                                        <span className="font-mono text-amber-300">
+                                                        <span className="font-mono text-amber-300 break-all">
                                                             {isRevealed ? (
                                                                 <span className="font-bold">{revealedClients[clientCred.id]}</span>
                                                             ) : (
@@ -772,7 +759,7 @@ export default function ProjectVaultModal({
 
                                                 {/* Notes / 2FA */}
                                                 {clientCred.notes && (
-                                                    <div className="text-xs bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80 text-slate-300">
+                                                    <div className="text-xs bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/80 text-slate-300 break-words">
                                                         <span className="text-slate-500 font-medium">Notes / 2FA:</span> {clientCred.notes}
                                                     </div>
                                                 )}
@@ -787,14 +774,14 @@ export default function ProjectVaultModal({
                     {/* TAB: REPOSITORIES & GIT */}
                     {activeTab === 'links' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Repositories & External Links ({project.links?.length || 0})
                                 </h3>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'links' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
                                     >
                                         + Add Repository
                                     </button>
@@ -810,26 +797,26 @@ export default function ProjectVaultModal({
                                     {project.links.map((link) => (
                                         <div
                                             key={link.id}
-                                            className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700 flex items-center justify-between gap-4"
+                                            className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
                                         >
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-slate-100 text-sm">{link.title}</span>
+                                            <div className="space-y-1 min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-semibold text-slate-100 text-sm break-all">{link.title}</span>
                                                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300">
                                                         {link.category}
                                                     </span>
                                                 </div>
                                                 {link.branch_strategy && (
-                                                    <p className="text-xs text-slate-400 font-mono">
+                                                    <p className="text-xs text-slate-400 font-mono break-all">
                                                         <span className="text-slate-500">Branching:</span> {link.branch_strategy}
                                                     </p>
                                                 )}
-                                                <p className="text-xs text-indigo-400 font-mono truncate max-w-md">
+                                                <p className="text-xs text-indigo-400 font-mono break-all max-w-full">
                                                     {link.url}
                                                 </p>
                                             </div>
 
-                                            <div className="flex items-center gap-2 shrink-0">
+                                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-700/40 w-full sm:w-auto justify-end">
                                                 <button
                                                     onClick={() => handleCopyText(link.url, `Repo URL: ${link.title}`)}
                                                     className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
@@ -849,7 +836,7 @@ export default function ProjectVaultModal({
                                                 </a>
 
                                                 {project.is_owner && (
-                                                    <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                    <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                         <button
                                                             onClick={() => setSubEntityModal({ type: 'links', item: link })}
                                                             className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -878,14 +865,14 @@ export default function ProjectVaultModal({
                     {/* TAB: SERVERS */}
                     {activeTab === 'servers' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Server & Hosting Environments ({project.server_environments?.length || 0})
                                 </h3>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'servers' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
                                     >
                                         + Add Server
                                     </button>
@@ -897,7 +884,7 @@ export default function ProjectVaultModal({
                                     No server environments configured.
                                 </div>
                             ) : (
-                                <div className="grid gap-4">
+                                <div className="grid gap-3.5 sm:gap-4">
                                     {project.server_environments.map((server) => {
                                         const sshRevealed = Boolean(revealedServers[`${server.id}_ssh`]);
                                         const envRevealed = Boolean(revealedServers[`${server.id}_env`]);
@@ -905,12 +892,12 @@ export default function ProjectVaultModal({
                                         return (
                                             <div
                                                 key={server.id}
-                                                className="p-5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-4"
+                                                className="p-3.5 sm:p-5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3 sm:space-y-4"
                                             >
-                                                <div className="flex items-start justify-between">
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-bold text-slate-100">{server.hosting_provider}</span>
+                                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                                    <div className="space-y-1 min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="text-sm font-bold text-slate-100 break-all">{server.hosting_provider}</span>
                                                             <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
                                                                 server.environment_type === 'production' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
                                                                 server.environment_type === 'staging' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
@@ -919,7 +906,7 @@ export default function ProjectVaultModal({
                                                                 {server.environment_type}
                                                             </span>
                                                         </div>
-                                                        <div className="font-mono text-xs text-slate-400 flex items-center gap-4">
+                                                        <div className="font-mono text-xs text-slate-400 flex items-center gap-x-4 gap-y-1 flex-wrap break-all">
                                                             {server.ip_address && (
                                                                 <span>IP: <strong className="text-slate-200">{server.ip_address}</strong></span>
                                                             )}
@@ -930,7 +917,7 @@ export default function ProjectVaultModal({
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-700/40 w-full sm:w-auto justify-end">
                                                         <button
                                                             onClick={() => handleRevealServerSecret(server, 'ssh')}
                                                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
@@ -945,7 +932,7 @@ export default function ProjectVaultModal({
                                                         </button>
 
                                                         {project.is_owner && (
-                                                            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                            <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                                 <button
                                                                     onClick={() => setSubEntityModal({ type: 'servers', item: server })}
                                                                     className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -966,14 +953,14 @@ export default function ProjectVaultModal({
                                                     </div>
                                                 </div>
 
-                                                <div className="grid sm:grid-cols-2 gap-2 text-xs bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-900/60 p-3 rounded-lg border border-slate-800 break-words">
                                                     <div>
                                                         <span className="text-slate-500">Runtime Stack:</span>{' '}
                                                         <span className="text-slate-300 font-medium">{server.runtime_stack || 'Standard'}</span>
                                                     </div>
                                                     <div>
                                                         <span className="text-slate-500">Deploy Path:</span>{' '}
-                                                        <span className="text-slate-300 font-mono">{server.deploy_path || '-'}</span>
+                                                        <span className="text-slate-300 font-mono break-all">{server.deploy_path || '-'}</span>
                                                     </div>
                                                 </div>
 
@@ -989,7 +976,7 @@ export default function ProjectVaultModal({
                                                                 Copy SSH Key
                                                             </button>
                                                         </div>
-                                                        <pre className="p-3 bg-black/60 rounded-lg border border-amber-500/30 text-xs font-mono text-amber-200/90 overflow-x-auto max-h-36">
+                                                        <pre className="p-3 bg-black/60 rounded-lg border border-amber-500/30 text-xs font-mono text-amber-200/90 overflow-x-auto max-h-36 break-all whitespace-pre-wrap">
                                                             {revealedServers[`${server.id}_ssh`]}
                                                         </pre>
                                                     </div>
@@ -1007,7 +994,7 @@ export default function ProjectVaultModal({
                                                                 Copy .env
                                                             </button>
                                                         </div>
-                                                        <pre className="p-3 bg-black/60 rounded-lg border border-indigo-500/30 text-xs font-mono text-indigo-200/90 overflow-x-auto max-h-48">
+                                                        <pre className="p-3 bg-black/60 rounded-lg border border-indigo-500/30 text-xs font-mono text-indigo-200/90 overflow-x-auto max-h-48 break-all whitespace-pre-wrap">
                                                             {revealedServers[`${server.id}_env`]}
                                                         </pre>
                                                     </div>
@@ -1023,14 +1010,14 @@ export default function ProjectVaultModal({
                     {/* TAB: THIRD-PARTY ACCOUNTS */}
                     {activeTab === 'accounts' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Third-Party & Cloud Accounts ({project.third_party_accounts?.length || 0})
                                 </h3>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'accounts' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
                                     >
                                         + Add Cloud Account
                                     </button>
@@ -1042,29 +1029,29 @@ export default function ProjectVaultModal({
                                     No third-party accounts configured.
                                 </div>
                             ) : (
-                                <div className="grid gap-4">
+                                <div className="grid gap-3.5 sm:gap-4">
                                     {project.third_party_accounts.map((acc) => {
                                         const isRevealed = Boolean(revealedAccounts[acc.id]);
 
                                         return (
                                             <div
                                                 key={acc.id}
-                                                className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3"
+                                                className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3"
                                             >
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="font-bold text-slate-100 text-sm">{acc.service_provider}</span>
+                                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-bold text-slate-100 text-sm break-all">{acc.service_provider}</span>
                                                             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-700 text-slate-300">
                                                                 {acc.environment}
                                                             </span>
                                                         </div>
-                                                        <div className="text-xs text-slate-400 mt-0.5">
+                                                        <div className="text-xs text-slate-400 mt-0.5 break-all">
                                                             Account ID / Login: <strong className="text-slate-200">{acc.account_identifier}</strong>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-700/40 w-full sm:w-auto justify-end">
                                                         <button
                                                             onClick={() => handleRevealAccountPassword(acc)}
                                                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20"
@@ -1086,7 +1073,7 @@ export default function ProjectVaultModal({
                                                         )}
 
                                                         {project.is_owner && (
-                                                            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+                                                            <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                                 <button
                                                                     onClick={() => setSubEntityModal({ type: 'accounts', item: acc })}
                                                                     className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -1108,8 +1095,8 @@ export default function ProjectVaultModal({
                                                 </div>
 
                                                 {isRevealed && (
-                                                    <div className="p-2.5 bg-amber-950/30 border border-amber-500/30 rounded-lg flex items-center justify-between text-xs">
-                                                        <span className="font-mono text-amber-200">{revealedAccounts[acc.id]}</span>
+                                                    <div className="p-2.5 bg-amber-950/30 border border-amber-500/30 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs">
+                                                        <span className="font-mono text-amber-200 break-all">{revealedAccounts[acc.id]}</span>
                                                         <button
                                                             onClick={() => handleCopyText(revealedAccounts[acc.id], `Account Password: ${acc.service_provider}`)}
                                                             className="text-amber-400 hover:underline font-semibold"
@@ -1135,14 +1122,14 @@ export default function ProjectVaultModal({
                     {/* TAB: BACKGROUND DAEMONS */}
                     {activeTab === 'services' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Background Daemons & Workers ({project.background_services?.length || 0})
                                 </h3>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'services' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
                                     >
                                         + Add Daemon
                                     </button>
@@ -1158,21 +1145,21 @@ export default function ProjectVaultModal({
                                     {project.background_services.map((svc) => (
                                         <div
                                             key={svc.id}
-                                            className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-2"
+                                            className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-2.5"
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                                                         {svc.service_type.replace('_', ' ')}
                                                     </span>
                                                     {svc.frequency_or_config && (
-                                                        <span className="font-mono text-xs text-slate-400">
+                                                        <span className="font-mono text-xs text-slate-400 break-all">
                                                             {svc.frequency_or_config}
                                                         </span>
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     <button
                                                         onClick={() => handleCopyText(svc.command, `Service command: ${svc.command}`)}
                                                         className="px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
@@ -1202,12 +1189,12 @@ export default function ProjectVaultModal({
                                                 </div>
                                             </div>
 
-                                            <div className="font-mono text-xs text-emerald-400 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800">
+                                            <div className="font-mono text-xs text-emerald-400 bg-slate-950/70 p-2.5 rounded-lg border border-slate-800 break-all select-all">
                                                 $ {svc.command}
                                             </div>
 
                                             {svc.monitoring_notes && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-slate-400 break-words">
                                                     {svc.monitoring_notes}
                                                 </p>
                                             )}
@@ -1221,14 +1208,14 @@ export default function ProjectVaultModal({
                     {/* TAB: IOT & TELEMETRY */}
                     {activeTab === 'iot' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     IOT Hardware & Telemetry ({project.iot_configurations?.length || 0})
                                 </h3>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'iot' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
                                     >
                                         + Add IoT Device
                                     </button>
@@ -1244,11 +1231,11 @@ export default function ProjectVaultModal({
                                     {project.iot_configurations.map((iot) => (
                                         <div
                                             key={iot.id}
-                                            className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3"
+                                            className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3"
                                         >
-                                            <div className="flex items-start justify-between">
+                                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
                                                 <div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex flex-wrap items-center gap-2">
                                                         <span className="font-bold text-slate-100 text-sm">{iot.hardware_model}</span>
                                                         <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                                             {iot.communication_protocol}
@@ -1260,14 +1247,14 @@ export default function ProjectVaultModal({
                                                         )}
                                                     </div>
                                                     {iot.broker_url && (
-                                                        <div className="font-mono text-xs text-slate-400 mt-1">
+                                                        <div className="font-mono text-xs text-slate-400 mt-1 break-all">
                                                             Broker: <strong className="text-slate-200">{iot.broker_url}:{iot.port || '8883'}</strong>
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {project.is_owner && (
-                                                    <div className="flex items-center gap-1.5">
+                                                    <div className="flex items-center gap-1.5 self-start sm:self-auto">
                                                         <button
                                                             onClick={() => setSubEntityModal({ type: 'iot', item: iot })}
                                                             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -1288,7 +1275,7 @@ export default function ProjectVaultModal({
                                             </div>
 
                                             {iot.topic_structure && (
-                                                <div className="text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                                                <div className="text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 break-all">
                                                     <span className="text-slate-500 font-semibold">Topic Structure:</span>{' '}
                                                     <code className="text-cyan-400 font-mono">{iot.topic_structure}</code>
                                                 </div>
@@ -1300,70 +1287,193 @@ export default function ProjectVaultModal({
                         </div>
                     )}
 
-                    {/* TAB: DOCUMENTS */}
+                    {/* TAB: DOCUMENTS & UPLOADS */}
                     {activeTab === 'documents' && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-200">
-                                    Documentation & Diagrams Vault ({project.documents?.length || 0})
-                                </h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-200">
+                                        Documents & Uploads Vault ({project.documents?.length || 0})
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Specifications, architecture SRS, source code archives (.zip), firmware binaries, or external Google Drive assets.
+                                    </p>
+                                </div>
                                 {project.is_owner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'documents' })}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
                                     >
-                                        + Upload Document
+                                        <span>+</span>
+                                        <span>Upload Document / Link</span>
                                     </button>
                                 )}
                             </div>
 
                             {(!project.documents || project.documents.length === 0) ? (
-                                <div className="p-8 text-center text-slate-500 rounded-xl border border-slate-800 bg-slate-900/40">
-                                    No project documents uploaded yet.
+                                <div className="p-8 text-center rounded-xl border border-slate-800 bg-slate-900/40 space-y-2">
+                                    <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl">
+                                        📁
+                                    </div>
+                                    <p className="text-sm font-medium text-slate-300">No project documents uploaded yet</p>
+                                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                                        Upload documentation (.pdf, .docx), source code files, project backups (.zip up to 50MB), or add external Google Drive links.
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="grid gap-3">
-                                    {project.documents.map((doc) => (
-                                        <div
-                                            key={doc.id}
-                                            className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 flex items-center justify-between gap-4"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-bold text-xs uppercase">
-                                                    {doc.file_type || 'DOC'}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-semibold text-slate-100 text-sm">{doc.title}</h4>
-                                                    <p className="text-xs text-slate-400 font-mono">{doc.file_path}</p>
-                                                </div>
-                                            </div>
+                                    {project.documents.map((doc) => {
+                                        const isExternal = doc.file_type === 'external' || doc.file_path.startsWith('http://') || doc.file_path.startsWith('https://');
+                                        const isDrive = isExternal && (doc.file_path.includes('drive.google.com') || doc.file_path.includes('docs.google.com'));
+                                        const ext = (doc.file_type || '').toLowerCase();
 
-                                            <div className="flex items-center gap-2">
-                                                <a
-                                                    href={`/storage/${doc.file_path}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5"
-                                                >
-                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                    </svg>
-                                                    Download
-                                                </a>
+                                        let typeLabel = ext ? ext.toUpperCase() : 'DOC';
+                                        let badgeStyle = 'bg-slate-800 text-slate-300 border-slate-700';
+                                        let fileIcon = '📄';
 
-                                                {project.is_owner && (
+                                        if (isDrive) {
+                                            typeLabel = 'Google Drive';
+                                            badgeStyle = 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+                                            fileIcon = '📂';
+                                        } else if (isExternal) {
+                                            typeLabel = 'External Link';
+                                            badgeStyle = 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30';
+                                            fileIcon = '🔗';
+                                        } else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) {
+                                            typeLabel = 'ZIP / Archive';
+                                            badgeStyle = 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+                                            fileIcon = '📦';
+                                        } else if (ext === 'pdf') {
+                                            typeLabel = 'PDF Spec';
+                                            badgeStyle = 'bg-rose-500/10 text-rose-300 border-rose-500/30';
+                                            fileIcon = '📕';
+                                        } else if (['doc', 'docx'].includes(ext)) {
+                                            typeLabel = 'Word Doc';
+                                            badgeStyle = 'bg-blue-500/10 text-blue-300 border-blue-500/30';
+                                            fileIcon = '📘';
+                                        } else if (['js', 'ts', 'jsx', 'tsx', 'py', 'php', 'cpp', 'c', 'h', 'ino', 'json', 'sql', 'sh', 'html', 'css'].includes(ext)) {
+                                            typeLabel = `Code (${ext.toUpperCase()})`;
+                                            badgeStyle = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+                                            fileIcon = '💻';
+                                        } else if (['png', 'jpg', 'jpeg', 'svg', 'webp'].includes(ext)) {
+                                            typeLabel = 'Diagram / Image';
+                                            badgeStyle = 'bg-purple-500/10 text-purple-300 border-purple-500/30';
+                                            fileIcon = '🖼️';
+                                        }
+
+                                        const resourceUrl = isExternal
+                                            ? (doc.file_path.startsWith('http://') || doc.file_path.startsWith('https://') ? doc.file_path : `https://${doc.file_path}`)
+                                            : `/storage/${doc.file_path}`;
+
+                                        const formattedSize = doc.file_size && doc.file_size > 0
+                                            ? doc.file_size > 1024 * 1024
+                                                ? `${(doc.file_size / (1024 * 1024)).toFixed(1)} MB`
+                                                : `${Math.round(doc.file_size / 1024)} KB`
+                                            : null;
+
+                                        return (
+                                            <div
+                                                key={doc.id}
+                                                className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5"
+                                            >
+                                                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-900 border border-slate-700/60 flex items-center justify-center text-lg shadow-inner">
+                                                        {fileIcon}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1 space-y-1">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <h4 className="font-semibold text-slate-100 text-sm break-words">
+                                                                {doc.title}
+                                                            </h4>
+                                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}>
+                                                                {typeLabel}
+                                                            </span>
+                                                            {formattedSize && (
+                                                                <span className="text-[11px] font-mono text-slate-400 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
+                                                                    {formattedSize}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 font-mono break-all line-clamp-1">
+                                                            {doc.file_path}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap items-center gap-2 shrink-0 self-end sm:self-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/80 w-full md:w-auto justify-end">
+                                                    {/* Primary Action Button */}
+                                                    {isExternal ? (
+                                                        <a
+                                                            href={resourceUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20 transition-colors flex items-center gap-1.5 shadow-sm"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                            {isDrive ? 'Open Drive' : 'Open Link'}
+                                                        </a>
+                                                    ) : (
+                                                        <a
+                                                            href={resourceUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            download
+                                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 shadow-sm"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                            Download
+                                                        </a>
+                                                    )}
+
+                                                    {/* Copy Link Button */}
                                                     <button
-                                                        onClick={() => handleDeleteSubEntity('documents', doc.id, doc.title)}
-                                                        disabled={deletingId === `documents_${doc.id}`}
-                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
-                                                        title="Delete document"
+                                                        onClick={() => {
+                                                            const copyUrl = isExternal ? resourceUrl : `${window.location.origin}${resourceUrl}`;
+                                                            navigator.clipboard.writeText(copyUrl);
+                                                            triggerCopyFeedback(`Copied resource link: ${doc.title}`);
+                                                            axios.post('/developer/log-copy', {
+                                                                project_id: project.id,
+                                                                target_field: `Document URL: ${doc.title}`,
+                                                                action_type: 'COPIED_KEY',
+                                                            }).catch(() => {});
+                                                        }}
+                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-600/20 transition-colors flex items-center gap-1.5"
+                                                        title="Copy link to clipboard"
                                                     >
-                                                        {deletingId === `documents_${doc.id}` ? '...' : 'Delete'}
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                        </svg>
+                                                        Copy Link
                                                     </button>
-                                                )}
+
+                                                    {/* Owner Actions */}
+                                                    {project.is_owner && (
+                                                        <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-700">
+                                                            <button
+                                                                onClick={() => setSubEntityModal({ type: 'documents', item: doc })}
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                                                                title="Edit document title or resource link"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeleteSubEntity('documents', doc.id, doc.title)}
+                                                                disabled={deletingId === `documents_${doc.id}`}
+                                                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors disabled:opacity-50"
+                                                                title="Delete document"
+                                                            >
+                                                                {deletingId === `documents_${doc.id}` ? '...' : 'Delete'}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -1382,7 +1492,7 @@ export default function ProjectVaultModal({
                                     </p>
                                 </div>
                                 {project.is_owner && (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -1429,7 +1539,7 @@ export default function ProjectVaultModal({
                                 </div>
 
                                 {project.developers && project.developers.length > 0 ? (
-                                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                                         {project.developers.map((dev) => {
                                             const isCreator = dev.id === project.created_by_id;
                                             const isLead = dev.id === project.lead_developer_id;
@@ -1448,7 +1558,7 @@ export default function ProjectVaultModal({
                                                         </div>
                                                         <div className="min-w-0">
                                                             <div className="text-slate-200 font-medium truncate flex items-center gap-1.5">
-                                                                <span>{dev.name}</span>
+                                                                <span className="truncate">{dev.name}</span>
                                                                 {isCreator && (
                                                                     <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
                                                                         Creator
@@ -1486,7 +1596,7 @@ export default function ProjectVaultModal({
                                 )}
                             </div>
 
-                            <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lead Developer</h4>
@@ -1506,12 +1616,12 @@ export default function ProjectVaultModal({
                                     </div>
                                     {project.lead_developer ? (
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                                            <div className="h-8 w-8 shrink-0 rounded-full bg-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
                                                 {project.lead_developer.name.charAt(0)}
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-slate-200">{project.lead_developer.name}</div>
-                                                <div className="text-xs text-slate-400">{project.lead_developer.email}</div>
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-medium text-slate-200 truncate">{project.lead_developer.name}</div>
+                                                <div className="text-xs text-slate-400 truncate">{project.lead_developer.email}</div>
                                             </div>
                                         </div>
                                     ) : (
@@ -1538,12 +1648,12 @@ export default function ProjectVaultModal({
                                     </div>
                                     {project.manager ? (
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-amber-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                                            <div className="h-8 w-8 shrink-0 rounded-full bg-amber-500 text-white font-bold text-xs flex items-center justify-center shadow-sm">
                                                 {project.manager.name.charAt(0)}
                                             </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-slate-200">{project.manager.name}</div>
-                                                <div className="text-xs text-slate-400">{project.manager.email}</div>
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-medium text-slate-200 truncate">{project.manager.name}</div>
+                                                <div className="text-xs text-slate-400 truncate">{project.manager.email}</div>
                                             </div>
                                         </div>
                                     ) : (
@@ -1552,9 +1662,9 @@ export default function ProjectVaultModal({
                                 </div>
                             </div>
 
-                            <div className="p-5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
+                            <div className="p-4 sm:p-5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
                                 <h3 className="text-sm font-semibold text-slate-200">Architecture Scope & Specifications</h3>
-                                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap break-words">
                                     {project.description || 'No detailed architecture description provided.'}
                                 </p>
                             </div>
@@ -1563,14 +1673,14 @@ export default function ProjectVaultModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-slate-800/80 bg-slate-900/60 flex items-center justify-between text-xs text-slate-400">
-                    <div>
+                <div className="p-3.5 sm:p-4 border-t border-slate-800/80 bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                    <div className="text-center sm:text-left">
                         Project ID: <span className="font-mono text-slate-200">#{project.id}</span> • Registered in Vault
                     </div>
                     {isPage ? (
                         <Link
                             href={route('dashboard')}
-                            className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors inline-flex items-center gap-1.5"
+                            className="w-full sm:w-auto text-center px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors inline-flex items-center justify-center gap-1.5"
                         >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1580,7 +1690,7 @@ export default function ProjectVaultModal({
                     ) : (
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
+                            className="w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
                         >
                             Close Vault
                         </button>
@@ -1601,8 +1711,8 @@ export default function ProjectVaultModal({
 
             {/* Assign Developer Modal */}
             {project.is_owner && isAssignDevModalOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
-                    <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
+                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+                    <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4 sm:space-y-5">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                             <div>
                                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Team Management</span>
@@ -1644,11 +1754,11 @@ export default function ProjectVaultModal({
                                 </div>
                             )}
 
-                            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setIsAssignDevModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:bg-slate-800 transition-colors"
+                                    className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:bg-slate-800 transition-colors text-center"
                                 >
                                     Cancel
                                 </button>
@@ -1656,7 +1766,7 @@ export default function ProjectVaultModal({
                                     <button
                                         type="submit"
                                         disabled={!selectedDevId || isSubmittingDev}
-                                        className="px-4 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all disabled:opacity-50"
+                                        className="px-4 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all disabled:opacity-50 text-center"
                                     >
                                         {isSubmittingDev ? 'Assigning...' : 'Assign to Team'}
                                     </button>
@@ -1669,8 +1779,8 @@ export default function ProjectVaultModal({
 
             {/* Manage Leadership Roles Modal */}
             {project.is_owner && isEditLeadsModalOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
-                    <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-6 space-y-5">
+                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+                    <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4 sm:space-y-5">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                             <div>
                                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Project Roles</span>
@@ -1718,18 +1828,18 @@ export default function ProjectVaultModal({
                                 </select>
                             </div>
 
-                            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setIsEditLeadsModalOpen(false)}
-                                    className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:bg-slate-800 transition-colors"
+                                    className="px-4 py-2 rounded-xl font-semibold text-slate-400 hover:bg-slate-800 transition-colors text-center"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isSubmittingDev}
-                                    className="px-4 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all disabled:opacity-50"
+                                    className="px-4 py-2 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all disabled:opacity-50 text-center"
                                 >
                                     {isSubmittingDev ? 'Saving...' : 'Save Roles'}
                                 </button>
