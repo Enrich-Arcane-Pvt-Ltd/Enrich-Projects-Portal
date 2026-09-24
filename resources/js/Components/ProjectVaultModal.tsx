@@ -1371,6 +1371,10 @@ export default function ProjectVaultModal({
                                                 : `${Math.round(doc.file_size / 1024)} KB`
                                             : null;
 
+                                        const downloadUrl = isExternal
+                                            ? resourceUrl
+                                            : `/developer/projects/${project.id}/documents/${doc.id}/download`;
+
                                         return (
                                             <div
                                                 key={doc.id}
@@ -1416,10 +1420,7 @@ export default function ProjectVaultModal({
                                                         </a>
                                                     ) : (
                                                         <a
-                                                            href={resourceUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            download
+                                                            href={downloadUrl}
                                                             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 shadow-sm"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

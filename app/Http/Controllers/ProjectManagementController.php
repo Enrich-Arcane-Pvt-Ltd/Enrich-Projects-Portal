@@ -657,6 +657,33 @@ class ProjectManagementController extends Controller
         return redirect()->back()->with('success', 'Document removed.');
     }
 
+    public function downloadDocument(Request $request, Project $project, ProjectDocument $document): mixed
+    {
+        abort_if($document->project_id !== $project->id, 404);
+
+        if ($document->file_type === 'external' || str_starts_with($document->file_path, 'http')) {
+            return redirect()->away($document->file_path);
+        }
+
+        if (! Storage::disk('public')->exists($document->file_path)) {
+            if (file_exists(public_path('storage/' . $document->file_path))) {
+                return response()->download(public_path('storage/' . $document->file_path));
+            }
+            abort(404, 'The requested document file could not be found on the server.');
+        }
+
+        AuditService::log($project->id, 'DOWNLOADED_DOC', "Downloaded document: {$document->title}");
+
+        $ext = pathinfo($document->file_path, PATHINFO_EXTENSION);
+        $title = trim($document->title);
+        $cleanTitle = preg_replace('/[^\w\s\.-]/u', '_', $title);
+        if ($ext && ! str_ends_with(strtolower($cleanTitle), '.' . strtolower($ext))) {
+            $cleanTitle .= '.' . $ext;
+        }
+
+        return Storage::disk('public')->download($document->file_path, $cleanTitle ?: basename($document->file_path));
+    }
+
     // ==========================================
     // DEVELOPER TEAM ASSIGNMENTS & ROLES
     // ==========================================
