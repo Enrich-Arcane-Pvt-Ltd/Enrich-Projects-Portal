@@ -332,7 +332,7 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                 {/* Header */}
                 <div className="flex items-start justify-between p-6 border-b border-slate-800/80 bg-slate-900/60">
                     <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        {/* <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono text-xs font-medium uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
                                 {project.code}
                             </span>
@@ -360,7 +360,7 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                                     <span>👤</span> Created by {project.creator?.name || 'Developer'} (Read-Only)
                                 </span>
                             )}
-                        </div>
+                        </div> */}
                         <h2 className="text-xl font-bold text-white tracking-tight">
                             {project.name}
                         </h2>
@@ -383,7 +383,7 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                 </div>
 
                 {/* Audit notification banner */}
-                <div className="bg-slate-900/90 border-b border-slate-800 px-6 py-2 flex items-center justify-between text-xs text-slate-400">
+                {/* <div className="bg-slate-900/90 border-b border-slate-800 px-6 py-2 flex items-center justify-between text-xs text-slate-400">
                     <div className="flex items-center gap-2">
                         <span className="h-2 w-2 rounded-full bg-amber-400/80"></span>
                         <span>
@@ -395,7 +395,7 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                             ✓ {copyFeedback}
                         </span>
                     )}
-                </div>
+                </div> */}
 
                 {/* Tabs Header with Horizontal Scroll Controls & Visual Indicators */}
                 <div className="relative border-b border-slate-800 bg-slate-900/50 flex items-center">
@@ -435,7 +435,7 @@ export default function ProjectVaultModal({ project, isOpen, onClose, availableD
                                         : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                                 }`}
                             >
-                                <span className="text-sm">{tab.icon}</span>
+                                {/* <span className="text-sm">{tab.icon}</span> */}
                                 <span>{tab.label}</span>
                                 {tab.count !== undefined && (
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
