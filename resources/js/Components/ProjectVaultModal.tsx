@@ -374,47 +374,23 @@ export default function ProjectVaultModal({
                     </div>
                 </div>
 
-                {/* Tabs Header with Horizontal Scroll Controls & Visual Indicators */}
-                <div className="relative border-b border-slate-800 bg-slate-900/50 flex items-center">
-                    {/* Left Scroll Button */}
-                    {canScrollLeft && (
-                        <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 pl-1.5 bg-gradient-to-r from-slate-900 via-slate-900/95 to-transparent">
-                            <button
-                                onClick={() => scrollTabs('left')}
-                                className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-lg transition-all hover:scale-105 active:scale-95"
-                                title="Scroll tabs left"
-                                type="button"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Scrollable Tabs List */}
-                    <div
-                        ref={tabsContainerRef}
-                        onScroll={updateScrollButtons}
-                        onWheel={handleWheelScroll}
-                        className="flex items-center gap-1.5 overflow-x-auto px-3 sm:px-4 pt-2.5 pb-1 w-full scroll-smooth select-none focus:outline-none [scrollbar-width:thin] [scrollbar-color:#334155_transparent]"
-                    >
+                {/* Tabs + Content: vertical sidebar list on desktop (lg+), horizontal scroll tabs below content on mobile */}
+                <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+                    {/* Desktop sidebar tab list (1/4 width) */}
+                    <nav className="hidden lg:flex lg:flex-col lg:w-1/4 lg:min-w-[240px] lg:max-w-xs shrink-0 border-r border-slate-800 bg-slate-900/50 overflow-y-auto p-3 gap-1 [scrollbar-width:thin] [scrollbar-color:#334155_transparent]">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={(e) => {
-                                    setActiveTab(tab.id);
-                                    e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                                }}
-                                className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
                                     activeTab === tab.id
-                                        ? 'border-indigo-500 text-indigo-400 bg-slate-800/80 shadow-sm'
-                                        : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                                        ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
                                 }`}
                             >
-                                <span>{tab.label}</span>
+                                <span className="truncate">{tab.label}</span>
                                 {tab.count !== undefined && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
                                         activeTab === tab.id
                                             ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
                                             : 'bg-slate-800 text-slate-400'
@@ -424,27 +400,79 @@ export default function ProjectVaultModal({
                                 )}
                             </button>
                         ))}
+                    </nav>
+
+                    {/* Mobile Tabs Header with Horizontal Scroll Controls & Visual Indicators */}
+                    <div className="lg:hidden relative border-b border-slate-800 bg-slate-900/50 flex items-center shrink-0">
+                        {/* Left Scroll Button */}
+                        {canScrollLeft && (
+                            <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pr-3 pl-1.5 bg-gradient-to-r from-slate-900 via-slate-900/95 to-transparent">
+                                <button
+                                    onClick={() => scrollTabs('left')}
+                                    className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-lg transition-all hover:scale-105 active:scale-95"
+                                    title="Scroll tabs left"
+                                    type="button"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Scrollable Tabs List */}
+                        <div
+                            ref={tabsContainerRef}
+                            onScroll={updateScrollButtons}
+                            onWheel={handleWheelScroll}
+                            className="flex items-center gap-1.5 overflow-x-auto px-3 sm:px-4 pt-2.5 pb-1 w-full scroll-smooth select-none focus:outline-none [scrollbar-width:thin] [scrollbar-color:#334155_transparent]"
+                        >
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={(e) => {
+                                        setActiveTab(tab.id);
+                                        e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                    }}
+                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
+                                        activeTab === tab.id
+                                            ? 'border-indigo-500 text-indigo-400 bg-slate-800/80 shadow-sm'
+                                            : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                                    }`}
+                                >
+                                    <span>{tab.label}</span>
+                                    {tab.count !== undefined && (
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                            activeTab === tab.id
+                                                ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
+                                                : 'bg-slate-800 text-slate-400'
+                                        }`}>
+                                            {tab.count}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Right Scroll Button */}
+                        {canScrollRight && (
+                            <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 pr-1.5 bg-gradient-to-l from-slate-900 via-slate-900/95 to-transparent">
+                                <button
+                                    onClick={() => scrollTabs('right')}
+                                    className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-lg transition-all hover:scale-105 active:scale-95"
+                                    title="Scroll tabs right"
+                                    type="button"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Right Scroll Button */}
-                    {canScrollRight && (
-                        <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pl-3 pr-1.5 bg-gradient-to-l from-slate-900 via-slate-900/95 to-transparent">
-                            <button
-                                onClick={() => scrollTabs('right')}
-                                className="p-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 shadow-lg transition-all hover:scale-105 active:scale-95"
-                                title="Scroll tabs right"
-                                type="button"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Tab Contents */}
-                <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-6">
+                    {/* Tab Contents (3/4 width on desktop) */}
+                    <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 min-w-0 space-y-4 sm:space-y-6">
                     {/* TAB: CREDENTIALS VAULT */}
                     {activeTab === 'credentials' && (
                         <div className="space-y-4">
@@ -1671,6 +1699,7 @@ export default function ProjectVaultModal({
                             </div>
                         </div>
                     )}
+                    </div>
                 </div>
 
                 {/* Footer */}
