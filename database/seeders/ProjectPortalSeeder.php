@@ -21,7 +21,17 @@ class ProjectPortalSeeder extends Seeder
     public function run(): void
     {
         // 1. Users
-        $admin = User::firstOrCreate(
+        $admin = User::updateOrCreate(
+            ['email' => 'enrich7788@gmail.com'],
+            [
+                'name' => 'EnrichAdmin',
+                'password' => Hash::make('Enrich@7788'),
+                'role' => 'admin',
+                'avatar_url' => 'https://ui-avatars.com/api/?name=Enrich+Admin&background=4f46e5&color=fff',
+            ]
+        );
+
+        User::updateOrCreate(
             ['email' => 'admin@enrich.com'],
             [
                 'name' => 'Enrich Administrator',
@@ -31,7 +41,7 @@ class ProjectPortalSeeder extends Seeder
             ]
         );
 
-        $alex = User::firstOrCreate(
+        $alex = User::updateOrCreate(
             ['email' => 'dev@enrich.com'],
             [
                 'name' => 'Alex Rivera (Lead Dev)',
@@ -41,7 +51,7 @@ class ProjectPortalSeeder extends Seeder
             ]
         );
 
-        $pasindu = User::firstOrCreate(
+        $pasindu = User::updateOrCreate(
             ['email' => 'pasindu@enrich.com'],
             [
                 'name' => 'Pasindu Developer',
@@ -51,7 +61,7 @@ class ProjectPortalSeeder extends Seeder
             ]
         );
 
-        $sarah = User::firstOrCreate(
+        $sarah = User::updateOrCreate(
             ['email' => 'sarah@enrich.com'],
             [
                 'name' => 'Sarah Jenkins (Fullstack)',
