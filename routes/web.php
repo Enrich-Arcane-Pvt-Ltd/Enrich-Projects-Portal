@@ -25,6 +25,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DeveloperProjectController::class, 'index'])->name('dashboard');
+    Route::get('/projects/{project}', [DeveloperProjectController::class, 'show'])->name('projects.show');
 
     // Developer Secret Vault Actions with Automated Audit Logging
     Route::prefix('developer')->name('developer.')->group(function () {

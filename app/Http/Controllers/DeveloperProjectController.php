@@ -119,6 +119,41 @@ class DeveloperProjectController extends Controller
     }
 
     /**
+     * Display the full dedicated project vault page
+     */
+    public function show(Request $request, Project $project): Response
+    {
+        $user = $request->user();
+
+        $project->load([
+            'creator:id,name,email,avatar_url',
+            'leadDeveloper:id,name,email,avatar_url',
+            'manager:id,name,email,avatar_url',
+            'developers:id,name,email,role,avatar_url',
+            'links',
+            'serverEnvironments',
+            'thirdPartyAccounts',
+            'credentials',
+            'backgroundServices',
+            'iotConfigurations',
+            'documents',
+            'clientAccessCredentials',
+        ]);
+
+        $project->is_owner = $project->created_by_id === $user->id;
+        $project->is_assigned = $project->lead_developer_id === $user->id
+            || $project->manager_id === $user->id
+            || $project->developers->contains('id', $user->id);
+
+        AuditService::log($project->id, 'ACCESSED_PROJECT_VAULT', "Opened project vault for {$project->name}");
+
+        return Inertia::render('Projects/Show', [
+            'project' => $project,
+            'availableDevelopers' => User::select('id', 'name', 'email', 'role')->orderBy('name')->get(),
+        ]);
+    }
+
+    /**
      * Securely reveal a decrypted secret and log the access in audit vault
      */
     public function revealSecret(Request $request, ProjectCredential $credential): JsonResponse

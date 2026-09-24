@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ProjectVaultModal from '@/Components/ProjectVaultModal';
 import ProjectFormModal from '@/Components/ProjectFormModal';
 import { AuditLog, DashboardStats, PageProps, Project, User } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
 type Scope = 'all' | 'my_created' | 'other_developers' | 'assigned';
@@ -426,11 +426,11 @@ export default function Dashboard({
                                     {popularProjects.map((project) => {
                                         const stack = stackList(project);
                                         return (
-                                            <button
+                                            <Link
                                                 key={project.id}
+                                                href={route('projects.show', project.id)}
                                                 onClick={() => {
                                                     recordProjectAccess(project.id);
-                                                    setSelectedProjectId(project.id);
                                                 }}
                                                 className="text-left rounded-md border border-slate-800 bg-slate-900/50 hover:border-slate-600 transition-colors p-4 flex flex-col gap-3 min-h-[112px]"
                                             >
@@ -447,7 +447,7 @@ export default function Dashboard({
                                                     <StackDot tech={stack[0]} />
                                                     {stack[1] && <StackDot tech={stack[1]} />}
                                                 </div>
-                                            </button>
+                                            </Link>
                                         );
                                     })}
                                 </div>
@@ -542,15 +542,15 @@ export default function Dashboard({
                                             <li key={project.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 hover:bg-slate-900/40 transition-colors">
                                                 <div className="min-w-0 space-y-2">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                        <button
+                                                        <Link
+                                                            href={route('projects.show', project.id)}
                                                             onClick={() => {
                                                                 recordProjectAccess(project.id);
-                                                                setSelectedProjectId(project.id);
                                                             }}
                                                             className="text-base font-semibold text-sky-400 hover:underline text-left"
                                                         >
                                                             {project.name}
-                                                        </button>
+                                                        </Link>
                                                         <StatusPill status={project.status} />
                                                     </div>
 
@@ -604,15 +604,15 @@ export default function Dashboard({
                                                             </button>
                                                         </>
                                                     )}
-                                                    <button
+                                                    <Link
+                                                        href={route('projects.show', project.id)}
                                                         onClick={() => {
                                                             recordProjectAccess(project.id);
-                                                            setSelectedProjectId(project.id);
                                                         }}
                                                         className="px-3.5 py-1.5 rounded-md border border-slate-700 hover:border-indigo-500 hover:text-white text-slate-200 text-xs font-semibold transition-colors"
                                                     >
                                                         Open vault
-                                                    </button>
+                                                    </Link>
                                                 </div>
                                             </li>
                                         );
