@@ -19,6 +19,7 @@ interface DashboardProps extends PageProps {
     stats: DashboardStats;
     recentAuditActivity: AuditLog[];
     availableDevelopers?: User[];
+    availableAdmins?: User[];
     filters: {
         search?: string;
         type?: string;
@@ -266,12 +267,77 @@ export default function Dashboard({
     stats,
     recentAuditActivity,
     availableDevelopers = [],
+    availableAdmins = [],
     filters,
 }: DashboardProps) {
     const [scopeFilter, setScopeFilter] = useState<Scope>('all');
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+    // Project deletion approval request states
+    const [deletionRequestProject, setDeletionRequestProject] = useState<Project | null>(null);
+    const [pendingDeletionProject, setPendingDeletionProject] = useState<Project | null>(null);
+    const [approvedDeletionProject, setApprovedDeletionProject] = useState<Project | null>(null);
+    const [selectedAdminId, setSelectedAdminId] = useState<string>('');
+    const [deletionReason, setDeletionReason] = useState<string>('');
+    const [isSubmittingDeletion, setIsSubmittingDeletion] = useState(false);
+
+    const handleDeleteClick = (project: Project) => {
+        if (project.deletion_status === 'approved') {
+            setApprovedDeletionProject(project);
+        } else if (project.deletion_status === 'pending') {
+            setPendingDeletionProject(project);
+        } else {
+            setDeletionRequestProject(project);
+            setSelectedAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
+            setDeletionReason('');
+        }
+    };
+
+    const submitDeletionRequest = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!deletionRequestProject || !selectedAdminId) return;
+
+        setIsSubmittingDeletion(true);
+        router.post(
+            `/developer/projects/${deletionRequestProject.id}/request-deletion`,
+            {
+                admin_id: selectedAdminId,
+                reason: deletionReason,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setDeletionRequestProject(null);
+                    setDeletionReason('');
+                },
+                onFinish: () => setIsSubmittingDeletion(false),
+            }
+        );
+    };
+
+    const cancelDeletionRequest = (projectId: number) => {
+        setIsSubmittingDeletion(true);
+        router.post(
+            `/developer/projects/${projectId}/cancel-deletion-request`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setPendingDeletionProject(null),
+                onFinish: () => setIsSubmittingDeletion(false),
+            }
+        );
+    };
+
+    const executeApprovedDelete = (projectId: number) => {
+        setIsSubmittingDeletion(true);
+        router.delete(`/developer/projects/${projectId}`, {
+            preserveScroll: true,
+            onSuccess: () => setApprovedDeletionProject(null),
+            onFinish: () => setIsSubmittingDeletion(false),
+        });
+    };
 
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [selectedType, setSelectedType] = useState(filters.type || 'all');
@@ -623,6 +689,27 @@ export default function Dashboard({
                                                             {project.name}
                                                         </Link>
                                                         <StatusPill status={project.status} />
+                                                        {project.deletion_status === 'pending' && (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                Deletion Approval Pending
+                                                            </span>
+                                                        )}
+                                                        {project.deletion_status === 'approved' && (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Deletion Approved
+                                                            </span>
+                                                        )}
+                                                        {project.deletion_status === 'rejected' && (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                                                Deletion Rejected
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     {project.description && (
@@ -661,13 +748,25 @@ export default function Dashboard({
                                                                 </svg>
                                                             </button>
                                                             <button
-                                                                onClick={() => {
-                                                                    if (confirm(`Are you sure you want to delete project "${project.name}"? This will permanently delete all associated credentials, servers, and configuration.`)) {
-                                                                        router.delete(`/developer/projects/${project.id}`);
-                                                                    }
-                                                                }}
-                                                                className="p-2 rounded-md border border-slate-700 text-slate-400 hover:text-rose-400 hover:border-rose-500/50 transition-colors"
-                                                                title="Delete project"
+                                                                onClick={() => handleDeleteClick(project)}
+                                                                className={`p-2 rounded-md border transition-colors ${
+                                                                    project.deletion_status === 'approved'
+                                                                        ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500'
+                                                                        : project.deletion_status === 'pending'
+                                                                        ? 'border-amber-500/50 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                                                                        : project.deletion_status === 'rejected'
+                                                                        ? 'border-rose-500/50 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'
+                                                                        : 'border-slate-700 text-slate-400 hover:text-rose-400 hover:border-rose-500/50'
+                                                                }`}
+                                                                title={
+                                                                    project.deletion_status === 'approved'
+                                                                        ? 'Deletion approved by admin! Click to permanently delete project'
+                                                                        : project.deletion_status === 'pending'
+                                                                        ? `Deletion requested from ${project.deletion_admin?.name || 'Admin'} (Pending Approval)`
+                                                                        : project.deletion_status === 'rejected'
+                                                                        ? 'Deletion request was rejected. Click to review or re-request.'
+                                                                        : 'Request admin approval to delete project'
+                                                                }
                                                             >
                                                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -829,6 +928,301 @@ export default function Dashboard({
                 }}
                 projectToEdit={editingProject}
             />
+
+            {/* Modal: Request Deletion Approval */}
+            {deletionRequestProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setDeletionRequestProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Request Project Deletion</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Admin approval is required to delete a project.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setDeletionRequestProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Project summary card */}
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-semibold text-white break-words">
+                                    {deletionRequestProject.name}
+                                </span>
+                                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                                    {deletionRequestProject.code}
+                                </span>
+                            </div>
+                            {deletionRequestProject.description && (
+                                <p className="text-xs text-slate-400 line-clamp-2">
+                                    {deletionRequestProject.description}
+                                </p>
+                            )}
+                            {deletionRequestProject.deletion_status === 'rejected' && (
+                                <div className="mt-2 text-xs text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5">
+                                    <span className="font-semibold text-rose-200">Previous Request Rejected:</span>{' '}
+                                    {deletionRequestProject.deletion_rejection_reason || 'No reason specified'}
+                                </div>
+                            )}
+                        </div>
+
+                        <form onSubmit={submitDeletionRequest} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    Select Administrator for Approval <span className="text-rose-400">*</span>
+                                </label>
+                                {availableAdmins.length > 0 ? (
+                                    <select
+                                        value={selectedAdminId}
+                                        onChange={(e) => setSelectedAdminId(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    >
+                                        <option value="" disabled>Select an administrator...</option>
+                                        {availableAdmins.map((admin) => (
+                                            <option key={admin.id} value={admin.id}>
+                                                {admin.name} ({admin.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                                        No administrators found to review this request.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    Reason for Deletion <span className="text-slate-500">(Optional)</span>
+                                </label>
+                                <textarea
+                                    value={deletionReason}
+                                    onChange={(e) => setDeletionReason(e.target.value)}
+                                    placeholder="Explain why this project should be deleted..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setDeletionRequestProject(null)}
+                                    className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!selectedAdminId || isSubmittingDeletion}
+                                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
+                                >
+                                    {isSubmittingDeletion ? (
+                                        <>
+                                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Sending Request...
+                                        </>
+                                    ) : (
+                                        'Send Request to Admin'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Pending Deletion Approval Status */}
+            {pendingDeletionProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setPendingDeletionProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                                    <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Deletion Request Pending</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Awaiting administrator review and approval.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setPendingDeletionProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+                            <div>
+                                <div className="text-xs text-slate-400">Project</div>
+                                <div className="text-sm font-semibold text-white">{pendingDeletionProject.name}</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <span className="text-slate-400">Assigned Admin:</span>
+                                    <div className="text-slate-200 font-medium">
+                                        {pendingDeletionProject.deletion_admin?.name || 'Administrator'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="text-slate-400">Requested:</span>
+                                    <div className="text-slate-200 font-medium">
+                                        {pendingDeletionProject.deletion_requested_at
+                                            ? new Date(pendingDeletionProject.deletion_requested_at).toLocaleDateString()
+                                            : 'Recently'}
+                                    </div>
+                                </div>
+                            </div>
+                            {pendingDeletionProject.deletion_reason && (
+                                <div className="text-xs pt-2 border-t border-slate-800">
+                                    <span className="text-slate-400">Submitted Reason:</span>
+                                    <div className="text-slate-300 italic mt-0.5">
+                                        &ldquo;{pendingDeletionProject.deletion_reason}&rdquo;
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            Once the administrator approves your request, you will receive confirmation and be able to finalize project deletion. You can also withdraw your request at any time.
+                        </p>
+
+                        <div className="flex items-center justify-between pt-2">
+                            <button
+                                type="button"
+                                disabled={isSubmittingDeletion}
+                                onClick={() => cancelDeletionRequest(pendingDeletionProject.id)}
+                                className="px-3.5 py-2 text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/20 rounded-lg transition-colors"
+                            >
+                                {isSubmittingDeletion ? 'Cancelling...' : 'Withdraw Request'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPendingDeletionProject(null)}
+                                className="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Approved Deletion Confirmation ("Do u really want to Delete this project?") */}
+            {approvedDeletionProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setApprovedDeletionProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-rose-500/30 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 shrink-0">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Delete Project</h3>
+                                    <p className="text-xs text-emerald-400 mt-0.5 flex items-center gap-1 font-medium">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Approved by {approvedDeletionProject.deletion_approved_by?.name || 'Administrator'}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setApprovedDeletionProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Exact user-requested reminder */}
+                        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 space-y-2">
+                            <p className="text-sm font-semibold text-rose-200">
+                                Do u really want to Delete this project?
+                            </p>
+                            <p className="text-xs text-rose-300/90 leading-relaxed">
+                                This will permanently delete <strong className="text-white">{approvedDeletionProject.name}</strong> ({approvedDeletionProject.code}), along with all secured credentials, server environments, client access entries, and IoT configurations. This action cannot be reversed.
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setApprovedDeletionProject(null)}
+                                className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isSubmittingDeletion}
+                                onClick={() => executeApprovedDelete(approvedDeletionProject.id)}
+                                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
+                            >
+                                {isSubmittingDeletion ? (
+                                    <>
+                                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                        </svg>
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Yes, Delete Project'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

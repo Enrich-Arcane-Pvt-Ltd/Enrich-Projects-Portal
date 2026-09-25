@@ -142,6 +142,16 @@ export interface Project {
     is_assigned?: boolean;
     is_owner?: boolean;
     access_count?: number;
+    deletion_status?: 'pending' | 'approved' | 'rejected' | null;
+    deletion_admin_id?: number | null;
+    deletion_admin?: User | null;
+    deletion_reason?: string | null;
+    deletion_requested_at?: string | null;
+    deletion_approved_at?: string | null;
+    deletion_approved_by_id?: number | null;
+    deletion_approved_by?: User | null;
+    deletion_rejected_at?: string | null;
+    deletion_rejection_reason?: string | null;
 }
 
 export interface DashboardStats {
@@ -155,10 +165,32 @@ export interface DashboardStats {
     total_servers: number;
 }
 
+export interface NotificationAction {
+    name: string;
+    label?: string;
+    url?: string;
+}
+
+export interface InertiaNotification {
+    id: string;
+    title: string;
+    body: string;
+    status?: 'success' | 'warning' | 'danger' | 'info';
+    icon?: string;
+    actions?: NotificationAction[];
+    read_at?: string | null;
+    created_at: string;
+    created_at_raw?: string;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: {
         user: User;
     };
+    notifications?: {
+        unread_count: number;
+        recent: InertiaNotification[];
+    } | null;
 };

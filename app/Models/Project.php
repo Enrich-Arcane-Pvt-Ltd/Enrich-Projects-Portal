@@ -23,7 +23,44 @@ class Project extends Model
         'manager_id',
         'tech_stack',
         'description',
+        'deletion_status',
+        'deletion_admin_id',
+        'deletion_reason',
+        'deletion_requested_at',
+        'deletion_approved_at',
+        'deletion_approved_by_id',
+        'deletion_rejected_at',
+        'deletion_rejection_reason',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'deletion_requested_at' => 'datetime',
+            'deletion_approved_at' => 'datetime',
+            'deletion_rejected_at' => 'datetime',
+        ];
+    }
+
+    public function deletionAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deletion_admin_id');
+    }
+
+    public function deletionApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deletion_approved_by_id');
+    }
+
+    public function isDeletionPending(): bool
+    {
+        return $this->deletion_status === 'pending';
+    }
+
+    public function isDeletionApproved(): bool
+    {
+        return $this->deletion_status === 'approved';
+    }
 
     public function creator(): BelongsTo
     {

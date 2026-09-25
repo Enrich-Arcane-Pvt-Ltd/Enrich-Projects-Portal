@@ -1,6 +1,7 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
+import NotificationDropdown from '@/Components/NotificationDropdown';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useMemo } from 'react';
@@ -55,7 +56,8 @@ export default function Authenticated({
                             </Link>
                         </div>
 
-                        <div className="hidden sm:flex sm:items-center sm:gap-4">
+                        <div className="hidden sm:flex sm:items-center sm:gap-3">
+                            <NotificationDropdown />
                             <div className="relative">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -116,7 +118,8 @@ export default function Authenticated({
                             </div>
                         </div>
 
-                        <div className="-me-2 flex items-center sm:hidden">
+                        <div className="-me-2 flex items-center gap-1 sm:hidden">
+                            <NotificationDropdown />
                             <button
                                 onClick={() =>
                                     setShowingNavigationDropdown(
