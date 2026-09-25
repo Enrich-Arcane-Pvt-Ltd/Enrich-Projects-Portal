@@ -5,7 +5,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    role: 'admin' | 'developer' | 'superadmin';
+    role: 'admin' | 'developer' | 'superadmin' | 'qa';
     avatar_url?: string;
     email_verified_at?: string;
 }

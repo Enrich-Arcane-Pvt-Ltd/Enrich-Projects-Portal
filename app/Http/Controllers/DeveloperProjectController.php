@@ -214,6 +214,10 @@ class DeveloperProjectController extends Controller
         $account = \App\Models\ThirdPartyAccount::findOrFail($accountId);
         $user = $request->user();
 
+        if ($user->role === 'qa') {
+            abort(403, 'Unauthorized.');
+        }
+
         if (! $this->userCanAccessProject($user, $account->project_id)) {
             abort(403, 'Unauthorized.');
         }
@@ -237,6 +241,10 @@ class DeveloperProjectController extends Controller
     {
         $cred = \App\Models\ClientAccessCredential::findOrFail($id);
         $user = $request->user();
+
+        if ($user->role === 'qa') {
+            abort(403, 'Unauthorized.');
+        }
 
         if (! $this->userCanAccessProject($user, $cred->project_id)) {
             abort(403, 'Unauthorized.');
@@ -262,6 +270,10 @@ class DeveloperProjectController extends Controller
     {
         $server = \App\Models\ServerEnvironment::findOrFail($serverId);
         $user = $request->user();
+
+        if ($user->role === 'qa') {
+            abort(403, 'Unauthorized.');
+        }
 
         if (! $this->userCanAccessProject($user, $server->project_id)) {
             abort(403, 'Unauthorized.');

@@ -24,9 +24,18 @@ class UsersTable
                 TextColumn::make('role')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
+                        'superadmin' => 'warning',
                         'admin' => 'danger',
+                        'qa' => 'success',
                         'developer' => 'info',
                         default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'superadmin' => 'Super Admin',
+                        'admin' => 'Admin',
+                        'qa' => 'QA Engineer',
+                        'developer' => 'Developer',
+                        default => ucfirst($state),
                     }),
                 TextColumn::make('projects_count')
                     ->counts('projects')
@@ -40,8 +49,10 @@ class UsersTable
             ->filters([
                 SelectFilter::make('role')
                     ->options([
+                        'superadmin' => 'Super Admin',
                         'admin' => 'Administrator',
                         'developer' => 'Developer',
+                        'qa' => 'QA Engineer',
                     ]),
             ])
             ->recordActions([

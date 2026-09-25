@@ -74,6 +74,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === 'developer';
     }
 
+    public function isQa(): bool
+    {
+        return $this->role === 'qa';
+    }
+
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_user')->withTimestamps();

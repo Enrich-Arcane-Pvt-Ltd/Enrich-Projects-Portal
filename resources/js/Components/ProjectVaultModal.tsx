@@ -1,7 +1,7 @@
-import { AuditLog, ClientAccessCredential, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount, User } from '@/types';
+import { AuditLog, ClientAccessCredential, PageProps, Project, ProjectCredential, ServerEnvironment, ThirdPartyAccount, User } from '@/types';
 import axios from 'axios';
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import SubEntityFormModal, { SubEntityType } from '@/Components/SubEntityFormModal';
 
 interface ProjectVaultModalProps {
@@ -12,7 +12,13 @@ interface ProjectVaultModalProps {
     isPage?: boolean;
 }
 
-type TabType = 'overview' | 'credentials' | 'client_credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
+export type TabType = 'overview' | 'credentials' | 'client_credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
+
+/**
+ * Configurable list of tab IDs accessible by QA Engineers.
+ * To enable access to additional sections in the future, simply add their TabType ID to this array.
+ */
+export const QA_ALLOWED_TABS: TabType[] = ['credentials'];
 
 export default function ProjectVaultModal({
     project,
@@ -22,6 +28,14 @@ export default function ProjectVaultModal({
     isPage = false,
 }: ProjectVaultModalProps) {
     if (!isOpen || !project) return null;
+
+    const { auth } = usePage<PageProps>().props;
+    const isQa = auth?.user?.role === 'qa';
+    const isOwner = Boolean(project.is_owner && !isQa);
+
+    const isTabLocked = (tabId: TabType): boolean => {
+        return isQa && !QA_ALLOWED_TABS.includes(tabId);
+    };
 
     const [activeTab, setActiveTab] = useState<TabType>('credentials');
     const [revealedSecrets, setRevealedSecrets] = useState<Record<number, string>>({});
@@ -378,28 +392,46 @@ export default function ProjectVaultModal({
                 <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
                     {/* Desktop sidebar tab list (1/4 width) */}
                     <nav className="hidden lg:flex lg:flex-col lg:w-1/4 lg:min-w-[240px] lg:max-w-xs shrink-0 border-r border-slate-800 bg-slate-900/50 overflow-y-auto p-3 gap-1 [scrollbar-width:thin] [scrollbar-color:#334155_transparent]">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
-                                    activeTab === tab.id
-                                        ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
-                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
-                                }`}
-                            >
-                                <span className="truncate">{tab.label}</span>
-                                {tab.count !== undefined && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
+                        {tabs.map((tab) => {
+                            const locked = isTabLocked(tab.id);
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-left transition-colors ${
                                         activeTab === tab.id
-                                            ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
-                                            : 'bg-slate-800 text-slate-400'
-                                    }`}>
-                                        {tab.count}
+                                            ? locked
+                                                ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                                                : 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/30'
+                                            : locked
+                                            ? 'text-slate-500 hover:text-slate-400 hover:bg-slate-800/40 border border-transparent'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-2 min-w-0 truncate">
+                                        {locked && (
+                                            <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                        )}
+                                        <span className="truncate">{tab.label}</span>
                                     </span>
-                                )}
-                            </button>
-                        ))}
+                                    {locked ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 bg-slate-800/80 text-slate-500 border border-slate-700/50">
+                                            Locked
+                                        </span>
+                                    ) : tab.count !== undefined ? (
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
+                                            activeTab === tab.id
+                                                ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
+                                                : 'bg-slate-800 text-slate-400'
+                                        }`}>
+                                            {tab.count}
+                                        </span>
+                                    ) : null}
+                                </button>
+                            );
+                        })}
                     </nav>
 
                     {/* Mobile Tabs Header with Horizontal Scroll Controls & Visual Indicators */}
@@ -427,31 +459,47 @@ export default function ProjectVaultModal({
                             onWheel={handleWheelScroll}
                             className="flex items-center gap-1.5 overflow-x-auto px-3 sm:px-4 pt-2.5 pb-1 w-full scroll-smooth select-none focus:outline-none [scrollbar-width:thin] [scrollbar-color:#334155_transparent]"
                         >
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={(e) => {
-                                        setActiveTab(tab.id);
-                                        e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-                                    }}
-                                    className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
-                                        activeTab === tab.id
-                                            ? 'border-indigo-500 text-indigo-400 bg-slate-800/80 shadow-sm'
-                                            : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
-                                    }`}
-                                >
-                                    <span>{tab.label}</span>
-                                    {tab.count !== undefined && (
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                            {tabs.map((tab) => {
+                                const locked = isTabLocked(tab.id);
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={(e) => {
+                                            setActiveTab(tab.id);
+                                            e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                        }}
+                                        className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap shrink-0 ${
                                             activeTab === tab.id
-                                                ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
-                                                : 'bg-slate-800 text-slate-400'
-                                        }`}>
-                                            {tab.count}
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
+                                                ? locked
+                                                    ? 'border-amber-500 text-amber-400 bg-slate-800/80 shadow-sm'
+                                                    : 'border-indigo-500 text-indigo-400 bg-slate-800/80 shadow-sm'
+                                                : locked
+                                                ? 'border-transparent text-slate-500 hover:text-slate-400 hover:bg-slate-800/40'
+                                                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                                        }`}
+                                    >
+                                        {locked && (
+                                            <svg className="w-3 h-3 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                        )}
+                                        <span>{tab.label}</span>
+                                        {locked ? (
+                                            <span className="text-[9px] px-1 py-0.2 rounded font-medium bg-slate-800 text-slate-500">
+                                                Locked
+                                            </span>
+                                        ) : tab.count !== undefined ? (
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                                activeTab === tab.id
+                                                    ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
+                                                    : 'bg-slate-800 text-slate-400'
+                                            }`}>
+                                                {tab.count}
+                                            </span>
+                                        ) : null}
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         {/* Right Scroll Button */}
@@ -473,6 +521,32 @@ export default function ProjectVaultModal({
 
                     {/* Tab Contents (3/4 width on desktop) */}
                     <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 min-w-0 space-y-4 sm:space-y-6">
+                    {/* LOCKED STATE FOR QA ROLE */}
+                    {isTabLocked(activeTab) ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4 shadow-lg shadow-amber-500/5">
+                                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-base font-semibold text-slate-100 mb-1.5">
+                                Section Restricted for QA Role
+                            </h3>
+                            {/* <p className="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
+                                As a QA Engineer, your access is currently reserved for the <strong className="text-indigo-400 font-semibold">Credential Vault</strong>. Other project architecture sections (servers, external links, cloud accounts, etc.) are locked.
+                            </p>
+                            <button
+                                onClick={() => setActiveTab('credentials')}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                Go to Credential Vault
+                            </button> */}
+                        </div>
+                    ) : (
+                        <>
                     {/* TAB: CREDENTIALS VAULT */}
                     {activeTab === 'credentials' && (
                         <div className="space-y-4">
@@ -485,7 +559,7 @@ export default function ProjectVaultModal({
                                         Click <strong>Reveal</strong> to decrypt with automated audit stamp.
                                     </span>
                                 </div>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'credentials' })}
                                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
@@ -582,7 +656,7 @@ export default function ProjectVaultModal({
                                                         Copy
                                                     </button>
 
-                                                    {project.is_owner && (
+                                                    {isOwner && (
                                                         <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                             <button
                                                                 onClick={() => setSubEntityModal({ type: 'credentials', item: cred })}
@@ -622,7 +696,7 @@ export default function ProjectVaultModal({
                                         Click <strong>Reveal Password</strong> to decrypt with automated audit logging.
                                     </span>
                                 </div>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'client_credentials' })}
                                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
@@ -735,7 +809,7 @@ export default function ProjectVaultModal({
                                                             Copy Password
                                                         </button>
 
-                                                        {project.is_owner && (
+                                                        {isOwner && (
                                                             <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                                 <button
                                                                     onClick={() => setSubEntityModal({ type: 'client_credentials', item: clientCred })}
@@ -806,7 +880,7 @@ export default function ProjectVaultModal({
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Repositories & External Links ({project.links?.length || 0})
                                 </h3>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'links' })}
                                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
@@ -863,7 +937,7 @@ export default function ProjectVaultModal({
                                                     </svg>
                                                 </a>
 
-                                                {project.is_owner && (
+                                                {isOwner && (
                                                     <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                         <button
                                                             onClick={() => setSubEntityModal({ type: 'links', item: link })}
@@ -897,7 +971,7 @@ export default function ProjectVaultModal({
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Server & Hosting Environments ({project.server_environments?.length || 0})
                                 </h3>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'servers' })}
                                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
@@ -959,7 +1033,7 @@ export default function ProjectVaultModal({
                                                             {envRevealed ? 'Hide .env' : 'View .env Backup'}
                                                         </button>
 
-                                                        {project.is_owner && (
+                                                        {isOwner && (
                                                             <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                                 <button
                                                                     onClick={() => setSubEntityModal({ type: 'servers', item: server })}
@@ -1042,7 +1116,7 @@ export default function ProjectVaultModal({
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Third-Party & Cloud Accounts ({project.third_party_accounts?.length || 0})
                                 </h3>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'accounts' })}
                                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1.5 shadow-sm w-full sm:w-auto"
@@ -1100,7 +1174,7 @@ export default function ProjectVaultModal({
                                                             </a>
                                                         )}
 
-                                                        {project.is_owner && (
+                                                        {isOwner && (
                                                             <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
                                                                 <button
                                                                     onClick={() => setSubEntityModal({ type: 'accounts', item: acc })}
@@ -1154,7 +1228,7 @@ export default function ProjectVaultModal({
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     Background Daemons & Workers ({project.background_services?.length || 0})
                                 </h3>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'services' })}
                                         className="self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
@@ -1195,7 +1269,7 @@ export default function ProjectVaultModal({
                                                         Copy Command
                                                     </button>
 
-                                                    {project.is_owner && (
+                                                    {isOwner && (
                                                         <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
                                                             <button
                                                                 onClick={() => setSubEntityModal({ type: 'services', item: svc })}
@@ -1240,7 +1314,7 @@ export default function ProjectVaultModal({
                                 <h3 className="text-sm font-semibold text-slate-200">
                                     IOT Hardware & Telemetry ({project.iot_configurations?.length || 0})
                                 </h3>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'iot' })}
                                         className="self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm"
@@ -1281,7 +1355,7 @@ export default function ProjectVaultModal({
                                                     )}
                                                 </div>
 
-                                                {project.is_owner && (
+                                                {isOwner && (
                                                     <div className="flex items-center gap-1.5 self-start sm:self-auto">
                                                         <button
                                                             onClick={() => setSubEntityModal({ type: 'iot', item: iot })}
@@ -1327,7 +1401,7 @@ export default function ProjectVaultModal({
                                         Specifications, architecture SRS, source code archives (.zip), firmware binaries, or external Google Drive assets.
                                     </p>
                                 </div>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <button
                                         onClick={() => setSubEntityModal({ type: 'documents' })}
                                         className="self-start sm:self-auto px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
@@ -1482,7 +1556,7 @@ export default function ProjectVaultModal({
                                                     </button>
 
                                                     {/* Owner Actions */}
-                                                    {project.is_owner && (
+                                                    {isOwner && (
                                                         <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-700">
                                                             <button
                                                                 onClick={() => setSubEntityModal({ type: 'documents', item: doc })}
@@ -1522,7 +1596,7 @@ export default function ProjectVaultModal({
                                         Team members assigned to contribute, develop, and inspect this project.
                                     </p>
                                 </div>
-                                {project.is_owner && (
+                                {isOwner && (
                                     <div className="flex flex-wrap items-center gap-2">
                                         <button
                                             type="button"
@@ -1559,7 +1633,7 @@ export default function ProjectVaultModal({
                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                                         Project Developers Team
                                     </h4>
-                                    {project.is_owner && (
+                                    {isOwner && (
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -1609,7 +1683,7 @@ export default function ProjectVaultModal({
                                                         </div>
                                                     </div>
 
-                                                    {project.is_owner && !isCreator && (
+                                                    {isOwner && !isCreator && (
                                                         <button
                                                             type="button"
                                                             onClick={() => handleUnassignDeveloper(dev.id, dev.name)}
@@ -1635,7 +1709,7 @@ export default function ProjectVaultModal({
                                 <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lead Developer</h4>
-                                        {project.is_owner && (
+                                        {isOwner && (
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -1667,7 +1741,7 @@ export default function ProjectVaultModal({
                                 <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-800 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Manager / Lead</h4>
-                                        {project.is_owner && (
+                                        {isOwner && (
                                             <button
                                                 type="button"
                                                 onClick={() => {
@@ -1705,6 +1779,8 @@ export default function ProjectVaultModal({
                             </div>
                         </div>
                     )}
+                        </>
+                    )}
                     </div>
                 </div>
 
@@ -1735,7 +1811,7 @@ export default function ProjectVaultModal({
             </div>
 
             {/* Sub-Entity Modal for Adding / Editing Details */}
-            {project.is_owner && subEntityModal && (
+            {isOwner && subEntityModal && (
                 <SubEntityFormModal
                     isOpen={Boolean(subEntityModal)}
                     onClose={() => setSubEntityModal(null)}
@@ -1746,7 +1822,7 @@ export default function ProjectVaultModal({
             )}
 
             {/* Assign Developer Modal */}
-            {project.is_owner && isAssignDevModalOpen && (
+            {isOwner && isAssignDevModalOpen && (
                 <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
                     <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4 sm:space-y-5">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -1816,7 +1892,7 @@ export default function ProjectVaultModal({
             )}
 
             {/* Manage Leadership Roles Modal */}
-            {project.is_owner && isEditLeadsModalOpen && (
+            {isOwner && isEditLeadsModalOpen && (
                 <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
                     <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4 sm:space-y-5">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
