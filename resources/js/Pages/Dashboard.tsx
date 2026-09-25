@@ -365,7 +365,7 @@ export default function Dashboard({
         <AuthenticatedLayout>
             <Head title="Developer Vault Dashboard" />
 
-            <div className="py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-w-0">
+            <div className="py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto w-full min-w-0">
                 {/* ---------------- Organization-style header ---------------- */}
                 <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 min-w-0 w-full">
                     <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
@@ -426,7 +426,7 @@ export default function Dashboard({
                     {/* ===== Main column ===== */}
                     <main className="space-y-8 sm:space-y-10 min-w-0 w-full">
                         {/* Popular projects */}
-                        {popularProjects.length > 0 && (
+                        {scopeFilter === 'all' && popularProjects.length > 0 && (
                             <section className="space-y-3 w-full min-w-0">
                                 <h2 className="text-base font-normal text-slate-100">Popular projects</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 w-full min-w-0">

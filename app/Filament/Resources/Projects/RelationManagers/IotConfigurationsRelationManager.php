@@ -18,12 +18,21 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class IotConfigurationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'iotConfigurations';
 
     protected static ?string $title = 'IOT Hardware & Telemetry';
+
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-cpu-chip';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        $count = $ownerRecord->iotConfigurations()->count();
+        return $count > 0 ? (string) $count : '0';
+    }
 
     public function form(Schema $schema): Schema
     {

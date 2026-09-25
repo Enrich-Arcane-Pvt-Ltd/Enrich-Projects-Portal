@@ -771,7 +771,9 @@ export default function SubEntityFormModal({
                                                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                                         }`}
                                     >
-                                        <span>📁</span>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                                        </svg>
                                         <span>Upload File (.zip, code, pdf)</span>
                                     </button>
                                     <button
@@ -783,7 +785,9 @@ export default function SubEntityFormModal({
                                                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                                         }`}
                                     >
-                                        <span>🔗</span>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                        </svg>
                                         <span>External Link (Google Drive)</span>
                                     </button>
                                 </div>
@@ -812,13 +816,15 @@ export default function SubEntityFormModal({
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                         />
                                         <div className="flex flex-col items-center justify-center gap-2">
-                                            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                                                📁
+                                            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                                                </svg>
                                             </div>
                                             {(data as any).file ? (
                                                 <div className="space-y-1">
                                                     <p className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1.5">
-                                                        <span>✓ Selected:</span> {((data as any).file as File).name}
+                                                        <span>Selected:</span> {((data as any).file as File).name}
                                                     </p>
                                                     <p className="text-[11px] text-slate-400 font-mono">
                                                         {(((data as any).file as File).size / (1024 * 1024)).toFixed(2)} MB
@@ -866,7 +872,9 @@ export default function SubEntityFormModal({
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                            🔗
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                            </svg>
                                         </div>
                                         <input
                                             type="text"
@@ -880,7 +888,7 @@ export default function SubEntityFormModal({
                                         />
                                     </div>
                                     <p className="text-[11px] text-slate-400 flex items-start gap-1.5">
-                                        <span className="text-amber-400 font-bold">💡</span>
+                                        <span className="text-amber-400 font-bold">Note:</span>
                                         <span>
                                             Paste your <strong>Google Drive</strong> share link, OneDrive file, Figma diagram, or Notion specification URL.
                                         </span>
@@ -891,7 +899,9 @@ export default function SubEntityFormModal({
                             {/* Error Alert */}
                             {(localDocError || errors.file || errors.file_url) && (
                                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
-                                    <span>⚠️</span>
+                                    <svg className="w-4 h-4 shrink-0 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
                                     <span>{localDocError || errors.file || errors.file_url}</span>
                                 </div>
                             )}

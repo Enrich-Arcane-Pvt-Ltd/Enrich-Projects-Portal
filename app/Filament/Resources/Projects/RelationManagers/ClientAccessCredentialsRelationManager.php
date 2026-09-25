@@ -18,12 +18,21 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ClientAccessCredentialsRelationManager extends RelationManager
 {
     protected static string $relationship = 'clientAccessCredentials';
 
     protected static ?string $title = 'Client Access Credentials';
+
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-user';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        $count = $ownerRecord->clientAccessCredentials()->count();
+        return $count > 0 ? (string) $count : '0';
+    }
 
     public function form(Schema $schema): Schema
     {

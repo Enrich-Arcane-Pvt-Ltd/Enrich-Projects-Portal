@@ -18,12 +18,21 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ServerEnvironmentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'serverEnvironments';
 
     protected static ?string $title = 'Server & Hosting Environments';
+
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-server-stack';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        $count = $ownerRecord->serverEnvironments()->count();
+        return $count > 0 ? (string) $count : '0';
+    }
 
     public function form(Schema $schema): Schema
     {
