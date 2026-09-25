@@ -6,6 +6,7 @@ export default function NotificationDropdown() {
     const { notifications } = usePage<PageProps>().props;
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const unreadCount = notifications?.unread_count || 0;
@@ -18,6 +19,10 @@ export default function NotificationDropdown() {
         }
         return true;
     });
+
+    const isAllSelected =
+        filteredNotifications.length > 0 &&
+        filteredNotifications.every((n) => selectedIds.includes(n.id));
 
     // Auto-poll notifications every 30 seconds (matching Filament's 30s interval)
     useEffect(() => {
@@ -62,7 +67,6 @@ export default function NotificationDropdown() {
             {},
             {
                 preserveScroll: true,
-                preserveState: true,
             }
         );
     };
@@ -74,9 +78,65 @@ export default function NotificationDropdown() {
             {},
             {
                 preserveScroll: true,
-                preserveState: true,
             }
         );
+    };
+
+    // Delete single notification with 'x' mark
+    const deleteNotification = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.delete(`/notifications/${id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSelectedIds((prev) => prev.filter((item) => item !== id));
+            },
+        });
+    };
+
+    // Delete all notifications
+    const deleteAllNotifications = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (notificationList.length === 0) return;
+        router.delete('/notifications/delete-all', {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSelectedIds([]);
+            },
+        });
+    };
+
+    // Delete selected notifications
+    const deleteSelectedNotifications = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (selectedIds.length === 0) return;
+        router.post(
+            '/notifications/bulk-delete',
+            { ids: selectedIds },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setSelectedIds([]);
+                },
+            }
+        );
+    };
+
+    // Checkbox selection
+    const toggleSelect = (id: string, e: React.ChangeEvent<HTMLInputElement> | React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement> | React.MouseEvent) => {
+        e.stopPropagation();
+        const currentVisibleIds = filteredNotifications.map((n) => n.id);
+        if (isAllSelected) {
+            setSelectedIds((prev) => prev.filter((id) => !currentVisibleIds.includes(id)));
+        } else {
+            setSelectedIds((prev) => Array.from(new Set([...prev, ...currentVisibleIds])));
+        }
     };
 
     // Icon renderer based on notification content
@@ -183,15 +243,28 @@ export default function NotificationDropdown() {
                             )}
                         </div>
 
-                        {unreadCount > 0 && (
-                            <button
-                                type="button"
-                                onClick={markAllAsRead}
-                                className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
-                            >
-                                Mark all as read
-                            </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={markAllAsRead}
+                                    className="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                                >
+                                    Mark all read
+                                </button>
+                            )}
+
+                            {notificationList.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={deleteAllNotifications}
+                                    className="text-[11px] font-medium text-rose-400 hover:text-rose-300 transition-colors"
+                                    title="Delete all notifications"
+                                >
+                                    Delete all
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Filter Tabs */}
@@ -220,32 +293,96 @@ export default function NotificationDropdown() {
                         </button>
                     </div>
 
+                    {/* Bulk Selection Bar (Select All & Delete Selected) */}
+                    {filteredNotifications.length > 0 && (
+                        <div className="px-3.5 py-2 border-b border-slate-800/80 bg-slate-950/60 flex items-center justify-between text-xs text-slate-300">
+                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={isAllSelected}
+                                    onChange={toggleSelectAll}
+                                    className="rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 cursor-pointer"
+                                />
+                                <span className="text-[11px] font-medium text-slate-400 hover:text-slate-200">
+                                    Select all
+                                </span>
+                            </label>
+
+                            {selectedIds.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={deleteSelectedNotifications}
+                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete selected ({selectedIds.length})
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {/* Notification Items List */}
                     <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-800/60 [scrollbar-width:thin]">
                         {filteredNotifications.length > 0 ? (
                             filteredNotifications.map((n) => {
                                 const isUnread = !n.read_at;
+                                const isSelected = selectedIds.includes(n.id);
+
+                                // Filter out "Open Dashboard" actions
+                                const validActions = (n.actions || []).filter(
+                                    (a) =>
+                                        a.url &&
+                                        a.url !== '/dashboard' &&
+                                        (a.label || '').toLowerCase() !== 'open dashboard'
+                                );
+
                                 return (
                                     <div
                                         key={n.id}
                                         onClick={() => isUnread && markAsRead(n.id)}
-                                        className={`p-3 sm:p-3.5 transition-colors flex items-start gap-3 hover:bg-slate-800/40 cursor-pointer ${
+                                        className={`group p-3 sm:p-3.5 transition-colors flex items-start gap-2.5 hover:bg-slate-800/40 cursor-pointer ${
                                             isUnread ? 'bg-indigo-950/15' : 'bg-transparent'
                                         }`}
                                     >
+                                        {/* Individual Checkbox */}
+                                        <input
+                                            type="checkbox"
+                                            checked={isSelected}
+                                            onChange={(e) => toggleSelect(n.id, e)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="mt-1 rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5 cursor-pointer shrink-0"
+                                        />
+
                                         {renderIcon(n)}
 
                                         <div className="min-w-0 flex-1 space-y-1">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <h4 className="text-xs font-semibold text-white leading-snug">
-                                                    {n.title}
-                                                </h4>
-                                                {isUnread && (
-                                                    <span
-                                                        className="h-2 w-2 rounded-full bg-indigo-500 shrink-0 mt-1 shadow-sm shadow-indigo-500/50"
-                                                        title="Unread"
-                                                    />
-                                                )}
+                                            <div className="flex items-start justify-between gap-1.5">
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <h4 className="text-xs font-semibold text-white leading-snug break-words">
+                                                        {n.title}
+                                                    </h4>
+                                                    {isUnread && (
+                                                        <span
+                                                            className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0 shadow-sm shadow-indigo-500/50"
+                                                            title="Unread"
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {/* X mark to delete notification */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => deleteNotification(n.id, e)}
+                                                    className="p-1 -mr-1 -mt-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors shrink-0"
+                                                    title="Delete notification"
+                                                    aria-label="Delete notification"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
                                             </div>
 
                                             <p className="text-xs text-slate-400 leading-relaxed break-words whitespace-pre-line">
@@ -255,17 +392,17 @@ export default function NotificationDropdown() {
                                             <div className="flex items-center justify-between pt-1 gap-2">
                                                 <span className="text-[10px] text-slate-500">{n.created_at}</span>
 
-                                                {/* Action link if available */}
-                                                {n.actions && n.actions.length > 0 && n.actions[0].url && (
+                                                {/* Action link if available (excluding Open Dashboard) */}
+                                                {validActions.length > 0 && validActions[0].url && (
                                                     <Link
-                                                        href={n.actions[0].url}
+                                                        href={validActions[0].url}
                                                         onClick={() => {
                                                             if (isUnread) markAsRead(n.id);
                                                             setIsOpen(false);
                                                         }}
                                                         className="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300 underline"
                                                     >
-                                                        {n.actions[0].label || 'View'}
+                                                        {validActions[0].label || 'View'}
                                                     </Link>
                                                 )}
                                             </div>

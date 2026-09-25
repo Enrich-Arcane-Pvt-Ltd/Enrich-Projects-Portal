@@ -44,12 +44,6 @@ class PortalNotificationService
                 ->icon('heroicon-o-check-circle')
                 ->success()
                 ->body("Admin {$admin->name} approved your deletion request for project '{$project->name}' ({$project->code}). You may now finalize deleting this project from your dashboard.")
-                ->actions([
-                    Action::make('view_dashboard')
-                        ->button()
-                        ->label('Open Dashboard')
-                        ->url('/dashboard'),
-                ])
                 ->sendToDatabase($developer);
         } catch (\Throwable $e) {
             Log::error('PortalNotificationService::notifyDeletionApproved error: ' . $e->getMessage());
@@ -67,12 +61,6 @@ class PortalNotificationService
                 ->icon('heroicon-o-x-circle')
                 ->danger()
                 ->body("Admin {$admin->name} rejected your deletion request for project '{$project->name}' ({$project->code}). Reason: {$reason}")
-                ->actions([
-                    Action::make('view_dashboard')
-                        ->button()
-                        ->label('Open Dashboard')
-                        ->url('/dashboard'),
-                ])
                 ->sendToDatabase($developer);
         } catch (\Throwable $e) {
             Log::error('PortalNotificationService::notifyDeletionRejected error: ' . $e->getMessage());

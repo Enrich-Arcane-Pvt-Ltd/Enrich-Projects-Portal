@@ -92,4 +92,43 @@ class NotificationController extends Controller
 
         return redirect()->back();
     }
+
+    /**
+     * Delete all notifications for current user
+     */
+    public function deleteAll(Request $request): RedirectResponse|JsonResponse
+    {
+        $request->user()->notifications()->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'unread_count' => 0,
+            ]);
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * Delete multiple selected notifications
+     */
+    public function destroyBulk(Request $request): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'string',
+        ]);
+
+        $request->user()->notifications()->whereIn('id', $validated['ids'])->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'unread_count' => $request->user()->unreadNotifications()->count(),
+            ]);
+        }
+
+        return redirect()->back();
+    }
 }
