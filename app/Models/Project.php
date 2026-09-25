@@ -31,6 +31,14 @@ class Project extends Model
         'deletion_approved_by_id',
         'deletion_rejected_at',
         'deletion_rejection_reason',
+        'edit_permission_status',
+        'edit_permission_admin_id',
+        'edit_permission_reason',
+        'edit_permission_requested_at',
+        'edit_permission_approved_at',
+        'edit_permission_approved_by_id',
+        'edit_permission_rejected_at',
+        'edit_permission_rejection_reason',
     ];
 
     protected function casts(): array
@@ -39,6 +47,9 @@ class Project extends Model
             'deletion_requested_at' => 'datetime',
             'deletion_approved_at' => 'datetime',
             'deletion_rejected_at' => 'datetime',
+            'edit_permission_requested_at' => 'datetime',
+            'edit_permission_approved_at' => 'datetime',
+            'edit_permission_rejected_at' => 'datetime',
         ];
     }
 
@@ -52,6 +63,16 @@ class Project extends Model
         return $this->belongsTo(User::class, 'deletion_approved_by_id');
     }
 
+    public function editPermissionAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edit_permission_admin_id');
+    }
+
+    public function editPermissionApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edit_permission_approved_by_id');
+    }
+
     public function isDeletionPending(): bool
     {
         return $this->deletion_status === 'pending';
@@ -60,6 +81,21 @@ class Project extends Model
     public function isDeletionApproved(): bool
     {
         return $this->deletion_status === 'approved';
+    }
+
+    public function isEditPermissionPending(): bool
+    {
+        return $this->edit_permission_status === 'pending';
+    }
+
+    public function isEditPermissionApproved(): bool
+    {
+        return $this->edit_permission_status === 'approved';
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === \App\Enums\ProjectStatus::COMPLETED->value;
     }
 
     public function creator(): BelongsTo

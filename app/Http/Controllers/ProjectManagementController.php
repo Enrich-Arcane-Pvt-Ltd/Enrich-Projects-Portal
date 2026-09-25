@@ -60,6 +60,10 @@ class ProjectManagementController extends Controller
 
         PortalNotificationService::notifyProjectCreated($project, $request->user(), [$request->user()->id]);
 
+        if ($project->status === ProjectStatus::COMPLETED->value) {
+            PortalNotificationService::notifyProjectCompleted($project, $request->user());
+        }
+
         AuditService::log(
             $project->id,
             'CREATED_PROJECT',
@@ -74,7 +78,19 @@ class ProjectManagementController extends Controller
      */
     public function updateProject(Request $request, Project $project): RedirectResponse
     {
-        $this->authorizeCreator($request, $project);
+        $user = $request->user();
+        $isAdmin = in_array($user->role, ['admin', 'superadmin']);
+
+        if (! $isAdmin) {
+            $this->authorizeCreator($request, $project);
+
+            // If project is currently completed, check edit permission
+            if ($project->status === ProjectStatus::COMPLETED->value && $project->edit_permission_status !== 'approved') {
+                return redirect()->back()->withErrors([
+                    'status' => "Permission denied: Project '{$project->name}' is marked as Completed and locked for editing. Please request edit permission from an administrator.",
+                ]);
+            }
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -86,7 +102,29 @@ class ProjectManagementController extends Controller
             'description' => 'nullable|string',
         ]);
 
+        $wasCompleted = $project->status === ProjectStatus::COMPLETED->value;
+        $isNowCompleted = $validated['status'] === ProjectStatus::COMPLETED->value;
+
         $project->update($validated);
+
+        // 1. If project was updated to Completed -> notify admin & superadmin
+        if (! $wasCompleted && $isNowCompleted) {
+            PortalNotificationService::notifyProjectCompleted($project, $user);
+        }
+
+        // 2. If edit was performed under approved permission, consume the permission
+        if ($project->edit_permission_status === 'approved') {
+            $project->update([
+                'edit_permission_status' => null,
+                'edit_permission_admin_id' => null,
+                'edit_permission_reason' => null,
+                'edit_permission_requested_at' => null,
+                'edit_permission_approved_at' => null,
+                'edit_permission_approved_by_id' => null,
+                'edit_permission_rejected_at' => null,
+                'edit_permission_rejection_reason' => null,
+            ]);
+        }
 
         AuditService::log(
             $project->id,
@@ -95,6 +133,78 @@ class ProjectManagementController extends Controller
         );
 
         return redirect()->back()->with('success', "Project '{$project->name}' updated successfully.");
+    }
+
+    /**
+     * Request project edit permission from an administrator for completed project
+     */
+    public function requestEditPermission(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorizeCreator($request, $project);
+
+        if ($project->status !== ProjectStatus::COMPLETED->value) {
+            return redirect()->back()->with('info', "Project '{$project->name}' is not marked as completed. You can edit it directly.");
+        }
+
+        $validated = $request->validate([
+            'admin_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($q) => $q->whereIn('role', ['admin', 'superadmin'])),
+            ],
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $admin = User::findOrFail($validated['admin_id']);
+        $user = $request->user();
+
+        $project->update([
+            'edit_permission_status' => 'pending',
+            'edit_permission_admin_id' => $admin->id,
+            'edit_permission_reason' => $validated['reason'] ?? null,
+            'edit_permission_requested_at' => now(),
+            'edit_permission_approved_at' => null,
+            'edit_permission_approved_by_id' => null,
+            'edit_permission_rejected_at' => null,
+            'edit_permission_rejection_reason' => null,
+        ]);
+
+        AuditService::log(
+            $project->id,
+            'REQUESTED_EDIT_PERMISSION',
+            "Developer {$user->name} requested edit permission from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: {$validated['reason']}" : '')
+        );
+
+        PortalNotificationService::notifyEditPermissionRequested($project, $admin, $user, $validated['reason'] ?? null);
+
+        return redirect()->back()->with('success', "Edit permission request submitted to {$admin->name}. You will be notified once approved.");
+    }
+
+    /**
+     * Cancel / withdraw a pending project edit permission request
+     */
+    public function cancelEditPermissionRequest(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorizeCreator($request, $project);
+
+        $project->update([
+            'edit_permission_status' => null,
+            'edit_permission_admin_id' => null,
+            'edit_permission_reason' => null,
+            'edit_permission_requested_at' => null,
+            'edit_permission_approved_at' => null,
+            'edit_permission_approved_by_id' => null,
+            'edit_permission_rejected_at' => null,
+            'edit_permission_rejection_reason' => null,
+        ]);
+
+        AuditService::log(
+            $project->id,
+            'CANCELLED_EDIT_PERMISSION_REQUEST',
+            "Developer {$request->user()->name} withdrew edit permission request for project {$project->name}"
+        );
+
+        return redirect()->back()->with('info', "Edit permission request for project '{$project->name}' has been cancelled.");
     }
 
     /**

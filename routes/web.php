@@ -42,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/projects/{project}', [ProjectManagementController::class, 'deleteProject'])->name('projects.destroy');
         Route::post('/projects/{project}/request-deletion', [ProjectManagementController::class, 'requestDeletion'])->name('projects.request-deletion');
         Route::post('/projects/{project}/cancel-deletion-request', [ProjectManagementController::class, 'cancelDeletionRequest'])->name('projects.cancel-deletion-request');
+        Route::post('/projects/{project}/request-edit-permission', [ProjectManagementController::class, 'requestEditPermission'])->name('projects.request-edit-permission');
+        Route::post('/projects/{project}/cancel-edit-permission-request', [ProjectManagementController::class, 'cancelEditPermissionRequest'])->name('projects.cancel-edit-permission-request');
 
         // Sub-entities
         Route::post('/projects/{project}/credentials', [ProjectManagementController::class, 'storeCredential'])->name('credentials.store');

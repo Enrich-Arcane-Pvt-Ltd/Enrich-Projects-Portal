@@ -88,6 +88,17 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                     </button>
                 </div>
 
+                {projectToEdit?.status === 'completed' && projectToEdit?.edit_permission_status === 'approved' && (
+                    <div className="flex items-center gap-2.5 px-4 sm:px-6 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-300 text-xs font-medium">
+                        <svg className="w-4 h-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>
+                            Edit permission approved by {projectToEdit.edit_permission_approved_by?.name || 'Administrator'}. You can now save your changes to this completed project.
+                        </span>
+                    </div>
+                )}
+
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                     {/* Project Name */}

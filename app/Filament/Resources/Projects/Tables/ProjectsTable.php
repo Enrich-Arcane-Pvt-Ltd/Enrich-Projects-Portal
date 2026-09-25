@@ -37,6 +37,11 @@ class ProjectsTable
                         } elseif ($record->deletion_status === 'approved') {
                             $desc .= ' • [Deletion Approved]';
                         }
+                        if ($record->edit_permission_status === 'pending') {
+                            $desc .= ' • [Edit Permission Requested]';
+                        } elseif ($record->edit_permission_status === 'approved') {
+                            $desc .= ' • [Edit Permission Approved]';
+                        }
                         return $desc;
                     }),
                 TextColumn::make('type')
@@ -79,6 +84,22 @@ class ProjectsTable
                         default => 'None',
                     })
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('edit_permission_status')
+                    ->label('Edit Permission')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'pending' => 'Pending Approval',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                        default => 'None',
+                    })
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label('Last Updated')
                     ->dateTime('M d, Y')
@@ -99,9 +120,84 @@ class ProjectsTable
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
                     ]),
+                SelectFilter::make('edit_permission_status')
+                    ->label('Edit Permission Request')
+                    ->options([
+                        'pending' => 'Pending Approval',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ]),
             ])
             ->recordActions([
                 ViewAction::make(),
+                Action::make('approve_edit_permission')
+                    ->label('Approve Edit')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('info')
+                    ->visible(fn ($record) => $record->edit_permission_status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Approve Project Edit Permission Request')
+                    ->modalDescription(fn ($record) => "Developer " . ($record->creator?->name ?? 'User') . " requested permission to edit completed project '{$record->name}' ({$record->code}). Reason: " . ($record->edit_permission_reason ?: 'No reason provided') . ". Do you approve this edit request?")
+                    ->modalSubmitActionLabel('Yes, Approve Edit Permission')
+                    ->action(function ($record) {
+                        $record->update([
+                            'edit_permission_status' => 'approved',
+                            'edit_permission_approved_at' => now(),
+                            'edit_permission_approved_by_id' => auth()->id(),
+                        ]);
+
+                        AuditService::log(
+                            $record->id,
+                            'APPROVED_EDIT_PERMISSION',
+                            "Admin " . (auth()->user()?->name ?? 'Admin') . " approved edit permission request for project {$record->name}"
+                        );
+
+                        if ($record->creator) {
+                            PortalNotificationService::notifyEditPermissionApproved($record, auth()->user(), $record->creator);
+                        }
+
+                        Notification::make()
+                            ->title('Edit Permission Approved')
+                            ->success()
+                            ->body("Edit permission for '{$record->name}' has been approved. The developer can now edit this project.")
+                            ->send();
+                    }),
+                Action::make('reject_edit_permission')
+                    ->label('Reject Edit')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->edit_permission_status === 'pending')
+                    ->form([
+                        Textarea::make('rejection_reason')
+                            ->label('Rejection Reason')
+                            ->placeholder('Specify why edit permission is rejected...')
+                            ->required(),
+                    ])
+                    ->modalHeading('Reject Project Edit Permission Request')
+                    ->modalSubmitActionLabel('Reject Request')
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'edit_permission_status' => 'rejected',
+                            'edit_permission_rejected_at' => now(),
+                            'edit_permission_rejection_reason' => $data['rejection_reason'],
+                        ]);
+
+                        AuditService::log(
+                            $record->id,
+                            'REJECTED_EDIT_PERMISSION',
+                            "Admin " . (auth()->user()?->name ?? 'Admin') . " rejected edit permission request for project {$record->name}: {$data['rejection_reason']}"
+                        );
+
+                        if ($record->creator) {
+                            PortalNotificationService::notifyEditPermissionRejected($record, auth()->user(), $record->creator, $data['rejection_reason']);
+                        }
+
+                        Notification::make()
+                            ->title('Edit Permission Rejected')
+                            ->warning()
+                            ->body("Edit permission request for '{$record->name}' has been rejected.")
+                            ->send();
+                    }),
                 Action::make('approve_deletion')
                     ->label('Approve Deletion')
                     ->icon('heroicon-o-check-circle')
