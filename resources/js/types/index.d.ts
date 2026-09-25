@@ -152,6 +152,16 @@ export interface Project {
     deletion_approved_by?: User | null;
     deletion_rejected_at?: string | null;
     deletion_rejection_reason?: string | null;
+    edit_permission_status?: 'pending' | 'approved' | 'rejected' | null;
+    edit_permission_admin_id?: number | null;
+    edit_permission_admin?: User | null;
+    edit_permission_reason?: string | null;
+    edit_permission_requested_at?: string | null;
+    edit_permission_approved_at?: string | null;
+    edit_permission_approved_by_id?: number | null;
+    edit_permission_approved_by?: User | null;
+    edit_permission_rejected_at?: string | null;
+    edit_permission_rejection_reason?: string | null;
 }
 
 export interface DashboardStats {

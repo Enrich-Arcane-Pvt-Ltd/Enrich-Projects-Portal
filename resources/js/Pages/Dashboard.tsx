@@ -1,4 +1,4 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AuthenticatedLayout, { getUserInitials } from '@/Layouts/AuthenticatedLayout';
 import ProjectVaultModal from '@/Components/ProjectVaultModal';
 import ProjectFormModal from '@/Components/ProjectFormModal';
 import {
@@ -174,47 +174,6 @@ const selectClass =
     'px-3 py-2 rounded-md bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50';
 
 /* ------------------------------------------------------------------ */
-/* User Initials & Monogram Helper                                     */
-/* ------------------------------------------------------------------ */
-
-const getUserInitials = (name: string, allNames: string[] = []): string => {
-    if (!name) return 'U';
-    const trimmed = name.trim();
-    if (!trimmed) return 'U';
-    const firstChar = trimmed.charAt(0).toUpperCase();
-
-    // Check if other users in the system share the same starting letter
-    const hasSameFirstLetter = allNames.some((other) => {
-        if (!other) return false;
-        const otherTrimmed = other.trim();
-        return (
-            otherTrimmed.toLowerCase() !== trimmed.toLowerCase() &&
-            otherTrimmed.charAt(0).toUpperCase() === firstChar
-        );
-    });
-
-    // If only one user has this starting letter, display just the first letter
-    if (!hasSameFirstLetter) {
-        return firstChar;
-    }
-
-    // Multiple users start with the same letter: get the first letter and another letter
-    const parts = trimmed.split(/\s+/).filter(Boolean);
-    if (parts.length > 1) {
-        // e.g. "Sunimal Opatha" -> "SO", "Super Admin" -> "SA"
-        return `${firstChar}${parts[1].charAt(0).toUpperCase()}`;
-    }
-    if (trimmed.length > 1) {
-        // Single word name: e.g. "Sunimal" -> "SU"
-        return `${firstChar}${trimmed.charAt(1).toUpperCase()}`;
-    }
-    // Single-character name: deterministically pick another letter
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const seed = (trimmed.charCodeAt(0) * 7 + 11) % alphabet.length;
-    return `${firstChar}${alphabet[seed]}`;
-};
-
-/* ------------------------------------------------------------------ */
 /* Small presentational pieces                                         */
 /* ------------------------------------------------------------------ */
 
@@ -229,14 +188,13 @@ function StatusPill({ status }: { status: string }) {
 
 function Avatar({
     name,
-    allNames = [],
     size = 'h-8 w-8',
 }: {
     name: string;
     allNames?: string[];
     size?: string;
 }) {
-    const initials = getUserInitials(name, allNames);
+    const initials = getUserInitials(name);
     return (
         <div
             title={name}
@@ -282,6 +240,66 @@ export default function Dashboard({
     const [selectedAdminId, setSelectedAdminId] = useState<string>('');
     const [deletionReason, setDeletionReason] = useState<string>('');
     const [isSubmittingDeletion, setIsSubmittingDeletion] = useState(false);
+
+    // Project edit permission request states (for completed projects)
+    const [editPermissionRequestProject, setEditPermissionRequestProject] = useState<Project | null>(null);
+    const [pendingEditPermissionProject, setPendingEditPermissionProject] = useState<Project | null>(null);
+    const [selectedEditAdminId, setSelectedEditAdminId] = useState<string>('');
+    const [editPermissionReason, setEditPermissionReason] = useState<string>('');
+    const [isSubmittingEditPermission, setIsSubmittingEditPermission] = useState(false);
+
+    const handleEditClick = (project: Project) => {
+        if (project.status === ProjectStatus.COMPLETED) {
+            if (project.edit_permission_status === 'approved') {
+                setEditingProject(project);
+                setIsFormModalOpen(true);
+            } else if (project.edit_permission_status === 'pending') {
+                setPendingEditPermissionProject(project);
+            } else {
+                setEditPermissionRequestProject(project);
+                setSelectedEditAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
+                setEditPermissionReason('');
+            }
+        } else {
+            setEditingProject(project);
+            setIsFormModalOpen(true);
+        }
+    };
+
+    const submitEditPermissionRequest = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editPermissionRequestProject || !selectedEditAdminId) return;
+
+        setIsSubmittingEditPermission(true);
+        router.post(
+            `/developer/projects/${editPermissionRequestProject.id}/request-edit-permission`,
+            {
+                admin_id: selectedEditAdminId,
+                reason: editPermissionReason,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setEditPermissionRequestProject(null);
+                    setEditPermissionReason('');
+                },
+                onFinish: () => setIsSubmittingEditPermission(false),
+            }
+        );
+    };
+
+    const cancelEditPermissionRequest = (projectId: number) => {
+        setIsSubmittingEditPermission(true);
+        router.post(
+            `/developer/projects/${projectId}/cancel-edit-permission-request`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setPendingEditPermissionProject(null),
+                onFinish: () => setIsSubmittingEditPermission(false),
+            }
+        );
+    };
 
     const handleDeleteClick = (project: Project) => {
         if (project.deletion_status === 'approved') {
@@ -449,8 +467,8 @@ export default function Dashboard({
     }, [auth.user, availableDevelopers, projects]);
 
     const userInitials = useMemo(() => {
-        return getUserInitials(auth.user.name, allUserNames);
-    }, [auth.user.name, allUserNames]);
+        return getUserInitials(auth.user.name);
+    }, [auth.user.name]);
 
     // Project list pagination (8 per page)
     const PROJECTS_PER_PAGE = 8;
@@ -710,6 +728,27 @@ export default function Dashboard({
                                                                 Deletion Rejected
                                                             </span>
                                                         )}
+                                                        {project.status === 'completed' && project.edit_permission_status === 'pending' && (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                                                <svg className="w-2.5 h-2.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                Edit Permission Pending
+                                                            </span>
+                                                        )}
+                                                        {project.status === 'completed' && project.edit_permission_status === 'approved' && (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Edit Permission Approved
+                                                            </span>
+                                                        )}
+                                                        {project.status === 'completed' && project.edit_permission_status === 'rejected' && (
+                                                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                                                Edit Permission Rejected
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     {project.description && (
@@ -736,16 +775,39 @@ export default function Dashboard({
                                                     {auth.user.role !== 'qa' && project.is_owner && (
                                                         <div className="flex items-center gap-1.5">
                                                             <button
-                                                                onClick={() => {
-                                                                    setEditingProject(project);
-                                                                    setIsFormModalOpen(true);
-                                                                }}
-                                                                className="p-2 rounded-md border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
-                                                                title="Edit project details"
+                                                                onClick={() => handleEditClick(project)}
+                                                                className={`p-2 rounded-md border transition-colors ${
+                                                                    project.status === 'completed'
+                                                                        ? project.edit_permission_status === 'approved'
+                                                                            ? 'border-emerald-500/60 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
+                                                                            : project.edit_permission_status === 'pending'
+                                                                            ? 'border-amber-500/50 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                                                                            : project.edit_permission_status === 'rejected'
+                                                                            ? 'border-rose-500/50 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20'
+                                                                            : 'border-slate-700 text-slate-400 hover:text-amber-400 hover:border-amber-500/50'
+                                                                        : 'border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                                                                }`}
+                                                                title={
+                                                                    project.status === 'completed'
+                                                                        ? project.edit_permission_status === 'approved'
+                                                                            ? 'Edit permission approved! Click to edit project details'
+                                                                            : project.edit_permission_status === 'pending'
+                                                                            ? `Edit permission requested from ${project.edit_permission_admin?.name || 'Admin'} (Pending Review)`
+                                                                            : project.edit_permission_status === 'rejected'
+                                                                            ? 'Edit permission was rejected. Click to review or re-request.'
+                                                                            : 'Project completed (locked). Click to request admin edit permission'
+                                                                        : 'Edit project details'
+                                                                }
                                                             >
-                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                </svg>
+                                                                {project.status === 'completed' && project.edit_permission_status !== 'approved' ? (
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                                    </svg>
+                                                                ) : (
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                    </svg>
+                                                                )}
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteClick(project)}
@@ -1218,6 +1280,222 @@ export default function Dashboard({
                                 ) : (
                                     'Yes, Delete Project'
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Modal: Request Edit Permission for Completed Project */}
+            {editPermissionRequestProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setEditPermissionRequestProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Request Edit Permission</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Completed projects require admin permission before editing.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setEditPermissionRequestProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Project summary card */}
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-semibold text-white break-words">
+                                    {editPermissionRequestProject.name}
+                                </span>
+                                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                                    {editPermissionRequestProject.code}
+                                </span>
+                            </div>
+                            {editPermissionRequestProject.description && (
+                                <p className="text-xs text-slate-400 line-clamp-2">
+                                    {editPermissionRequestProject.description}
+                                </p>
+                            )}
+                            {editPermissionRequestProject.edit_permission_status === 'rejected' && (
+                                <div className="mt-2 text-xs text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5">
+                                    <span className="font-semibold text-rose-200">Previous Request Rejected:</span>{' '}
+                                    {editPermissionRequestProject.edit_permission_rejection_reason || 'No reason specified'}
+                                </div>
+                            )}
+                        </div>
+
+                        <form onSubmit={submitEditPermissionRequest} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    Select Administrator or Super Admin <span className="text-rose-400">*</span>
+                                </label>
+                                {availableAdmins.length > 0 ? (
+                                    <select
+                                        value={selectedEditAdminId}
+                                        onChange={(e) => setSelectedEditAdminId(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    >
+                                        <option value="" disabled>Select an administrator...</option>
+                                        {availableAdmins.map((admin) => (
+                                            <option key={admin.id} value={admin.id}>
+                                                {admin.name} ({admin.role === 'superadmin' ? 'Super Admin' : 'Admin'} - {admin.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                                        No administrators found to review this request.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    Reason for Editing <span className="text-slate-500">(Optional)</span>
+                                </label>
+                                <textarea
+                                    value={editPermissionReason}
+                                    onChange={(e) => setEditPermissionReason(e.target.value)}
+                                    placeholder="Explain what updates or changes need to be made to this completed project..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditPermissionRequestProject(null)}
+                                    className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!selectedEditAdminId || isSubmittingEditPermission}
+                                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
+                                >
+                                    {isSubmittingEditPermission ? (
+                                        <>
+                                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Sending Request...
+                                        </>
+                                    ) : (
+                                        'Send Edit Request'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Pending Edit Permission Status */}
+            {pendingEditPermissionProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setPendingEditPermissionProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                                    <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Edit Permission Pending</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Awaiting administrator review and approval.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setPendingEditPermissionProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+                            <div>
+                                <div className="text-xs text-slate-400">Completed Project</div>
+                                <div className="text-sm font-semibold text-white">{pendingEditPermissionProject.name}</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <span className="text-slate-400">Assigned Admin:</span>
+                                    <div className="text-slate-200 font-medium">
+                                        {pendingEditPermissionProject.edit_permission_admin?.name || 'Administrator'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="text-slate-400">Requested:</span>
+                                    <div className="text-slate-200 font-medium">
+                                        {pendingEditPermissionProject.edit_permission_requested_at
+                                            ? new Date(pendingEditPermissionProject.edit_permission_requested_at).toLocaleDateString()
+                                            : 'Recently'}
+                                    </div>
+                                </div>
+                            </div>
+                            {pendingEditPermissionProject.edit_permission_reason && (
+                                <div className="text-xs pt-2 border-t border-slate-800">
+                                    <span className="text-slate-400">Submitted Reason:</span>
+                                    <div className="text-slate-300 italic mt-0.5">
+                                        &ldquo;{pendingEditPermissionProject.edit_permission_reason}&rdquo;
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            Once the administrator approves your request, you will receive a notification and the project details form will be unlocked for editing.
+                        </p>
+
+                        <div className="flex items-center justify-between pt-2">
+                            <button
+                                type="button"
+                                disabled={isSubmittingEditPermission}
+                                onClick={() => cancelEditPermissionRequest(pendingEditPermissionProject.id)}
+                                className="px-3.5 py-2 text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/20 rounded-lg transition-colors"
+                            >
+                                {isSubmittingEditPermission ? 'Cancelling...' : 'Withdraw Request'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPendingEditPermissionProject(null)}
+                                className="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                Close
                             </button>
                         </div>
                     </div>

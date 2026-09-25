@@ -250,4 +250,97 @@ class PortalNotificationService
             Log::error('PortalNotificationService::notifyDeveloperAssigned error: ' . $e->getMessage());
         }
     }
+
+    /**
+     * 6. When a project creator updates project status to COMPLETED
+     *    Role == admin & superadmin need to receive a notification: {project.name} marked as completed.
+     */
+    public static function notifyProjectCompleted(Project $project, User $actor): void
+    {
+        try {
+            $admins = User::whereIn('role', ['admin', 'superadmin'])
+                ->where('id', '!=', $actor->id)
+                ->get();
+
+            foreach ($admins as $admin) {
+                Notification::make()
+                    ->title('Project Marked as Completed')
+                    ->icon('heroicon-o-check-badge')
+                    ->success()
+                    ->body("{$project->name} marked as completed by {$actor->name}.")
+                    ->actions([
+                        Action::make('view_project')
+                            ->button()
+                            ->label('View in Admin')
+                            ->url("/admin/projects?search=" . urlencode($project->code)),
+                    ])
+                    ->sendToDatabase($admin);
+            }
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyProjectCompleted error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 7. When creator requests permission to edit a completed project from selected admin/superadmin
+     */
+    public static function notifyEditPermissionRequested(Project $project, User $admin, User $developer, ?string $reason = null): void
+    {
+        try {
+            Notification::make()
+                ->title('Project Edit Permission Request')
+                ->icon('heroicon-o-pencil-square')
+                ->warning()
+                ->body("Developer {$developer->name} requested permission to edit completed project '{$project->name}' ({$project->code})." . (filled($reason) ? "\nReason: {$reason}" : ''))
+                ->actions([
+                    Action::make('review')
+                        ->button()
+                        ->label('Review Request')
+                        ->url("/admin/projects?search=" . urlencode($project->code)),
+                ])
+                ->sendToDatabase($admin);
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyEditPermissionRequested error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 8. When admin approves the project edit permission request
+     */
+    public static function notifyEditPermissionApproved(Project $project, User $admin, User $developer): void
+    {
+        try {
+            Notification::make()
+                ->title('Edit Permission Approved')
+                ->icon('heroicon-o-check-circle')
+                ->success()
+                ->body("Admin {$admin->name} approved your request to edit completed project '{$project->name}' ({$project->code}). You may now edit the project details.")
+                ->actions([
+                    Action::make('open_dashboard')
+                        ->button()
+                        ->label('Go to Dashboard')
+                        ->url('/dashboard'),
+                ])
+                ->sendToDatabase($developer);
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyEditPermissionApproved error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 9. When admin rejects the project edit permission request
+     */
+    public static function notifyEditPermissionRejected(Project $project, User $admin, User $developer, string $reason): void
+    {
+        try {
+            Notification::make()
+                ->title('Edit Permission Rejected')
+                ->icon('heroicon-o-x-circle')
+                ->danger()
+                ->body("Admin {$admin->name} rejected your request to edit completed project '{$project->name}' ({$project->code}). Reason: {$reason}")
+                ->sendToDatabase($developer);
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyEditPermissionRejected error: ' . $e->getMessage());
+        }
+    }
 }
