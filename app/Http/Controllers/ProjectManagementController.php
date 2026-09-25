@@ -95,20 +95,112 @@ class ProjectManagementController extends Controller
     }
 
     /**
-     * Delete project
+     * Request project deletion approval from an administrator
+     */
+    public function requestDeletion(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorizeCreator($request, $project);
+
+        $validated = $request->validate([
+            'admin_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($q) => $q->whereIn('role', ['admin', 'superadmin'])),
+            ],
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $admin = User::findOrFail($validated['admin_id']);
+        $user = $request->user();
+
+        $project->update([
+            'deletion_status' => 'pending',
+            'deletion_admin_id' => $admin->id,
+            'deletion_reason' => $validated['reason'] ?? null,
+            'deletion_requested_at' => now(),
+            'deletion_approved_at' => null,
+            'deletion_approved_by_id' => null,
+            'deletion_rejected_at' => null,
+            'deletion_rejection_reason' => null,
+        ]);
+
+        AuditService::log(
+            $project->id,
+            'REQUESTED_PROJECT_DELETION',
+            "Developer {$user->name} requested deletion approval from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: {$validated['reason']}" : '')
+        );
+
+        // Send Filament database notification to the chosen administrator
+        try {
+            \Filament\Notifications\Notification::make()
+                ->title('Project Deletion Approval Request')
+                ->icon('heroicon-o-trash')
+                ->warning()
+                ->body("Developer {$user->name} requested approval to delete project '{$project->name}' ({$project->code})." . (filled($validated['reason'] ?? null) ? "\nReason: {$validated['reason']}" : ''))
+                ->actions([
+                    \Filament\Actions\Action::make('review')
+                        ->button()
+                        ->url("/admin/projects?search=" . urlencode($project->code)),
+                ])
+                ->sendToDatabase($admin);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed sending deletion notification: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', "Deletion request submitted to {$admin->name}. Waiting for administrative approval.");
+    }
+
+    /**
+     * Cancel / withdraw a pending project deletion request
+     */
+    public function cancelDeletionRequest(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorizeCreator($request, $project);
+
+        $project->update([
+            'deletion_status' => null,
+            'deletion_admin_id' => null,
+            'deletion_reason' => null,
+            'deletion_requested_at' => null,
+            'deletion_approved_at' => null,
+            'deletion_approved_by_id' => null,
+            'deletion_rejected_at' => null,
+            'deletion_rejection_reason' => null,
+        ]);
+
+        AuditService::log(
+            $project->id,
+            'CANCELLED_PROJECT_DELETION_REQUEST',
+            "Developer {$request->user()->name} withdrew the deletion request for project {$project->name}"
+        );
+
+        return redirect()->back()->with('info', "Deletion request for project '{$project->name}' has been cancelled.");
+    }
+
+    /**
+     * Delete project (requires approved deletion request for developers)
      */
     public function deleteProject(Request $request, Project $project): RedirectResponse
     {
-        $this->authorizeCreator($request, $project);
+        $user = $request->user();
+        $isAdmin = in_array($user->role, ['admin', 'superadmin']);
+
+        if (! $isAdmin) {
+            $this->authorizeCreator($request, $project);
+
+            if ($project->deletion_status !== 'approved') {
+                abort(403, 'Permission denied: Project deletion requires approval from an administrator.');
+            }
+        }
 
         $name = $project->name;
         $code = $project->code;
         $projectId = $project->id;
 
         AuditService::log(
-            $projectId,
+            null,
             'DELETED_PROJECT',
-            "Deleted project {$name} [{$code}]"
+            "Deleted project {$name} [{$code}] by {$user->name}"
         );
 
         $project->delete();

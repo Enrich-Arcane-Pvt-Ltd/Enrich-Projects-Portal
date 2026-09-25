@@ -34,6 +34,8 @@ class DeveloperProjectController extends Controller
                 'creator:id,name,email,avatar_url',
                 'leadDeveloper:id,name,email,avatar_url',
                 'manager:id,name,email,avatar_url',
+                'deletionAdmin:id,name,email',
+                'deletionApprovedBy:id,name,email',
                 'developers:id,name,email,role,avatar_url',
                 'links',
                 'serverEnvironments',
@@ -114,6 +116,7 @@ class DeveloperProjectController extends Controller
             'stats' => $stats,
             'recentAuditActivity' => $recentAuditActivity,
             'availableDevelopers' => User::select('id', 'name', 'email', 'role')->orderBy('name')->get(),
+            'availableAdmins' => User::whereIn('role', ['admin', 'superadmin'])->select('id', 'name', 'email', 'role')->orderBy('name')->get(),
             'filters' => $request->only(['search', 'type', 'status', 'priority']),
         ]);
     }
@@ -129,6 +132,8 @@ class DeveloperProjectController extends Controller
             'creator:id,name,email,avatar_url',
             'leadDeveloper:id,name,email,avatar_url',
             'manager:id,name,email,avatar_url',
+            'deletionAdmin:id,name,email',
+            'deletionApprovedBy:id,name,email',
             'developers:id,name,email,role,avatar_url',
             'links',
             'serverEnvironments',
