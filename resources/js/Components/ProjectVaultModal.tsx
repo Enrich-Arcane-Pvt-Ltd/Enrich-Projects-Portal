@@ -321,16 +321,16 @@ export default function ProjectVaultModal({
         }
     };
 
-    const tabs: { id: TabType; label: string; count?: number; icon: string }[] = [
-        { id: 'credentials', label: 'Credential Vault', count: project.credentials?.length || 0, icon: '🔑' },
-        { id: 'client_credentials', label: 'Client Access Credentials', count: (project.client_access_credentials || project.clientAccessCredentials)?.length || 0, icon: '👤' },
-        { id: 'links', label: 'Repositories & External Links', count: project.links?.length || 0, icon: '🔗' },
-        { id: 'servers', label: 'Server & Hosting Environments', count: project.server_environments?.length || 0, icon: '🖥️' },
-        { id: 'accounts', label: 'Third-Party & Cloud Accounts', count: project.third_party_accounts?.length || 0, icon: '☁️' },
-        { id: 'services', label: 'Background Daemons & Workers', count: project.background_services?.length || 0, icon: '⚙️' },
-        { id: 'iot', label: 'IOT Hardware & Telemetry', count: project.iot_configurations?.length || 0, icon: '📡' },
-        { id: 'documents', label: 'Documents & Uploads', count: project.documents?.length || 0, icon: '📁' },
-        { id: 'overview', label: 'Assigned Developers', count: project.developers?.length || 0, icon: '👥' },
+    const tabs: { id: TabType; label: string; count?: number }[] = [
+        { id: 'credentials', label: 'Credential Vault', count: project.credentials?.length || 0 },
+        { id: 'client_credentials', label: 'Client Access Credentials', count: (project.client_access_credentials || project.clientAccessCredentials)?.length || 0 },
+        { id: 'links', label: 'Repositories & External Links', count: project.links?.length || 0 },
+        { id: 'servers', label: 'Server & Hosting Environments', count: project.server_environments?.length || 0 },
+        { id: 'accounts', label: 'Third-Party & Cloud Accounts', count: project.third_party_accounts?.length || 0 },
+        { id: 'services', label: 'Background Daemons & Workers', count: project.background_services?.length || 0 },
+        { id: 'iot', label: 'IOT Hardware & Telemetry', count: project.iot_configurations?.length || 0 },
+        { id: 'documents', label: 'Documents & Uploads', count: project.documents?.length || 0 },
+        { id: 'overview', label: 'Assigned Developers', count: project.developers?.length || 0 },
     ];
 
     return (
@@ -1340,8 +1340,10 @@ export default function ProjectVaultModal({
 
                             {(!project.documents || project.documents.length === 0) ? (
                                 <div className="p-8 text-center rounded-xl border border-slate-800 bg-slate-900/40 space-y-2">
-                                    <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl">
-                                        📁
+                                    <div className="w-12 h-12 mx-auto rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                                        </svg>
                                     </div>
                                     <p className="text-sm font-medium text-slate-300">No project documents uploaded yet</p>
                                     <p className="text-xs text-slate-500 max-w-md mx-auto">
@@ -1357,36 +1359,28 @@ export default function ProjectVaultModal({
 
                                         let typeLabel = ext ? ext.toUpperCase() : 'DOC';
                                         let badgeStyle = 'bg-slate-800 text-slate-300 border-slate-700';
-                                        let fileIcon = '📄';
 
                                         if (isDrive) {
                                             typeLabel = 'Google Drive';
                                             badgeStyle = 'bg-sky-500/10 text-sky-300 border-sky-500/30';
-                                            fileIcon = '📂';
                                         } else if (isExternal) {
                                             typeLabel = 'External Link';
                                             badgeStyle = 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30';
-                                            fileIcon = '🔗';
                                         } else if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) {
                                             typeLabel = 'ZIP / Archive';
                                             badgeStyle = 'bg-amber-500/10 text-amber-300 border-amber-500/30';
-                                            fileIcon = '📦';
                                         } else if (ext === 'pdf') {
                                             typeLabel = 'PDF Spec';
                                             badgeStyle = 'bg-rose-500/10 text-rose-300 border-rose-500/30';
-                                            fileIcon = '📕';
                                         } else if (['doc', 'docx'].includes(ext)) {
                                             typeLabel = 'Word Doc';
                                             badgeStyle = 'bg-blue-500/10 text-blue-300 border-blue-500/30';
-                                            fileIcon = '📘';
                                         } else if (['js', 'ts', 'jsx', 'tsx', 'py', 'php', 'cpp', 'c', 'h', 'ino', 'json', 'sql', 'sh', 'html', 'css'].includes(ext)) {
                                             typeLabel = `Code (${ext.toUpperCase()})`;
                                             badgeStyle = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
-                                            fileIcon = '💻';
                                         } else if (['png', 'jpg', 'jpeg', 'svg', 'webp'].includes(ext)) {
                                             typeLabel = 'Diagram / Image';
                                             badgeStyle = 'bg-purple-500/10 text-purple-300 border-purple-500/30';
-                                            fileIcon = '🖼️';
                                         }
 
                                         const resourceUrl = isExternal
@@ -1409,8 +1403,16 @@ export default function ProjectVaultModal({
                                                 className="p-3.5 sm:p-4 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5"
                                             >
                                                 <div className="flex items-start sm:items-center gap-3 min-w-0">
-                                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-900 border border-slate-700/60 flex items-center justify-center text-lg shadow-inner">
-                                                        {fileIcon}
+                                                    <div className="h-10 w-10 shrink-0 rounded-xl bg-slate-900 border border-slate-700/60 flex items-center justify-center shadow-inner">
+                                                        {isDrive || isExternal ? (
+                                                            <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                                            </svg>
+                                                        ) : (
+                                                            <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                        )}
                                                     </div>
                                                     <div className="min-w-0 flex-1 space-y-1">
                                                         <div className="flex flex-wrap items-center gap-2">
@@ -1531,7 +1533,11 @@ export default function ProjectVaultModal({
                                             }}
                                             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors flex items-center gap-1.5"
                                         >
-                                            <span>⚙️</span> Manage Roles / Leads
+                                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span>Manage Roles / Leads</span>
                                         </button>
                                         <button
                                             type="button"
@@ -1753,7 +1759,9 @@ export default function ProjectVaultModal({
                                 onClick={() => setIsAssignDevModalOpen(false)}
                                 className="p-1 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
                             >
-                                ✕
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                             </button>
                         </div>
 
@@ -1821,7 +1829,9 @@ export default function ProjectVaultModal({
                                 onClick={() => setIsEditLeadsModalOpen(false)}
                                 className="p-1 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
                             >
-                                ✕
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                             </button>
                         </div>
 

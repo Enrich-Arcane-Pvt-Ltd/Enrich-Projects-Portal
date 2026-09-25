@@ -18,11 +18,21 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+use Illuminate\Database\Eloquent\Model;
+
 class DocumentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'documents';
 
-    protected static ?string $title = 'Documentation & Diagrams Vault';
+    protected static ?string $title = 'Documents & Uploads';
+
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-folder';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        $count = $ownerRecord->documents()->count();
+        return $count > 0 ? (string) $count : '0';
+    }
 
     public function form(Schema $schema): Schema
     {

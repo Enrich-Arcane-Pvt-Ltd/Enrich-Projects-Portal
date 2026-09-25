@@ -18,12 +18,21 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class ThirdPartyAccountsRelationManager extends RelationManager
 {
     protected static string $relationship = 'thirdPartyAccounts';
 
     protected static ?string $title = 'Third-Party & Cloud Accounts';
+
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-cloud';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        $count = $ownerRecord->thirdPartyAccounts()->count();
+        return $count > 0 ? (string) $count : '0';
+    }
 
     public function form(Schema $schema): Schema
     {

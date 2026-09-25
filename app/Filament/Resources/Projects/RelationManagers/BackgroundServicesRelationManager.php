@@ -14,12 +14,21 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class BackgroundServicesRelationManager extends RelationManager
 {
     protected static string $relationship = 'backgroundServices';
 
     protected static ?string $title = 'Background Daemons & Workers';
+
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-cog-6-tooth';
+
+    public static function getBadge(Model $ownerRecord, string $pageClass): ?string
+    {
+        $count = $ownerRecord->backgroundServices()->count();
+        return $count > 0 ? (string) $count : '0';
+    }
 
     public function form(Schema $schema): Schema
     {
