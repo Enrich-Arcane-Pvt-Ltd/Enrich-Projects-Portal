@@ -34,24 +34,94 @@ interface DashboardProps extends PageProps {
 // Full class names so Tailwind can see them at build time.
 const STACK_DOTS: Record<string, string> = {
     laravel: 'bg-red-500',
+    react: 'bg-cyan-400',
+    vue: 'bg-emerald-400',
+    angular: 'bg-red-600',
+    next: 'bg-slate-200',
+    svelte: 'bg-orange-500',
     flutter: 'bg-sky-400',
     esp32: 'bg-amber-400',
     mqtt: 'bg-purple-400',
     mysql: 'bg-blue-400',
+    mongo: 'bg-emerald-500',
+    mongodb: 'bg-emerald-500',
+    express: 'bg-amber-500',
     redis: 'bg-rose-400',
     docker: 'bg-cyan-400',
+    kubernetes: 'bg-blue-500',
     go: 'bg-teal-400',
+    golang: 'bg-teal-400',
     postgresql: 'bg-indigo-400',
+    postgres: 'bg-indigo-400',
     freertos: 'bg-lime-400',
     node: 'bg-green-500',
+    nodejs: 'bg-green-500',
     timescaledb: 'bg-yellow-400',
+    python: 'bg-blue-400',
+    django: 'bg-emerald-600',
+    fastapi: 'bg-teal-500',
+    flask: 'bg-slate-300',
+    typescript: 'bg-blue-500',
+    ts: 'bg-blue-500',
+    javascript: 'bg-yellow-400',
+    js: 'bg-yellow-400',
+    java: 'bg-red-500',
+    spring: 'bg-green-500',
+    php: 'bg-indigo-400',
+    rust: 'bg-orange-600',
+    csharp: 'bg-purple-500',
+    dotnet: 'bg-purple-600',
+    swift: 'bg-orange-500',
+    kotlin: 'bg-violet-400',
+    aws: 'bg-amber-500',
+    firebase: 'bg-amber-400',
+    graphql: 'bg-pink-500',
+    tailwind: 'bg-sky-400',
+};
+
+// Curated vibrant fallback palette for any new or custom tech stacks added by developers.
+const FALLBACK_PALETTE = [
+    'bg-emerald-400',
+    'bg-violet-400',
+    'bg-orange-400',
+    'bg-pink-400',
+    'bg-fuchsia-400',
+    'bg-indigo-400',
+    'bg-teal-400',
+    'bg-lime-400',
+    'bg-amber-400',
+    'bg-cyan-400',
+    'bg-rose-400',
+    'bg-sky-400',
+    'bg-purple-400',
+    'bg-blue-400',
+    'bg-yellow-400',
+    'bg-red-400',
+];
+
+const getFallbackDot = (str: string): string => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+    }
+    const idx = Math.abs(hash) % FALLBACK_PALETTE.length;
+    return FALLBACK_PALETTE[idx];
 };
 
 const stackDot = (tech?: string) => {
     if (!tech) return 'bg-slate-500';
-    const key = tech.trim().toLowerCase();
-    const hit = Object.keys(STACK_DOTS).find((k) => key.startsWith(k));
-    return hit ? STACK_DOTS[hit] : 'bg-slate-500';
+    const raw = tech.trim().toLowerCase();
+    const clean = raw.replace(/[^a-z0-9]/g, '');
+
+    // Check direct or prefix matches on raw or clean string
+    const hit = Object.keys(STACK_DOTS).find(
+        (k) => raw.startsWith(k) || clean.startsWith(k) || clean.includes(k) || k.includes(clean)
+    );
+    if (hit) return STACK_DOTS[hit];
+
+    // If tech stack is custom/unmapped, generate a consistent vibrant color
+    return getFallbackDot(clean || raw);
 };
 
 const stackList = (project: Project) =>
