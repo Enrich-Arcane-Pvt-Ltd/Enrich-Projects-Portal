@@ -3,19 +3,34 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode, useState, useMemo } from 'react';
+
+export const getUserInitials = (name?: string): string => {
+    if (!name) return 'U';
+    const trimmed = name.trim();
+    if (!trimmed) return 'U';
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    if (parts.length > 1) {
+        return `${parts[0].charAt(0).toUpperCase()}${parts[1].charAt(0).toUpperCase()}`;
+    }
+    if (trimmed.length > 1) {
+        return `${trimmed.charAt(0).toUpperCase()}${trimmed.charAt(1).toUpperCase()}`;
+    }
+    return trimmed.charAt(0).toUpperCase();
+};
 
 export default function Authenticated({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
+    const userInitials = useMemo(() => getUserInitials(user?.name), [user?.name]);
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white w-full max-w-full overflow-x-hidden">
+        <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white w-full max-w-full overflow-x-hidden flex flex-col justify-between">
             <nav className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md w-full">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between items-center">
@@ -48,8 +63,8 @@ export default function Authenticated({
                                             type="button"
                                             className="inline-flex items-center gap-2.5 rounded-lg border border-slate-700/60 bg-slate-800/80 px-3 py-1.5 text-sm font-medium text-slate-200 transition duration-150 ease-in-out hover:border-slate-600 hover:bg-slate-800 focus:outline-none"
                                         >
-                                            <div className="h-6 w-6 rounded-full bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold flex items-center justify-center">
-                                                {user.name.charAt(0)}
+                                            <div className="h-6 w-6 rounded-full bg-slate-800 text-slate-200 border border-slate-700 text-[10px] font-bold flex items-center justify-center tracking-tight">
+                                                {userInitials}
                                             </div>
                                             <span>{user.name}</span>
                                             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700/60">
@@ -153,8 +168,8 @@ export default function Authenticated({
                 >
                     {/* User identifier card in mobile menu */}
                     <div className="px-3 py-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center shrink-0">
-                            {user.name.charAt(0)}
+                        <div className="h-8 w-8 rounded-full bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center shrink-0 tracking-tight">
+                            {userInitials}
                         </div>
                         <div className="min-w-0 flex-1">
                             <div className="text-sm font-semibold text-white truncate flex items-center gap-2">
@@ -206,8 +221,12 @@ export default function Authenticated({
                 </header>
             )}
 
-            <main className="w-full max-w-full min-w-0">{children}</main>
+            <main className="w-full max-w-full min-w-0 flex-1">{children}</main>
 
+            {/* Footer */}
+            <footer className="relative z-10 py-5 text-center text-xs text-slate-500 border-t border-white/5 mt-auto">
+                &copy; {new Date().getFullYear()} Enrich Arcane (Pvt) Ltd — Project Information Management System
+            </footer>
         </div>
     );
 }
