@@ -50,6 +50,13 @@ class UserSeeder extends Seeder
                 'role' => 'developer',
                 'avatar_url' => 'https://ui-avatars.com/api/?name=Tharindu+Perera&background=4f46e5&color=fff',
             ],
+            [
+                'name' => 'QA Engineer',
+                'email' => 'qa@enricharcane.com',
+                'password' => Hash::make('Password@123'),
+                'role' => 'qa',
+                'avatar_url' => 'https://ui-avatars.com/api/?name=QA+Engineer&background=10b981&color=fff',
+            ],
         ];
 
         foreach ($users as $userData) {

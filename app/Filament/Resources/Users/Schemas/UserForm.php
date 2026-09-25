@@ -30,9 +30,10 @@ class UserForm
                         Grid::make(2)->schema([
                             Select::make('role')
                                 ->options([
-                                    'superadmin' => 'Super Admin (Full System Authority & Filament Panel)',
-                                    'admin' => 'Administrator (Full Access & Filament Panel)',
+                                    'superadmin' => 'Super Admin (Full System Authority)',
+                                    'admin' => 'Administrator (Full Access)',
                                     'developer' => 'Developer (Assigned Projects & Developer Portal)',
+                                    'qa' => 'QA Engineer (QA Data Access Only)',
                                 ])
                                 ->default('developer')
                                 ->required(),

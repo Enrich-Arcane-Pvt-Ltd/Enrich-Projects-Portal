@@ -47,7 +47,7 @@ export default function Authenticated({
                                     <span className="font-bold text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5 sm:gap-2 truncate">
                                         Enrich Vault
                                         <span className="hidden sm:inline-flex text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                                            Developer Portal
+                                            {user.role === 'qa' ? 'QA Portal' : 'Developer Portal'}
                                         </span>
                                     </span>
                                     <span className="text-[11px] sm:text-xs text-slate-400 truncate">Enrich Arcane (Pvt) Ltd</span>
@@ -68,7 +68,7 @@ export default function Authenticated({
                                             </div>
                                             <span>{user.name}</span>
                                             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700/60">
-                                                {user.role}
+                                                {user.role === 'qa' ? 'QA Engineer' : user.role}
                                             </span>
                                             <svg
                                                 className="h-4 w-4 text-slate-400"
@@ -95,7 +95,7 @@ export default function Authenticated({
                                         >
                                             Account Settings
                                         </Dropdown.Link>
-                                        {user.role === 'admin' && (
+                                        {['admin', 'superadmin'].includes(user.role) && (
                                             <a
                                                 href="/admin"
                                                 className="block w-full px-4 py-2 text-start text-sm leading-5 text-amber-300 hover:bg-amber-500/10 focus:bg-amber-500/10 focus:outline-none transition duration-150 ease-in-out"
@@ -175,7 +175,7 @@ export default function Authenticated({
                             <div className="text-sm font-semibold text-white truncate flex items-center gap-2">
                                 <span>{user.name}</span>
                                 <span className="text-[9px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-900 text-slate-300 border border-slate-700">
-                                    {user.role}
+                                    {user.role === 'qa' ? 'QA Engineer' : user.role}
                                 </span>
                             </div>
                             <div className="text-xs text-slate-400 truncate">{user.email}</div>
@@ -188,7 +188,7 @@ export default function Authenticated({
                     >
                         My Projects
                     </ResponsiveNavLink>
-                    {user.role === 'admin' && (
+                    {['admin', 'superadmin'].includes(user.role) && (
                         <a
                             href="/admin"
                             className="flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-amber-400 hover:bg-slate-800/80 transition"

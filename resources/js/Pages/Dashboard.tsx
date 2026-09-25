@@ -433,7 +433,7 @@ export default function Dashboard({
 
     return (
         <AuthenticatedLayout>
-            <Head title="Developer Vault Dashboard" />
+            <Head title={auth.user.role === 'qa' ? 'QA Portal Dashboard' : 'Developer Vault Dashboard'} />
 
             <div className="py-5 sm:py-8 px-3.5 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto w-full min-w-0">
                 {/* ---------------- Organization-style header ---------------- */}
@@ -446,7 +446,9 @@ export default function Dashboard({
                             <h1 className="text-lg sm:text-2xl font-semibold text-white truncate">{auth.user.name}</h1>
                             <div className="flex flex-wrap items-center gap-x-2.5 sm:gap-x-4 gap-y-1 text-xs text-slate-400">
                                 
-                                <span className="capitalize font-medium text-slate-300">{auth.user.role}</span>
+                                <span className="capitalize font-medium text-slate-300">
+                                    {auth.user.role === 'qa' ? 'QA Engineer' : auth.user.role}
+                                </span>
                                 <span>•</span>
                                 <span>{stats.total_projects} projects</span>
                                 <span>•</span>
@@ -644,7 +646,7 @@ export default function Dashboard({
                                                 </div>
 
                                                 <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-slate-800/80 w-full sm:w-auto min-w-0">
-                                                    {project.is_owner && (
+                                                    {auth.user.role !== 'qa' && project.is_owner && (
                                                         <div className="flex items-center gap-1.5">
                                                             <button
                                                                 onClick={() => {
