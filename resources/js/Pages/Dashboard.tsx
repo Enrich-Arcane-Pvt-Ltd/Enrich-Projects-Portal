@@ -1,4 +1,4 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import AuthenticatedLayout, { getUserInitials } from '@/Layouts/AuthenticatedLayout';
 import ProjectVaultModal from '@/Components/ProjectVaultModal';
 import ProjectFormModal from '@/Components/ProjectFormModal';
 import {
@@ -174,47 +174,6 @@ const selectClass =
     'px-3 py-2 rounded-md bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50';
 
 /* ------------------------------------------------------------------ */
-/* User Initials & Monogram Helper                                     */
-/* ------------------------------------------------------------------ */
-
-const getUserInitials = (name: string, allNames: string[] = []): string => {
-    if (!name) return 'U';
-    const trimmed = name.trim();
-    if (!trimmed) return 'U';
-    const firstChar = trimmed.charAt(0).toUpperCase();
-
-    // Check if other users in the system share the same starting letter
-    const hasSameFirstLetter = allNames.some((other) => {
-        if (!other) return false;
-        const otherTrimmed = other.trim();
-        return (
-            otherTrimmed.toLowerCase() !== trimmed.toLowerCase() &&
-            otherTrimmed.charAt(0).toUpperCase() === firstChar
-        );
-    });
-
-    // If only one user has this starting letter, display just the first letter
-    if (!hasSameFirstLetter) {
-        return firstChar;
-    }
-
-    // Multiple users start with the same letter: get the first letter and another letter
-    const parts = trimmed.split(/\s+/).filter(Boolean);
-    if (parts.length > 1) {
-        // e.g. "Sunimal Opatha" -> "SO", "Super Admin" -> "SA"
-        return `${firstChar}${parts[1].charAt(0).toUpperCase()}`;
-    }
-    if (trimmed.length > 1) {
-        // Single word name: e.g. "Sunimal" -> "SU"
-        return `${firstChar}${trimmed.charAt(1).toUpperCase()}`;
-    }
-    // Single-character name: deterministically pick another letter
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const seed = (trimmed.charCodeAt(0) * 7 + 11) % alphabet.length;
-    return `${firstChar}${alphabet[seed]}`;
-};
-
-/* ------------------------------------------------------------------ */
 /* Small presentational pieces                                         */
 /* ------------------------------------------------------------------ */
 
@@ -229,14 +188,13 @@ function StatusPill({ status }: { status: string }) {
 
 function Avatar({
     name,
-    allNames = [],
     size = 'h-8 w-8',
 }: {
     name: string;
     allNames?: string[];
     size?: string;
 }) {
-    const initials = getUserInitials(name, allNames);
+    const initials = getUserInitials(name);
     return (
         <div
             title={name}
@@ -449,8 +407,8 @@ export default function Dashboard({
     }, [auth.user, availableDevelopers, projects]);
 
     const userInitials = useMemo(() => {
-        return getUserInitials(auth.user.name, allUserNames);
-    }, [auth.user.name, allUserNames]);
+        return getUserInitials(auth.user.name);
+    }, [auth.user.name]);
 
     // Project list pagination (8 per page)
     const PROJECTS_PER_PAGE = 8;
