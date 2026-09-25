@@ -165,10 +165,32 @@ export interface DashboardStats {
     total_servers: number;
 }
 
+export interface NotificationAction {
+    name: string;
+    label?: string;
+    url?: string;
+}
+
+export interface InertiaNotification {
+    id: string;
+    title: string;
+    body: string;
+    status?: 'success' | 'warning' | 'danger' | 'info';
+    icon?: string;
+    actions?: NotificationAction[];
+    read_at?: string | null;
+    created_at: string;
+    created_at_raw?: string;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
     auth: {
         user: User;
     };
+    notifications?: {
+        unread_count: number;
+        recent: InertiaNotification[];
+    } | null;
 };

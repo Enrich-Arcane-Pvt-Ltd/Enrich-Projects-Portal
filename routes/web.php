@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DeveloperProjectController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectManagementController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -82,13 +83,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/projects/{project}/update-leads', [ProjectManagementController::class, 'updateLeads'])->name('developers.update-leads');
     });
 
-    // Universal public storage fallback
-    Route::get('/storage/{path}', function (string $path) {
-        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->response($path);
-        }
-        abort(404);
-    })->where('path', '.*');
+    // Notifications API for Developer and QA portal
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 Route::middleware('auth')->group(function () {

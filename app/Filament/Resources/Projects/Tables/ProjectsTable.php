@@ -6,6 +6,7 @@ use App\Enums\ProjectPriority;
 use App\Enums\ProjectStatus;
 use App\Enums\ProjectType;
 use App\Services\AuditService;
+use App\Services\PortalNotificationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -123,6 +124,10 @@ class ProjectsTable
                             "Admin " . (auth()->user()?->name ?? 'Admin') . " approved deletion request for project {$record->name}"
                         );
 
+                        if ($record->creator) {
+                            PortalNotificationService::notifyDeletionApproved($record, auth()->user(), $record->creator);
+                        }
+
                         Notification::make()
                             ->title('Project Deletion Approved')
                             ->success()
@@ -155,6 +160,10 @@ class ProjectsTable
                             "Admin " . (auth()->user()?->name ?? 'Admin') . " rejected deletion request for project {$record->name}: {$data['rejection_reason']}"
                         );
 
+                        if ($record->creator) {
+                            PortalNotificationService::notifyDeletionRejected($record, auth()->user(), $record->creator, $data['rejection_reason']);
+                        }
+
                         Notification::make()
                             ->title('Deletion Request Rejected')
                             ->warning()
@@ -166,11 +175,23 @@ class ProjectsTable
                     ->modalDescription('Do u really want to Delete this project?')
                     ->modalSubmitActionLabel('Yes, Delete')
                     ->before(function ($record) {
+                        $creator = $record->creator;
+                        $admin = auth()->user();
+
                         AuditService::log(
                             null,
                             'DELETED_PROJECT',
-                            "Admin " . (auth()->user()?->name ?? 'Admin') . " deleted project {$record->name} [{$record->code}]"
+                            "Admin " . ($admin?->name ?? 'Admin') . " deleted project {$record->name} [{$record->code}]"
                         );
+
+                        if ($creator && $admin && $creator->id !== $admin->id) {
+                            PortalNotificationService::notifyDirectProjectDeletedByAdmin(
+                                $record->name,
+                                $record->code,
+                                $creator,
+                                $admin
+                            );
+                        }
                     }),
             ])
             ->toolbarActions([

@@ -16,6 +16,7 @@ use App\Models\ServerEnvironment;
 use App\Models\ThirdPartyAccount;
 use App\Models\User;
 use App\Services\AuditService;
+use App\Services\PortalNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,6 +57,8 @@ class ProjectManagementController extends Controller
 
         // Attach creator to project_user pivot
         $project->developers()->syncWithoutDetaching([$request->user()->id]);
+
+        PortalNotificationService::notifyProjectCreated($project, $request->user(), [$request->user()->id]);
 
         AuditService::log(
             $project->id,
@@ -131,21 +134,7 @@ class ProjectManagementController extends Controller
         );
 
         // Send Filament database notification to the chosen administrator
-        try {
-            \Filament\Notifications\Notification::make()
-                ->title('Project Deletion Approval Request')
-                ->icon('heroicon-o-trash')
-                ->warning()
-                ->body("Developer {$user->name} requested approval to delete project '{$project->name}' ({$project->code})." . (filled($validated['reason'] ?? null) ? "\nReason: {$validated['reason']}" : ''))
-                ->actions([
-                    \Filament\Actions\Action::make('review')
-                        ->button()
-                        ->url("/admin/projects?search=" . urlencode($project->code)),
-                ])
-                ->sendToDatabase($admin);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Failed sending deletion notification: ' . $e->getMessage());
-        }
+        PortalNotificationService::notifyDeletionRequested($project, $admin, $user, $validated['reason'] ?? null);
 
         return redirect()->back()->with('success', "Deletion request submitted to {$admin->name}. Waiting for administrative approval.");
     }
@@ -195,7 +184,7 @@ class ProjectManagementController extends Controller
 
         $name = $project->name;
         $code = $project->code;
-        $projectId = $project->id;
+        $approver = $project->deletionApprovedBy;
 
         AuditService::log(
             null,
@@ -204,6 +193,8 @@ class ProjectManagementController extends Controller
         );
 
         $project->delete();
+
+        PortalNotificationService::notifyApprovedProjectDeleted($name, $code, $user, $approver);
 
         return redirect()->route('dashboard')->with('success', "Project '{$name}' deleted successfully.");
     }
@@ -796,6 +787,8 @@ class ProjectManagementController extends Controller
 
         $user = User::findOrFail($validated['user_id']);
         $project->developers()->syncWithoutDetaching([$user->id]);
+
+        PortalNotificationService::notifyDeveloperAssigned($project, $user, $request->user());
 
         AuditService::log(
             $project->id,
