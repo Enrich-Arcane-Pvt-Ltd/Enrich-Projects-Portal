@@ -107,4 +107,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function projectAccessRequests(): HasMany
+    {
+        return $this->hasMany(ProjectAccessRequest::class, 'user_id');
+    }
 }

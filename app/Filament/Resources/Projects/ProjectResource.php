@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Projects;
 
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
+use App\Filament\Resources\Projects\RelationManagers\AccessRequestsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\BackgroundServicesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\ClientAccessCredentialsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\CredentialsRelationManager;
@@ -63,6 +64,7 @@ class ProjectResource extends Resource
             IotConfigurationsRelationManager::class,
             DocumentsRelationManager::class,
             DevelopersRelationManager::class,
+            AccessRequestsRelationManager::class,
         ];
     }
 

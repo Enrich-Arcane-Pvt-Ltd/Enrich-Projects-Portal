@@ -162,4 +162,9 @@ class Project extends Model
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function accessRequests(): HasMany
+    {
+        return $this->hasMany(ProjectAccessRequest::class);
+    }
 }
