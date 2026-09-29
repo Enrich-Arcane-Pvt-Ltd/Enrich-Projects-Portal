@@ -28,7 +28,8 @@ class ProjectForm
                                 ->required(),
                             TextInput::make('code')
                                 ->label('Project Code / Slug')
-                                ->placeholder('e.g. SP-TAXI-2026')
+                                ->placeholder('e.g. EA' . date('ym') . '-1001')
+                                ->default(fn () => \App\Models\Project::generateNextCode())
                                 ->unique(ignoreRecord: true)
                                 ->required(),
                         ]),

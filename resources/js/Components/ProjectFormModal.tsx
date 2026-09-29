@@ -3,20 +3,55 @@ import type { Project } from '@/types';
 import { useForm } from '@inertiajs/react';
 import React, { useEffect } from 'react';
 
+export function generateClientProjectCode(existingProjects: Project[] = []): string {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `EA${yy}${mm}-`;
+
+    let maxSeq = 1000;
+    existingProjects.forEach((p) => {
+        if (p.code) {
+            const match = p.code.match(/^EA\d{4}-(\d+)$/i);
+            if (match) {
+                const seq = parseInt(match[1], 10);
+                if (!isNaN(seq) && seq > maxSeq) {
+                    maxSeq = seq;
+                }
+            }
+        }
+    });
+
+    const nextSeq = String(maxSeq + 1).padStart(4, '0');
+    return `${prefix}${nextSeq}`;
+}
+
 interface ProjectFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     projectToEdit?: Project | null;
+    nextProjectCode?: string;
+    existingProjects?: Project[];
 }
 
-export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: ProjectFormModalProps) {
+export default function ProjectFormModal({
+    isOpen,
+    onClose,
+    projectToEdit,
+    nextProjectCode,
+    existingProjects = [],
+}: ProjectFormModalProps) {
     if (!isOpen) return null;
 
     const isEditing = Boolean(projectToEdit);
 
+    const initialCode = isEditing
+        ? projectToEdit?.code || ''
+        : nextProjectCode || generateClientProjectCode(existingProjects);
+
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
         name: projectToEdit?.name || '',
-        code: projectToEdit?.code || '',
+        code: initialCode,
         type: projectToEdit?.type || 'web_app',
         priority: projectToEdit?.priority || 'medium',
         status: projectToEdit?.status || 'in_progress',
@@ -35,11 +70,20 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                 tech_stack: projectToEdit.tech_stack || '',
                 description: projectToEdit.description || '',
             });
-        } else {
-            reset();
+        } else if (isOpen) {
+            const freshCode = nextProjectCode || generateClientProjectCode(existingProjects);
+            setData({
+                name: '',
+                code: freshCode,
+                type: 'web_app',
+                priority: 'medium',
+                status: 'in_progress',
+                tech_stack: '',
+                description: '',
+            });
         }
         clearErrors();
-    }, [projectToEdit, isOpen]);
+    }, [projectToEdit, isOpen, nextProjectCode]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -109,17 +153,7 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                         <input
                             type="text"
                             value={data.name}
-                            onChange={(e) => {
-                                const newName = e.target.value;
-                                setData((prev) => ({
-                                    ...prev,
-                                    name: newName,
-                                    // Auto-generate code if creating and code is empty or matches previous slug
-                                    code: !isEditing && (!prev.code || prev.code === prev.name.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 15))
-                                        ? newName.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 15)
-                                        : prev.code,
-                                }));
-                            }}
+                            onChange={(e) => setData('name', e.target.value)}
                             placeholder="e.g. Real-Time Telemetry & Fleet Tracker"
                             required
                             className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-slate-600"
@@ -130,17 +164,42 @@ export default function ProjectFormModal({ isOpen, onClose, projectToEdit }: Pro
                     {/* Project Code & Type */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-300">
-                                Project Code / Identifier <span className="text-rose-400">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={data.code}
-                                onChange={(e) => setData('code', e.target.value.toUpperCase())}
-                                placeholder="e.g. FLEET-2026"
-                                required
-                                className="w-full font-mono px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600 uppercase"
-                            />
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-slate-300">
+                                    Project Code / Identifier <span className="text-rose-400">*</span>
+                                </label>
+                                {/* {!isEditing && (
+                                    <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                        Auto-generated
+                                    </span>
+                                )} */}
+                            </div>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={data.code}
+                                    onChange={(e) => setData('code', e.target.value.toUpperCase())}
+                                    placeholder="e.g. EA2609-1001"
+                                    required
+                                    className="w-full font-mono px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-600 uppercase pr-10"
+                                />
+                                {!isEditing && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const freshCode = generateClientProjectCode(existingProjects);
+                                            setData('code', freshCode);
+                                        }}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-md hover:bg-slate-800 transition-colors"
+                                        title="Regenerate project code"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
                             {errors.code && <p className="text-xs text-rose-400">{errors.code}</p>}
                         </div>
 
