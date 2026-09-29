@@ -140,6 +140,7 @@ class DeveloperProjectController extends Controller
             'availableDevelopers' => User::select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
             'availableAdmins' => User::whereIn('role', ['admin', 'superadmin'])->select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
             'filters' => $request->only(['search', 'type', 'status', 'priority']),
+            'nextProjectCode' => Project::generateNextCode(),
         ]);
     }
 

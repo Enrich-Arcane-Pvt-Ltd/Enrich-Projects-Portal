@@ -41,6 +41,48 @@ class Project extends Model
         'edit_permission_rejection_reason',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Project $project) {
+            if (empty($project->code)) {
+                $project->code = self::generateNextCode();
+            }
+        });
+    }
+
+    /**
+     * Generate the next automated project code according to the format:
+     * EA[last 2 digits of year][current month 2 digits]-[continuous 4-digit sequence starting from 1000]
+     * Examples: EA2609-1001, EA2609-1002, EA2610-1003, EA2610-1004
+     */
+    public static function generateNextCode(): string
+    {
+        $yearMonth = date('ym'); // e.g. 2609
+        $prefix = 'EA' . $yearMonth . '-';
+
+        $maxSeq = 1000;
+
+        $codes = self::pluck('code');
+        foreach ($codes as $c) {
+            if ($c && preg_match('/^EA\d{4}-(\d+)$/i', $c, $matches)) {
+                $seq = (int) $matches[1];
+                if ($seq > $maxSeq) {
+                    $maxSeq = $seq;
+                }
+            }
+        }
+
+        $nextSeq = $maxSeq + 1;
+
+        do {
+            $formattedSeq = str_pad((string) $nextSeq, 4, '0', STR_PAD_LEFT);
+            $candidateCode = $prefix . $formattedSeq;
+            $nextSeq++;
+        } while (self::where('code', $candidateCode)->exists());
+
+        return $candidateCode;
+    }
+
     protected function casts(): array
     {
         return [

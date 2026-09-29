@@ -26,6 +26,7 @@ interface DashboardProps extends PageProps {
         status?: string;
         priority?: string;
     };
+    nextProjectCode?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -269,6 +270,7 @@ export default function Dashboard({
     availableDevelopers = [],
     availableAdmins = [],
     filters,
+    nextProjectCode,
 }: DashboardProps) {
     const [scopeFilter, setScopeFilter] = useState<Scope>('all');
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
@@ -1362,6 +1364,8 @@ export default function Dashboard({
                     setEditingProject(null);
                 }}
                 projectToEdit={editingProject}
+                nextProjectCode={nextProjectCode}
+                existingProjects={projects}
             />
 
             {/* Modal: Request Deletion Approval */}

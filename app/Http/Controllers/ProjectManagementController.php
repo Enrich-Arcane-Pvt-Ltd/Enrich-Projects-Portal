@@ -40,6 +40,10 @@ class ProjectManagementController extends Controller
      */
     public function storeProject(Request $request): RedirectResponse
     {
+        if (empty($request->code)) {
+            $request->merge(['code' => Project::generateNextCode()]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:projects,code',
