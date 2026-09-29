@@ -18,6 +18,10 @@ export default function Edit({
         [&_input]:!bg-slate-950/80 [&_input]:!border-slate-700 [&_input]:!text-white [&_input]:placeholder:!text-slate-500
         [&_input]:px-4 [&_input]:py-3 [&_input]:rounded-xl [&_input]:text-sm [&_input]:shadow-inner
         [&_input:focus]:!border-blue-500 [&_input:focus]:!ring-2 [&_input:focus]:!ring-blue-500/30
+        [&_input:disabled]:!bg-slate-950/40 [&_input:disabled]:!border-slate-800 [&_input:disabled]:!text-slate-400 [&_input:disabled]:cursor-not-allowed
+        [&_textarea]:!bg-slate-950/80 [&_textarea]:!border-slate-700 [&_textarea]:!text-white [&_textarea]:placeholder:!text-slate-500
+        [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:rounded-xl [&_textarea]:text-sm [&_textarea]:shadow-inner
+        [&_textarea:focus]:!border-blue-500 [&_textarea:focus]:!ring-2 [&_textarea:focus]:!ring-blue-500/30
         [&_button[type='submit']]:!bg-blue-600 [&_button[type='submit']]:hover:!bg-blue-500 [&_button[type='submit']]:!text-white [&_button[type='submit']]:px-6 [&_button[type='submit']]:py-2.5 [&_button[type='submit']]:rounded-xl [&_button[type='submit']]:shadow-lg [&_button[type='submit']]:shadow-blue-600/30
     `;
 

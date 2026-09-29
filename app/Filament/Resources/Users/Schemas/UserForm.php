@@ -44,6 +44,17 @@ class UserForm
                                 ->dehydrated(fn ($state) => filled($state))
                                 ->required(fn (string $context): bool => $context === 'create'),
                         ]),
+                        Grid::make(2)->schema([
+                            \Filament\Forms\Components\DatePicker::make('birth_date')
+                                ->label('Birth Date'),
+                            TextInput::make('contact_no')
+                                ->label('Contact Number')
+                                ->maxLength(50),
+                        ]),
+                        \Filament\Forms\Components\Textarea::make('bio')
+                            ->label('Bio')
+                            ->rows(3)
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

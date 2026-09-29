@@ -16,16 +16,31 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $user = $this->user();
+        $canEditEmail = in_array($user->role, ['admin', 'superadmin']);
+
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,svg', 'max:4096'],
+            'birth_date' => ['nullable', 'date'],
+            'contact_no' => ['nullable', 'string', 'max:50'],
+            'bio' => ['nullable', 'string', 'max:1000'],
+            'remove_avatar' => ['nullable', 'boolean'],
+        ];
+
+        if ($canEditEmail) {
+            $rules['email'] = [
                 'required',
                 'string',
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
-            ],
-        ];
+                Rule::unique(User::class)->ignore($user->id),
+            ];
+        } else {
+            $rules['email'] = ['nullable', 'string'];
+        }
+
+        return $rules;
     }
 }

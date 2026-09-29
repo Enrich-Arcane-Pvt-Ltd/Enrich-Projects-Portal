@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,15 +30,43 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Email can only be updated by admin or superadmin
+        if (! in_array($user->role, ['admin', 'superadmin'])) {
+            unset($validated['email']);
         }
 
-        $request->user()->save();
+        // Handle avatar upload if provided
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar_url && str_starts_with($user->avatar_url, '/storage/avatars/')) {
+                $oldPath = str_replace('/storage/', '', $user->avatar_url);
+                Storage::disk('public')->delete($oldPath);
+            }
 
-        return Redirect::route('profile.edit');
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $validated['avatar_url'] = Storage::url($path);
+        }
+
+        // Handle removing avatar if requested
+        if ($request->boolean('remove_avatar')) {
+            if ($user->avatar_url && str_starts_with($user->avatar_url, '/storage/avatars/')) {
+                $oldPath = str_replace('/storage/', '', $user->avatar_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $validated['avatar_url'] = null;
+        }
+
+        $user->fill($validated);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
