@@ -165,6 +165,27 @@ export interface Project {
     edit_permission_approved_by?: User | null;
     edit_permission_rejected_at?: string | null;
     edit_permission_rejection_reason?: string | null;
+    access_request?: ProjectAccessRequest | null;
+    can_open?: boolean;
+}
+
+export interface ProjectAccessRequest {
+    id: number;
+    project_id: number;
+    user_id: number;
+    admin_id?: number | null;
+    status: 'pending' | 'approved' | 'rejected';
+    reason?: string | null;
+    requested_at?: string | null;
+    approved_at?: string | null;
+    approved_by_id?: number | null;
+    rejected_at?: string | null;
+    rejection_reason?: string | null;
+    created_at?: string;
+    updated_at?: string;
+    admin?: User | null;
+    approved_by?: User | null;
+    user?: User | null;
 }
 
 export interface DashboardStats {

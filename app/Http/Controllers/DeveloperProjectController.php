@@ -78,12 +78,32 @@ class DeveloperProjectController extends Controller
             ->groupBy('project_id')
             ->pluck('count', 'project_id');
 
-        $projects = $query->latest('updated_at')->get()->map(function ($project) use ($user, $userAuditAccessCounts) {
+        $userAccessRequests = \App\Models\ProjectAccessRequest::where('user_id', $user->id)
+            ->with(['admin:id,name,email', 'approvedBy:id,name,email'])
+            ->get()
+            ->keyBy('project_id');
+
+        $projects = $query->latest('updated_at')->get()->map(function ($project) use ($user, $userAuditAccessCounts, $userAccessRequests) {
             $project->is_owner = $project->created_by_id === $user->id;
             $project->is_assigned = $project->lead_developer_id === $user->id
                 || $project->manager_id === $user->id
                 || $project->developers->contains('id', $user->id);
             $project->access_count = (int) ($userAuditAccessCounts[$project->id] ?? 0);
+
+            $accessRequest = $userAccessRequests->get($project->id);
+            $project->access_request = $accessRequest;
+
+            if (in_array($user->role, ['admin', 'superadmin'])) {
+                $project->can_open = true;
+            } elseif ($user->role === 'qa') {
+                $project->can_open = $project->is_assigned;
+            } elseif ($user->role === 'developer') {
+                $project->can_open = $project->is_owner
+                    || $project->is_assigned
+                    || ($accessRequest && $accessRequest->status === 'approved');
+            } else {
+                $project->can_open = false;
+            }
 
             return $project;
         });
@@ -131,7 +151,7 @@ class DeveloperProjectController extends Controller
         $user = $request->user();
 
         if (! $this->userCanAccessProject($user, $project)) {
-            abort(403, 'Unauthorized access. QA engineers can only open projects they are assigned to.');
+            abort(403, 'Unauthorized access. You do not have permission to open this project vault.');
         }
 
         $project->load([
@@ -320,21 +340,35 @@ class DeveloperProjectController extends Controller
             return true;
         }
 
-        if ($user->role === 'qa') {
-            $proj = $project instanceof Project ? $project : Project::with('developers')->find($project);
-            if (! $proj) {
-                return false;
-            }
-
-            if (! $proj->relationLoaded('developers')) {
-                $proj->load('developers');
-            }
-
-            return $proj->lead_developer_id === $user->id
-                || $proj->manager_id === $user->id
-                || $proj->developers->contains('id', $user->id);
+        $proj = $project instanceof Project ? $project : Project::with('developers')->find($project);
+        if (! $proj) {
+            return false;
         }
 
-        return true;
+        if (! $proj->relationLoaded('developers')) {
+            $proj->load('developers');
+        }
+
+        $isAssigned = $proj->lead_developer_id === $user->id
+            || $proj->manager_id === $user->id
+            || $proj->developers->contains('id', $user->id);
+
+        if ($user->role === 'qa') {
+            return $isAssigned;
+        }
+
+        if ($user->role === 'developer') {
+            $isOwner = $proj->created_by_id === $user->id;
+            if ($isOwner || $isAssigned) {
+                return true;
+            }
+
+            return \App\Models\ProjectAccessRequest::where('project_id', $proj->id)
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->exists();
+        }
+
+        return false;
     }
 }

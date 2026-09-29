@@ -208,6 +208,88 @@ class ProjectManagementController extends Controller
     }
 
     /**
+     * Request access permission to an unassigned / other developer's project from an admin/superadmin
+     */
+    public function requestProjectAccess(Request $request, Project $project): RedirectResponse
+    {
+        $user = $request->user();
+
+        // If user already owns or is assigned, no need to request
+        $isAssigned = $project->lead_developer_id === $user->id
+            || $project->manager_id === $user->id
+            || $project->developers()->where('users.id', $user->id)->exists();
+
+        if ($project->created_by_id === $user->id || $isAssigned) {
+            return redirect()->back()->with('info', "You already have access to project '{$project->name}'.");
+        }
+
+        $validated = $request->validate([
+            'admin_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(fn ($q) => $q->whereIn('role', ['admin', 'superadmin'])),
+            ],
+            'reason' => 'nullable|string|max:1000',
+        ]);
+
+        $admin = User::findOrFail($validated['admin_id']);
+
+        \App\Models\ProjectAccessRequest::updateOrCreate(
+            [
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'admin_id' => $admin->id,
+                'status' => 'pending',
+                'reason' => $validated['reason'] ?? null,
+                'requested_at' => now(),
+                'approved_at' => null,
+                'approved_by_id' => null,
+                'rejected_at' => null,
+                'rejection_reason' => null,
+            ]
+        );
+
+        AuditService::log(
+            $project->id,
+            'REQUESTED_PROJECT_ACCESS',
+            "Developer {$user->name} requested project access from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: {$validated['reason']}" : '')
+        );
+
+        PortalNotificationService::notifyProjectAccessRequested($project, $admin, $user, $validated['reason'] ?? null);
+
+        return redirect()->back()->with('success', "Access request for '{$project->name}' submitted to {$admin->name}. You will be notified once reviewed.");
+    }
+
+    /**
+     * Cancel a pending project access request
+     */
+    public function cancelProjectAccessRequest(Request $request, Project $project): RedirectResponse
+    {
+        $user = $request->user();
+
+        $accessRequest = \App\Models\ProjectAccessRequest::where('project_id', $project->id)
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($accessRequest) {
+            $accessRequest->delete();
+
+            AuditService::log(
+                $project->id,
+                'CANCELLED_PROJECT_ACCESS_REQUEST',
+                "Developer {$user->name} cancelled access request for project {$project->name}"
+            );
+
+            return redirect()->back()->with('info', "Access request for project '{$project->name}' has been cancelled.");
+        }
+
+        return redirect()->back()->with('info', "No pending access request found for project '{$project->name}'.");
+    }
+
+    /**
      * Request project deletion approval from an administrator
      */
     public function requestDeletion(Request $request, Project $project): RedirectResponse

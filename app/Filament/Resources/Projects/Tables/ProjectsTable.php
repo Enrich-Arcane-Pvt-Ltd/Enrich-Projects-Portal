@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\Tables;
 use App\Enums\ProjectPriority;
 use App\Enums\ProjectStatus;
 use App\Enums\ProjectType;
+use App\Models\ProjectAccessRequest;
 use App\Services\AuditService;
 use App\Services\PortalNotificationService;
 use Filament\Actions\Action;
@@ -13,6 +14,9 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
@@ -41,6 +45,10 @@ class ProjectsTable
                             $desc .= ' • [Edit Permission Requested]';
                         } elseif ($record->edit_permission_status === 'approved') {
                             $desc .= ' • [Edit Permission Approved]';
+                        }
+                        $pendingAccessCount = $record->accessRequests()->where('status', 'pending')->count();
+                        if ($pendingAccessCount > 0) {
+                            $desc .= " • [{$pendingAccessCount} Access Request(s) Pending]";
                         }
                         return $desc;
                     }),
@@ -265,6 +273,112 @@ class ProjectsTable
                             ->warning()
                             ->body("Deletion request for '{$record->name}' has been rejected.")
                             ->send();
+                    }),
+                Action::make('approve_access')
+                    ->label('Approve Access')
+                    ->icon('heroicon-o-key')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->accessRequests()->where('status', 'pending')->exists())
+                    ->form(function ($record) {
+                        $pendingRequests = $record->accessRequests()->where('status', 'pending')->with('user')->get();
+                        if ($pendingRequests->count() === 1) {
+                            $req = $pendingRequests->first();
+                            return [
+                                Placeholder::make('dev_info')
+                                    ->label('Pending Access Request')
+                                    ->content("Developer: {$req->user?->name} ({$req->user?->email}) | Justification: " . ($req->reason ?: 'None provided')),
+                                Hidden::make('request_id')->default($req->id),
+                            ];
+                        }
+                        return [
+                            Select::make('request_id')
+                                ->label('Select Access Request to Approve')
+                                ->options($pendingRequests->mapWithKeys(fn ($r) => [$r->id => "{$r->user?->name} ({$r->user?->email}) - " . ($r->reason ?: 'No reason')]))
+                                ->required(),
+                        ];
+                    })
+                    ->modalHeading('Approve Developer Project Access')
+                    ->modalSubmitActionLabel('Grant Access')
+                    ->action(function ($record, array $data) {
+                        $req = ProjectAccessRequest::find($data['request_id']);
+                        if ($req) {
+                            $req->update([
+                                'status' => 'approved',
+                                'approved_at' => now(),
+                                'approved_by_id' => auth()->id(),
+                            ]);
+
+                            AuditService::log(
+                                $record->id,
+                                'APPROVED_PROJECT_ACCESS',
+                                "Admin " . (auth()->user()?->name ?? 'Admin') . " approved project access for developer " . ($req->user?->name ?? 'Developer')
+                            );
+
+                            if ($req->user) {
+                                PortalNotificationService::notifyProjectAccessApproved($record, auth()->user(), $req->user);
+                            }
+
+                            Notification::make()
+                                ->title('Project Access Granted')
+                                ->success()
+                                ->body("Access to '{$record->name}' granted for " . ($req->user?->name ?? 'developer') . ".")
+                                ->send();
+                        }
+                    }),
+                Action::make('reject_access')
+                    ->label('Reject Access')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->accessRequests()->where('status', 'pending')->exists())
+                    ->form(function ($record) {
+                        $pendingRequests = $record->accessRequests()->where('status', 'pending')->with('user')->get();
+                        $fields = [];
+                        if ($pendingRequests->count() === 1) {
+                            $req = $pendingRequests->first();
+                            $fields[] = Placeholder::make('dev_info')
+                                ->label('Rejecting Access Request For')
+                                ->content("Developer: {$req->user?->name} ({$req->user?->email}) | Justification: " . ($req->reason ?: 'None provided'));
+                            $fields[] = Hidden::make('request_id')->default($req->id);
+                        } else {
+                            $fields[] = Select::make('request_id')
+                                ->label('Select Access Request to Reject')
+                                ->options($pendingRequests->mapWithKeys(fn ($r) => [$r->id => "{$r->user?->name} ({$r->user?->email}) - " . ($r->reason ?: 'No reason')]))
+                                ->required();
+                        }
+                        $fields[] = Textarea::make('rejection_reason')
+                            ->label('Reason for Rejection')
+                            ->placeholder('Specify why access to this project is denied...')
+                            ->required();
+
+                        return $fields;
+                    })
+                    ->modalHeading('Reject Developer Project Access Request')
+                    ->modalSubmitActionLabel('Reject Access')
+                    ->action(function ($record, array $data) {
+                        $req = ProjectAccessRequest::find($data['request_id']);
+                        if ($req) {
+                            $req->update([
+                                'status' => 'rejected',
+                                'rejected_at' => now(),
+                                'rejection_reason' => $data['rejection_reason'],
+                            ]);
+
+                            AuditService::log(
+                                $record->id,
+                                'REJECTED_PROJECT_ACCESS',
+                                "Admin " . (auth()->user()?->name ?? 'Admin') . " rejected access for developer " . ($req->user?->name ?? 'Developer') . ": {$data['rejection_reason']}"
+                            );
+
+                            if ($req->user) {
+                                PortalNotificationService::notifyProjectAccessRejected($record, auth()->user(), $req->user, $data['rejection_reason']);
+                            }
+
+                            Notification::make()
+                                ->title('Project Access Denied')
+                                ->warning()
+                                ->body("Access request for " . ($req->user?->name ?? 'developer') . " has been rejected.")
+                                ->send();
+                        }
                     }),
                 DeleteAction::make()
                     ->modalHeading('Delete Project')

@@ -248,6 +248,14 @@ export default function Dashboard({
     const [editPermissionReason, setEditPermissionReason] = useState<string>('');
     const [isSubmittingEditPermission, setIsSubmittingEditPermission] = useState(false);
 
+    // Project access request states (for developers requesting access to unassigned/unowned projects)
+    const [accessRequestProject, setAccessRequestProject] = useState<Project | null>(null);
+    const [pendingAccessProject, setPendingAccessProject] = useState<Project | null>(null);
+    const [rejectedAccessProject, setRejectedAccessProject] = useState<Project | null>(null);
+    const [selectedAccessAdminId, setSelectedAccessAdminId] = useState<string>('');
+    const [accessReason, setAccessReason] = useState<string>('');
+    const [isSubmittingAccess, setIsSubmittingAccess] = useState(false);
+
     const handleEditClick = (project: Project) => {
         if (project.status === ProjectStatus.COMPLETED) {
             if (project.edit_permission_status === 'approved') {
@@ -355,6 +363,53 @@ export default function Dashboard({
             onSuccess: () => setApprovedDeletionProject(null),
             onFinish: () => setIsSubmittingDeletion(false),
         });
+    };
+
+    const handleAccessClick = (project: Project) => {
+        if (project.access_request?.status === 'pending') {
+            setPendingAccessProject(project);
+        } else if (project.access_request?.status === 'rejected') {
+            setRejectedAccessProject(project);
+        } else {
+            setAccessRequestProject(project);
+            setSelectedAccessAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
+            setAccessReason('');
+        }
+    };
+
+    const submitAccessRequest = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!accessRequestProject || !selectedAccessAdminId) return;
+
+        setIsSubmittingAccess(true);
+        router.post(
+            `/developer/projects/${accessRequestProject.id}/request-access`,
+            {
+                admin_id: selectedAccessAdminId,
+                reason: accessReason,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setAccessRequestProject(null);
+                    setAccessReason('');
+                },
+                onFinish: () => setIsSubmittingAccess(false),
+            }
+        );
+    };
+
+    const cancelAccessRequest = (projectId: number) => {
+        setIsSubmittingAccess(true);
+        router.post(
+            `/developer/projects/${projectId}/cancel-access-request`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setPendingAccessProject(null),
+                onFinish: () => setIsSubmittingAccess(false),
+            }
+        );
     };
 
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
@@ -611,9 +666,69 @@ export default function Dashboard({
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 w-full min-w-0">
                                     {popularProjects.map((project) => {
                                         const stack = stackList(project);
-                                        const canOpen = auth.user.role !== 'qa' || Boolean(project.is_assigned);
+                                        const canOpen = project.can_open ?? (
+                                            auth.user.role === 'admin' || auth.user.role === 'superadmin'
+                                                ? true
+                                                : auth.user.role === 'qa'
+                                                ? Boolean(project.is_assigned)
+                                                : Boolean(project.is_owner || project.is_assigned || project.access_request?.status === 'approved')
+                                        );
 
                                         if (!canOpen) {
+                                            if (auth.user.role === 'developer') {
+                                                const isPending = project.access_request?.status === 'pending';
+                                                const isRejected = project.access_request?.status === 'rejected';
+
+                                                return (
+                                                    <div
+                                                        key={project.id}
+                                                        onClick={() => handleAccessClick(project)}
+                                                        className={`text-left rounded-md border p-3.5 sm:p-4 flex flex-col gap-3 min-h-[112px] min-w-0 w-full cursor-pointer transition-colors ${
+                                                            isPending
+                                                                ? 'border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10'
+                                                                : isRejected
+                                                                ? 'border-rose-500/40 bg-rose-500/5 hover:bg-rose-500/10'
+                                                                : 'border-slate-800 bg-slate-900/40 hover:border-indigo-500/50 hover:bg-slate-900/70'
+                                                        }`}
+                                                        title={
+                                                            isPending
+                                                                ? 'Access requested - waiting for admin approval'
+                                                                : isRejected
+                                                                ? 'Access request was rejected - click to review or re-request'
+                                                                : 'Click to request access permission from an administrator'
+                                                        }
+                                                    >
+                                                        <div className="flex items-start justify-between gap-2.5 min-w-0">
+                                                            <span className="text-sm font-semibold text-slate-300 break-words min-w-0 flex-1 flex items-center gap-1.5">
+                                                                <svg className={`w-3.5 h-3.5 shrink-0 ${isPending ? 'text-amber-400 animate-pulse' : isRejected ? 'text-rose-400' : 'text-indigo-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                                                </svg>
+                                                                {project.name}
+                                                            </span>
+                                                            <div className="shrink-0 flex items-center gap-1.5">
+                                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                                                                    isPending
+                                                                        ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                                                                        : isRejected
+                                                                        ? 'bg-rose-500/15 text-rose-300 border-rose-500/30'
+                                                                        : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                                                                }`}>
+                                                                    {isPending ? 'Pending Access' : isRejected ? 'Access Rejected' : 'Request Access'}
+                                                                </span>
+                                                                <StatusPill status={project.status} />
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs text-slate-400 line-clamp-2 flex-1 break-words">
+                                                            {project.description || project.code}
+                                                        </p>
+                                                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
+                                                            <StackDot tech={stack[0]} />
+                                                            {stack[1] && <StackDot tech={stack[1]} />}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+
                                             return (
                                                 <div
                                                     key={project.id}
@@ -747,7 +862,13 @@ export default function Dashboard({
                                     {paginatedProjects.map((project) => {
                                         const stack = stackList(project);
                                         const updated = timeAgo((project as { updated_at?: string }).updated_at);
-                                        const canOpen = auth.user.role !== 'qa' || Boolean(project.is_assigned);
+                                        const canOpen = project.can_open ?? (
+                                            auth.user.role === 'admin' || auth.user.role === 'superadmin'
+                                                ? true
+                                                : auth.user.role === 'qa'
+                                                ? Boolean(project.is_assigned)
+                                                : Boolean(project.is_owner || project.is_assigned || project.access_request?.status === 'approved')
+                                        );
 
                                         return (
                                             <li key={project.id} className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 hover:bg-slate-900/40 transition-colors w-full min-w-0">
@@ -763,6 +884,17 @@ export default function Dashboard({
                                                             >
                                                                 {project.name}
                                                             </Link>
+                                                        ) : auth.user.role === 'developer' ? (
+                                                            <button
+                                                                onClick={() => handleAccessClick(project)}
+                                                                className="text-base font-semibold text-slate-300 hover:text-indigo-400 hover:underline text-left break-words min-w-0 flex items-center gap-1.5"
+                                                                title="Click to request access permission from an administrator"
+                                                            >
+                                                                <svg className="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                                </svg>
+                                                                {project.name}
+                                                            </button>
                                                         ) : (
                                                             <span
                                                                 className="text-base font-semibold text-slate-300 text-left break-words min-w-0 cursor-default"
@@ -813,6 +945,31 @@ export default function Dashboard({
                                                             <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
                                                                 Edit Permission Rejected
                                                             </span>
+                                                        )}
+                                                        {auth.user.role === 'developer' && !project.is_owner && !project.is_assigned && (
+                                                            <>
+                                                                {project.access_request?.status === 'pending' && (
+                                                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                                                        <svg className="w-2.5 h-2.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        Access Request Pending
+                                                                    </span>
+                                                                )}
+                                                                {project.access_request?.status === 'approved' && (
+                                                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                                                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                        Access Granted
+                                                                    </span>
+                                                                )}
+                                                                {project.access_request?.status === 'rejected' && (
+                                                                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                                                        Access Rejected
+                                                                    </span>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
 
@@ -907,10 +1064,45 @@ export default function Dashboard({
                                                             onClick={() => {
                                                                 recordProjectAccess(project.id);
                                                             }}
-                                                            className="px-3.5 py-1.5 rounded-md border border-slate-700 hover:border-indigo-500 hover:text-white text-slate-200 text-xs font-semibold transition-colors"
+                                                            className="px-3.5 py-1.5 rounded-md border border-slate-700 hover:border-indigo-500 hover:text-white text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5"
                                                         >
                                                             Open vault
                                                         </Link>
+                                                    ) : auth.user.role === 'developer' ? (
+                                                        project.access_request?.status === 'pending' ? (
+                                                            <button
+                                                                onClick={() => handleAccessClick(project)}
+                                                                className="px-3 py-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                                                title="Access request is waiting for administrator approval. Click to view status."
+                                                            >
+                                                                <svg className="w-3.5 h-3.5 animate-pulse text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                Access Pending
+                                                            </button>
+                                                        ) : project.access_request?.status === 'rejected' ? (
+                                                            <button
+                                                                onClick={() => handleAccessClick(project)}
+                                                                className="px-3 py-1.5 rounded-md border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                                                title="Access request was rejected. Click to see reason or re-request."
+                                                            >
+                                                                <svg className="w-3.5 h-3.5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                                </svg>
+                                                                Access Rejected
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleAccessClick(project)}
+                                                                className="px-3 py-1.5 rounded-md border border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+                                                                title="You are not assigned to this project. Click to request access permission from an administrator."
+                                                            >
+                                                                <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                                                </svg>
+                                                                Request access
+                                                            </button>
+                                                        )
                                                     ) : (
                                                         <span
                                                             className="px-3 py-1.5 rounded-md border border-slate-800 bg-slate-900/50 text-slate-500 text-xs font-medium inline-flex items-center gap-1.5 cursor-not-allowed select-none"
@@ -1570,6 +1762,306 @@ export default function Dashboard({
                             <button
                                 type="button"
                                 onClick={() => setPendingEditPermissionProject(null)}
+                                className="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Request Access Permission from Admin */}
+            {accessRequestProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setAccessRequestProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Request Project Access</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Request authorization from an administrator to access this project vault.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setAccessRequestProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Project summary card */}
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3.5 space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-semibold text-white break-words">
+                                    {accessRequestProject.name}
+                                </span>
+                                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                                    {accessRequestProject.code}
+                                </span>
+                            </div>
+                            {accessRequestProject.description && (
+                                <p className="text-xs text-slate-400 line-clamp-2">
+                                    {accessRequestProject.description}
+                                </p>
+                            )}
+                            <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400">
+                                <span>Created by: <strong className="text-slate-300">{accessRequestProject.creator?.name || 'Developer'}</strong></span>
+                                {accessRequestProject.tech_stack && (
+                                    <>
+                                        <span>•</span>
+                                        <span className="text-slate-400 truncate">{accessRequestProject.tech_stack}</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <form onSubmit={submitAccessRequest} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    Select Administrator or Super Admin <span className="text-rose-400">*</span>
+                                </label>
+                                {availableAdmins.length > 0 ? (
+                                    <select
+                                        value={selectedAccessAdminId}
+                                        onChange={(e) => setSelectedAccessAdminId(e.target.value)}
+                                        required
+                                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    >
+                                        <option value="" disabled>Select an administrator...</option>
+                                        {availableAdmins.map((admin) => (
+                                            <option key={admin.id} value={admin.id}>
+                                                {admin.name} ({admin.role === 'superadmin' ? 'Super Admin' : 'Admin'} - {admin.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                                        No administrators found to review this request.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                                    Reason / Justification <span className="text-slate-500">(Optional)</span>
+                                </label>
+                                <textarea
+                                    value={accessReason}
+                                    onChange={(e) => setAccessReason(e.target.value)}
+                                    placeholder="Explain why you need access to this project (e.g. assisting in debugging, contributing, code review)..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setAccessRequestProject(null)}
+                                    className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!selectedAccessAdminId || isSubmittingAccess}
+                                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition-colors"
+                                >
+                                    {isSubmittingAccess ? (
+                                        <>
+                                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Sending Request...
+                                        </>
+                                    ) : (
+                                        'Send Access Request'
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Pending Access Status */}
+            {pendingAccessProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setPendingAccessProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                                    <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Access Request Pending</h3>
+                                    <p className="text-xs text-slate-400 mt-0.5">
+                                        Awaiting administrator review and approval.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setPendingAccessProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+                            <div>
+                                <div className="text-xs text-slate-400">Project</div>
+                                <div className="text-sm font-semibold text-white">{pendingAccessProject.name}</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div>
+                                    <span className="text-slate-400">Assigned Admin:</span>
+                                    <div className="text-slate-200 font-medium">
+                                        {pendingAccessProject.access_request?.admin?.name || 'Administrator'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span className="text-slate-400">Requested:</span>
+                                    <div className="text-slate-200 font-medium">
+                                        {pendingAccessProject.access_request?.requested_at
+                                            ? new Date(pendingAccessProject.access_request.requested_at).toLocaleDateString()
+                                            : 'Recently'}
+                                    </div>
+                                </div>
+                            </div>
+                            {pendingAccessProject.access_request?.reason && (
+                                <div className="text-xs pt-2 border-t border-slate-800">
+                                    <span className="text-slate-400">Submitted Justification:</span>
+                                    <div className="text-slate-300 italic mt-0.5">
+                                        &ldquo;{pendingAccessProject.access_request.reason}&rdquo;
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            Once the administrator approves your request, you will receive a notification and full access to open this project vault will be granted.
+                        </p>
+
+                        <div className="flex items-center justify-between pt-2">
+                            <button
+                                type="button"
+                                disabled={isSubmittingAccess}
+                                onClick={() => cancelAccessRequest(pendingAccessProject.id)}
+                                className="px-3.5 py-2 text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/20 rounded-lg transition-colors"
+                            >
+                                {isSubmittingAccess ? 'Cancelling...' : 'Withdraw Request'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPendingAccessProject(null)}
+                                className="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal: Rejected Access Status */}
+            {rejectedAccessProject && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+                    onClick={() => setRejectedAccessProject(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 text-slate-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 shrink-0">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-white">Access Request Rejected</h3>
+                                    <p className="text-xs text-rose-300 mt-0.5">
+                                        Your previous request to access this project vault was not approved.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setRejectedAccessProject(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 space-y-3">
+                            <div>
+                                <div className="text-xs text-slate-400">Project</div>
+                                <div className="text-sm font-semibold text-white">{rejectedAccessProject.name}</div>
+                            </div>
+                            <div>
+                                <span className="text-xs text-rose-300 font-medium">Rejection Reason:</span>
+                                <div className="text-xs text-slate-200 mt-1 italic bg-slate-950/60 p-2.5 rounded-lg border border-slate-800">
+                                    {rejectedAccessProject.access_request?.rejection_reason || 'No specific reason was provided by the administrator.'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            You can re-apply for access with updated justification or select a different administrator to review your request.
+                        </p>
+
+                        <div className="flex items-center justify-between pt-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const proj = rejectedAccessProject;
+                                    setRejectedAccessProject(null);
+                                    setAccessRequestProject(proj);
+                                    setSelectedAccessAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
+                                    setAccessReason('');
+                                }}
+                                className="px-3.5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Request Access Again
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRejectedAccessProject(null)}
                                 className="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                             >
                                 Close

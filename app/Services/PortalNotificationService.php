@@ -343,4 +343,67 @@ class PortalNotificationService
             Log::error('PortalNotificationService::notifyEditPermissionRejected error: ' . $e->getMessage());
         }
     }
+
+    /**
+     * 10. When developer requests access to another developer's project from an admin/superadmin
+     */
+    public static function notifyProjectAccessRequested(Project $project, User $admin, User $developer, ?string $reason = null): void
+    {
+        try {
+            Notification::make()
+                ->title('Project Access Permission Request')
+                ->icon('heroicon-o-key')
+                ->warning()
+                ->body("Developer {$developer->name} requested permission to access project '{$project->name}' ({$project->code})." . (filled($reason) ? "\nReason: {$reason}" : ''))
+                ->actions([
+                    Action::make('review')
+                        ->button()
+                        ->label('Review Request')
+                        ->url("/admin/projects?search=" . urlencode($project->code)),
+                ])
+                ->sendToDatabase($admin);
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyProjectAccessRequested error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 11. When admin approves developer's access request for a project
+     */
+    public static function notifyProjectAccessApproved(Project $project, User $admin, User $developer): void
+    {
+        try {
+            Notification::make()
+                ->title('Project Access Approved')
+                ->icon('heroicon-o-check-circle')
+                ->success()
+                ->body("Admin {$admin->name} approved your request to access project '{$project->name}' ({$project->code}). You may now open and view this project vault.")
+                ->actions([
+                    Action::make('view_project')
+                        ->button()
+                        ->label('Open Project Vault')
+                        ->url("/projects/{$project->id}"),
+                ])
+                ->sendToDatabase($developer);
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyProjectAccessApproved error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 12. When admin rejects developer's access request for a project
+     */
+    public static function notifyProjectAccessRejected(Project $project, User $admin, User $developer, string $reason): void
+    {
+        try {
+            Notification::make()
+                ->title('Project Access Rejected')
+                ->icon('heroicon-o-x-circle')
+                ->danger()
+                ->body("Admin {$admin->name} rejected your request to access project '{$project->name}' ({$project->code}). Reason: {$reason}")
+                ->sendToDatabase($developer);
+        } catch (\Throwable $e) {
+            Log::error('PortalNotificationService::notifyProjectAccessRejected error: ' . $e->getMessage());
+        }
+    }
 }
