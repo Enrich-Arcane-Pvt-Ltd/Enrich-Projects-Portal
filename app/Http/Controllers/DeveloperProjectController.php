@@ -130,6 +130,10 @@ class DeveloperProjectController extends Controller
     {
         $user = $request->user();
 
+        if (! $this->userCanAccessProject($user, $project)) {
+            abort(403, 'Unauthorized access. QA engineers can only open projects they are assigned to.');
+        }
+
         $project->load([
             'creator:id,name,email,avatar_url',
             'leadDeveloper:id,name,email,avatar_url',
@@ -306,8 +310,31 @@ class DeveloperProjectController extends Controller
         ]);
     }
 
-    private function userCanAccessProject($user, int $projectId): bool
+    private function userCanAccessProject($user, Project|int $project): bool
     {
-        return $user !== null;
+        if (! $user) {
+            return false;
+        }
+
+        if (in_array($user->role, ['admin', 'superadmin'])) {
+            return true;
+        }
+
+        if ($user->role === 'qa') {
+            $proj = $project instanceof Project ? $project : Project::with('developers')->find($project);
+            if (! $proj) {
+                return false;
+            }
+
+            if (! $proj->relationLoaded('developers')) {
+                $proj->load('developers');
+            }
+
+            return $proj->lead_developer_id === $user->id
+                || $proj->manager_id === $user->id
+                || $proj->developers->contains('id', $user->id);
+        }
+
+        return true;
     }
 }

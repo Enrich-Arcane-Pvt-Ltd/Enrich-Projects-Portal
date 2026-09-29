@@ -441,7 +441,11 @@ export default function Dashboard({
             return { accesses, fallbackRank };
         };
 
-        return [...projects]
+        const list = auth.user.role === 'qa'
+            ? projects.filter((p) => p.is_assigned)
+            : projects;
+
+        return [...list]
             .sort((a, b) => {
                 const scoreA = getScore(a);
                 const scoreB = getScore(b);
@@ -451,7 +455,7 @@ export default function Dashboard({
                 return scoreA.fallbackRank - scoreB.fallbackRank;
             })
             .slice(0, 4);
-    }, [projects, localAccessCounts]);
+    }, [projects, localAccessCounts, auth.user.role]);
 
     // All distinct user names in the system for initial conflict detection
     const allUserNames = useMemo(() => {
@@ -508,12 +512,27 @@ export default function Dashboard({
             .map(([name]) => name);
     }, [projects]);
 
-    const tabs: { id: Scope; label: string; count: number }[] = [
-        { id: 'all', label: 'All projects', count: stats.total_projects },
-        { id: 'my_created', label: 'My created', count: stats.my_created_projects || 0 },
-        { id: 'other_developers', label: 'Other developers', count: stats.other_developers_projects || 0 },
-        { id: 'assigned', label: 'Assigned to me', count: stats.my_assigned_projects },
-    ];
+    useEffect(() => {
+        if (auth.user.role === 'qa' && (scopeFilter === 'my_created' || scopeFilter === 'other_developers')) {
+            setScopeFilter('all');
+        }
+    }, [auth.user.role, scopeFilter]);
+
+    const tabs: { id: Scope; label: string; count: number }[] = useMemo(() => {
+        if (auth.user.role === 'qa') {
+            return [
+                { id: 'all', label: 'All projects', count: stats.total_projects },
+                { id: 'assigned', label: 'Assigned to me', count: stats.my_assigned_projects },
+            ];
+        }
+
+        return [
+            { id: 'all', label: 'All projects', count: stats.total_projects },
+            { id: 'my_created', label: 'My created', count: stats.my_created_projects || 0 },
+            { id: 'other_developers', label: 'Other developers', count: stats.other_developers_projects || 0 },
+            { id: 'assigned', label: 'Assigned to me', count: stats.my_assigned_projects },
+        ];
+    }, [auth.user.role, stats]);
 
     return (
         <AuthenticatedLayout>
@@ -588,6 +607,37 @@ export default function Dashboard({
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 w-full min-w-0">
                                     {popularProjects.map((project) => {
                                         const stack = stackList(project);
+                                        const canOpen = auth.user.role !== 'qa' || Boolean(project.is_assigned);
+
+                                        if (!canOpen) {
+                                            return (
+                                                <div
+                                                    key={project.id}
+                                                    className="text-left rounded-md border border-slate-800 bg-slate-900/30 p-3.5 sm:p-4 flex flex-col gap-3 min-h-[112px] min-w-0 w-full opacity-60 cursor-not-allowed select-none"
+                                                    title="Access restricted: You must be assigned to this project to open its vault"
+                                                >
+                                                    <div className="flex items-start justify-between gap-2.5 min-w-0">
+                                                        <span className="text-sm font-semibold text-slate-400 break-words min-w-0 flex-1 flex items-center gap-1.5">
+                                                            <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                            </svg>
+                                                            {project.name}
+                                                        </span>
+                                                        <div className="shrink-0">
+                                                            <StatusPill status={project.status} />
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-slate-500 line-clamp-2 flex-1 break-words">
+                                                        {project.description || project.code}
+                                                    </p>
+                                                    <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
+                                                        <StackDot tech={stack[0]} />
+                                                        {stack[1] && <StackDot tech={stack[1]} />}
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
                                         return (
                                             <Link
                                                 key={project.id}
@@ -693,19 +743,30 @@ export default function Dashboard({
                                     {paginatedProjects.map((project) => {
                                         const stack = stackList(project);
                                         const updated = timeAgo((project as { updated_at?: string }).updated_at);
+                                        const canOpen = auth.user.role !== 'qa' || Boolean(project.is_assigned);
+
                                         return (
                                             <li key={project.id} className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 hover:bg-slate-900/40 transition-colors w-full min-w-0">
                                                 <div className="min-w-0 space-y-2 flex-1 w-full">
                                                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                                        <Link
-                                                            href={route('projects.show', project.id)}
-                                                            onClick={() => {
-                                                                recordProjectAccess(project.id);
-                                                            }}
-                                                            className="text-base font-semibold text-sky-400 hover:underline text-left break-words min-w-0"
-                                                        >
-                                                            {project.name}
-                                                        </Link>
+                                                        {canOpen ? (
+                                                            <Link
+                                                                href={route('projects.show', project.id)}
+                                                                onClick={() => {
+                                                                    recordProjectAccess(project.id);
+                                                                }}
+                                                                className="text-base font-semibold text-sky-400 hover:underline text-left break-words min-w-0"
+                                                            >
+                                                                {project.name}
+                                                            </Link>
+                                                        ) : (
+                                                            <span
+                                                                className="text-base font-semibold text-slate-300 text-left break-words min-w-0 cursor-default"
+                                                                title="Access restricted: You must be assigned to this project to open its vault"
+                                                            >
+                                                                {project.name}
+                                                            </span>
+                                                        )}
                                                         <StatusPill status={project.status} />
                                                         {project.deletion_status === 'pending' && (
                                                             <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1">
@@ -836,15 +897,27 @@ export default function Dashboard({
                                                             </button>
                                                         </div>
                                                     )}
-                                                    <Link
-                                                        href={route('projects.show', project.id)}
-                                                        onClick={() => {
-                                                            recordProjectAccess(project.id);
-                                                        }}
-                                                        className="px-3.5 py-1.5 rounded-md border border-slate-700 hover:border-indigo-500 hover:text-white text-slate-200 text-xs font-semibold transition-colors"
-                                                    >
-                                                        Open vault
-                                                    </Link>
+                                                    {canOpen ? (
+                                                        <Link
+                                                            href={route('projects.show', project.id)}
+                                                            onClick={() => {
+                                                                recordProjectAccess(project.id);
+                                                            }}
+                                                            className="px-3.5 py-1.5 rounded-md border border-slate-700 hover:border-indigo-500 hover:text-white text-slate-200 text-xs font-semibold transition-colors"
+                                                        >
+                                                            Open vault
+                                                        </Link>
+                                                    ) : (
+                                                        <span
+                                                            className="px-3 py-1.5 rounded-md border border-slate-800 bg-slate-900/50 text-slate-500 text-xs font-medium inline-flex items-center gap-1.5 cursor-not-allowed select-none"
+                                                            title="Access restricted: You must be assigned to this project to open its vault"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                            </svg>
+                                                            Not assigned
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </li>
                                         );
@@ -918,7 +991,7 @@ export default function Dashboard({
                                 {[
                                     { label: 'Active in development', value: stats.active_projects },
                                     { label: 'Secured secrets (AES-256)', value: stats.total_credentials },
-                                    { label: 'Created by you', value: stats.my_created_projects || 0 },
+                                    ...(auth.user.role !== 'qa' ? [{ label: 'Created by you', value: stats.my_created_projects || 0 }] : []),
                                     { label: 'Assigned to you', value: stats.my_assigned_projects },
                                 ].map((row) => (
                                     <div key={row.label} className="flex items-center justify-between gap-3 min-w-0">
