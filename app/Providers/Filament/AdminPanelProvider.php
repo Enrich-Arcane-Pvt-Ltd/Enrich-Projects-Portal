@@ -7,6 +7,8 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -37,6 +39,19 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
+            ->userMenuItems([
+                'profile' => MenuItem::make()
+                    ->label('Profile Settings')
+                    ->url(fn (): string => route('profile.edit'))
+                    ->icon('heroicon-o-user-circle'),
+            ])
+            ->navigationItems([
+                NavigationItem::make('Profile Settings')
+                    ->url(fn (): string => route('profile.edit'))
+                    ->icon('heroicon-o-user-circle')
+                    ->group('Account')
+                    ->sort(99),
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

@@ -5,9 +5,12 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
 export default function Edit({
+    auth,
     mustVerifyEmail,
     status,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
+    const isAdminUser = ['admin', 'superadmin'].includes(auth.user.role);
+
     // Utility classes applied to form children for contrast and spacing
     const formSectionStyles = `
         overflow-hidden rounded-2xl border border-white/10 bg-slate-900/85 p-4 sm:p-8 
@@ -57,21 +60,34 @@ export default function Edit({
                                 Enrich Arcane
                             </span>
                             <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-blue-400 font-semibold">
-                                PIMS Portal
+                                {isAdminUser ? 'Admin Portal' : 'PIMS Portal'}
                             </span>
                         </div>
                     </Link>
 
-                    <Link
-                        href={route('dashboard')}
-                        className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-white/10 border border-white/10 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/15 transition focus:outline-none"
-                    >
-                        <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        <span className="hidden sm:inline">Back to Dashboard</span>
-                        <span className="sm:hidden">Dashboard</span>
-                    </Link>
+                    {isAdminUser ? (
+                        <a
+                            href="/admin"
+                            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-indigo-600/20 border border-indigo-500/30 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-indigo-200 hover:text-white hover:bg-indigo-600/30 transition focus:outline-none"
+                        >
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span className="hidden sm:inline">Back to Admin Panel</span>
+                            <span className="sm:hidden">Admin Panel</span>
+                        </a>
+                    ) : (
+                        <Link
+                            href={route('dashboard')}
+                            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-lg bg-white/10 border border-white/10 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/15 transition focus:outline-none"
+                        >
+                            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span className="hidden sm:inline">Back to Dashboard</span>
+                            <span className="sm:hidden">Dashboard</span>
+                        </Link>
+                    )}
                 </header>
 
                 {/* Main Content Area */}
@@ -79,7 +95,13 @@ export default function Edit({
                     <div className="mx-auto max-w-4xl space-y-8">
                         <div>
                             <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-0.5 text-xs font-semibold text-blue-300 backdrop-blur-md mb-2">
-                                User Account
+                                {auth.user.role === 'superadmin'
+                                    ? 'Super Admin'
+                                    : auth.user.role === 'admin'
+                                    ? 'Administrator'
+                                    : auth.user.role === 'qa'
+                                    ? 'QA Engineer'
+                                    : 'Developer'}
                             </div>
                             <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
                                 Account Settings
@@ -104,9 +126,11 @@ export default function Edit({
                         </section>
 
                         {/* Section 3: Delete Account */}
-                        <section className={`${formSectionStyles} border-rose-500/20 hover:border-rose-500/40 [&_button]:!bg-rose-600 [&_button]:hover:!bg-rose-500`}>
-                            <DeleteUserForm className="max-w-xl" />
-                        </section>
+                        {auth.user.role !== 'superadmin' && (
+                            <section className={`${formSectionStyles} border-rose-500/20 hover:border-rose-500/40 [&_button]:!bg-rose-600 [&_button]:hover:!bg-rose-500`}>
+                                <DeleteUserForm className="max-w-xl" />
+                            </section>
+                        )}
                     </div>
                 </main>
 

@@ -80,6 +80,10 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        if ($user->role === 'superadmin') {
+            abort(403, 'Superadmin accounts cannot be deleted.');
+        }
+
         Auth::logout();
 
         $user->delete();
