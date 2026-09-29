@@ -65,8 +65,12 @@ export default function Authenticated({
                                             type="button"
                                             className="inline-flex items-center gap-2.5 rounded-lg border border-slate-700/60 bg-slate-800/80 px-3 py-1.5 text-sm font-medium text-slate-200 transition duration-150 ease-in-out hover:border-slate-600 hover:bg-slate-800 focus:outline-none"
                                         >
-                                            <div className="h-6 w-6 rounded-full bg-slate-800 text-slate-200 border border-slate-700 text-[10px] font-bold flex items-center justify-center tracking-tight">
-                                                {userInitials}
+                                            <div className="h-6 w-6 rounded-full bg-slate-800 text-slate-200 border border-slate-700 text-[10px] font-bold flex items-center justify-center tracking-tight overflow-hidden shrink-0">
+                                                {user.avatar_url ? (
+                                                    <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
+                                                ) : (
+                                                    userInitials
+                                                )}
                                             </div>
                                             <span>{user.name}</span>
                                             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700/60">
@@ -171,8 +175,12 @@ export default function Authenticated({
                 >
                     {/* User identifier card in mobile menu */}
                     <div className="px-3 py-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center shrink-0 tracking-tight">
-                            {userInitials}
+                        <div className="h-8 w-8 rounded-full bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center shrink-0 tracking-tight overflow-hidden">
+                            {user.avatar_url ? (
+                                <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
+                            ) : (
+                                userInitials
+                            )}
                         </div>
                         <div className="min-w-0 flex-1">
                             <div className="text-sm font-semibold text-white truncate flex items-center gap-2">

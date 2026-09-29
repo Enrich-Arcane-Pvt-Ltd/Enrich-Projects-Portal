@@ -542,8 +542,12 @@ export default function Dashboard({
                 {/* ---------------- Organization-style header ---------------- */}
                 <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 min-w-0 w-full">
                     <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
-                        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-xl bg-indigo-600 text-white text-xl sm:text-3xl font-bold flex items-center justify-center shrink-0 tracking-wider shadow-lg shadow-indigo-600/20">
-                            {userInitials}
+                        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-xl bg-indigo-600 text-white text-xl sm:text-3xl font-bold flex items-center justify-center shrink-0 tracking-wider shadow-lg shadow-indigo-600/20 overflow-hidden">
+                            {auth.user.avatar_url ? (
+                                <img src={auth.user.avatar_url} alt={auth.user.name} className="h-full w-full object-cover" />
+                            ) : (
+                                userInitials
+                            )}
                         </div>
                         <div className="min-w-0 space-y-1 sm:space-y-2">
                             <h1 className="text-lg sm:text-2xl font-semibold text-white truncate">{auth.user.name}</h1>

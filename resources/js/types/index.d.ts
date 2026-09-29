@@ -7,6 +7,9 @@ export interface User {
     email: string;
     role: 'admin' | 'developer' | 'superadmin' | 'qa';
     avatar_url?: string;
+    birth_date?: string;
+    contact_no?: string;
+    bio?: string;
     email_verified_at?: string;
 }
 
