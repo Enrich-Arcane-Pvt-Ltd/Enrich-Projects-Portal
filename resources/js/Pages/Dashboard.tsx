@@ -173,6 +173,48 @@ const resourceCounts = (p: Project) => [
 const selectClass =
     'px-3 py-2 rounded-md bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50';
 
+const formatRole = (role?: string) => {
+    if (!role) return 'Team Member';
+    if (role === 'qa') return 'QA Engineer';
+    if (role === 'developer') return 'Developer';
+    if (role === 'admin') return 'Administrator';
+    if (role === 'superadmin') return 'Super Admin';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+};
+
+const formatMemberSince = (iso?: string) => {
+    if (!iso) return 'Recently joined';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    const formatted = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+
+    const now = new Date();
+    let years = now.getFullYear() - date.getFullYear();
+    let months = now.getMonth() - date.getMonth();
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    let diffText = '';
+    if (years > 0 && months > 0) {
+        diffText = ` (${years} ${years === 1 ? 'year' : 'years'} ${months} ${months === 1 ? 'month' : 'months'} ago)`;
+    } else if (years > 0) {
+        diffText = ` (${years} ${years === 1 ? 'year' : 'years'} ago)`;
+    } else if (months > 0) {
+        diffText = ` (${months} ${months === 1 ? 'month' : 'months'} ago)`;
+    } else {
+        const days = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+        diffText = days > 0 ? ` (${days} ${days === 1 ? 'day' : 'days'} ago)` : ' (recently joined)';
+    }
+
+    return `${formatted}${diffText}`;
+};
+
 /* ------------------------------------------------------------------ */
 /* Small presentational pieces                                         */
 /* ------------------------------------------------------------------ */
@@ -255,6 +297,9 @@ export default function Dashboard({
     const [selectedAccessAdminId, setSelectedAccessAdminId] = useState<string>('');
     const [accessReason, setAccessReason] = useState<string>('');
     const [isSubmittingAccess, setIsSubmittingAccess] = useState(false);
+
+    // Selected user for profile modal/drawer view
+    const [selectedProfileUser, setSelectedProfileUser] = useState<User | null>(null);
 
     const handleEditClick = (project: Project) => {
         if (project.status === ProjectStatus.COMPLETED) {
@@ -544,18 +589,55 @@ export default function Dashboard({
         return filteredProjects.slice(start, start + PROJECTS_PER_PAGE);
     }, [filteredProjects, currentPage]);
 
-    // "People" sidebar block.
-    const people = useMemo(() => {
-        const map = new Map<string, string>();
-        availableDevelopers.forEach((d) => map.set(String(d.id ?? d.name), d.name));
-        projects.forEach((p) => {
-            if (p.lead_developer) {
-                const lead = p.lead_developer as { id?: number | string; name: string };
-                map.set(String(lead.id ?? lead.name), lead.name);
+    // "People" sidebar block - exclude current logged-in user
+    const people = useMemo<User[]>(() => {
+        const map = new Map<number, User>();
+
+        // Add from availableDevelopers (excluding current logged-in user)
+        availableDevelopers.forEach((dev) => {
+            if (dev.id && dev.id !== auth.user.id) {
+                map.set(dev.id, dev);
             }
         });
-        return Array.from(map.values());
-    }, [availableDevelopers, projects]);
+
+        // Also add from projects (leadDeveloper, manager, developers pivot, creator)
+        projects.forEach((p) => {
+            if (p.lead_developer && p.lead_developer.id && p.lead_developer.id !== auth.user.id) {
+                const existing = map.get(p.lead_developer.id);
+                map.set(p.lead_developer.id, { ...p.lead_developer, ...existing });
+            }
+            if (p.manager && p.manager.id && p.manager.id !== auth.user.id) {
+                const existing = map.get(p.manager.id);
+                map.set(p.manager.id, { ...p.manager, ...existing });
+            }
+            if (p.creator && p.creator.id && p.creator.id !== auth.user.id) {
+                const existing = map.get(p.creator.id);
+                map.set(p.creator.id, { ...p.creator, ...existing });
+            }
+            if (p.developers && Array.isArray(p.developers)) {
+                p.developers.forEach((dev) => {
+                    if (dev.id && dev.id !== auth.user.id) {
+                        const existing = map.get(dev.id);
+                        map.set(dev.id, { ...dev, ...existing });
+                    }
+                });
+            }
+        });
+
+        return Array.from(map.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }, [availableDevelopers, projects, auth.user.id]);
+
+    // Projects associated with the selected profile user
+    const userCollaboratedProjects = useMemo(() => {
+        if (!selectedProfileUser) return [];
+        return projects.filter(
+            (p) =>
+                p.created_by_id === selectedProfileUser.id ||
+                p.lead_developer_id === selectedProfileUser.id ||
+                p.manager_id === selectedProfileUser.id ||
+                (p.developers && p.developers.some((d) => d.id === selectedProfileUser.id))
+        );
+    }, [projects, selectedProfileUser]);
 
     // "Top languages" equivalent.
     const topStacks = useMemo(() => {
@@ -1171,10 +1253,32 @@ export default function Dashboard({
                         {/* People */}
                         {people.length > 0 && (
                             <section className="space-y-3 pb-8 border-b border-slate-800 w-full min-w-0">
-                                <h2 className="text-base font-normal text-slate-100">People</h2>
-                                <div className="flex flex-wrap gap-1.5 min-w-0">
-                                    {people.map((name) => (
-                                        <Avatar key={name} name={name} allNames={allUserNames} />
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-base font-normal text-slate-100">People</h2>
+                                    <span className="text-xs text-slate-500 font-medium">{people.length}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2 min-w-0">
+                                    {people.map((person) => (
+                                        <button
+                                            key={person.id}
+                                            type="button"
+                                            onClick={() => setSelectedProfileUser(person)}
+                                            className="relative group focus:outline-none transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                                            title={`${person.name} (${formatRole(person.role)}) - Click to view profile`}
+                                        >
+                                            {person.avatar_url ? (
+                                                <img
+                                                    src={person.avatar_url}
+                                                    alt={person.name}
+                                                    className="h-9 w-9 rounded-full object-cover border-2 border-slate-700 group-hover:border-indigo-500 shadow-sm transition-colors"
+                                                />
+                                            ) : (
+                                                <div className="h-9 w-9 rounded-full bg-slate-800 border-2 border-slate-700 group-hover:border-indigo-500 text-slate-200 text-xs font-semibold flex items-center justify-center shrink-0 tracking-tight shadow-sm transition-colors">
+                                                    {getUserInitials(person.name)}
+                                                </div>
+                                            )}
+                                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
+                                        </button>
                                     ))}
                                 </div>
                             </section>
@@ -2066,6 +2170,186 @@ export default function Dashboard({
                             >
                                 Close
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Slide-over Profile View Panel */}
+            {selectedProfileUser && (
+                <div
+                    className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm transition-opacity"
+                    onClick={() => setSelectedProfileUser(null)}
+                >
+                    <div
+                        className="w-full max-w-sm sm:max-w-md bg-slate-900 border-l border-slate-800 h-full overflow-y-auto shadow-2xl flex flex-col text-slate-200 animate-in slide-in-from-right duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10">
+                            <h3 className="text-base font-bold text-white tracking-tight">Profile</h3>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedProfileUser(null)}
+                                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                title="Close"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-5 flex-1">
+                            {/* Profile Image */}
+                            <div className="w-full">
+                                {selectedProfileUser.avatar_url ? (
+                                    <img
+                                        src={selectedProfileUser.avatar_url}
+                                        alt={selectedProfileUser.name}
+                                        className="w-full aspect-square max-h-80 object-cover rounded-2xl border border-slate-800 shadow-xl"
+                                    />
+                                ) : (
+                                    <div className="w-full aspect-square max-h-80 rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-800 to-slate-900 border border-slate-700/60 flex items-center justify-center text-6xl font-bold text-indigo-300 shadow-xl tracking-wider">
+                                        {getUserInitials(selectedProfileUser.name)}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Name & Role */}
+                            <div className="space-y-1">
+                                <h2 className="text-2xl font-bold text-white tracking-tight">
+                                    {selectedProfileUser.name}
+                                </h2>
+                                <p className="text-sm font-medium text-slate-300">
+                                    {formatRole(selectedProfileUser.role)}
+                                </p>
+                            </div>
+
+                            {/* Status Indicators */}
+                            <div className="space-y-2 pt-1 text-xs text-slate-300">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 shrink-0" />
+                                    <span className="font-medium text-emerald-400">Active</span>
+                                </div>
+                                <div className="flex items-center gap-2.5 text-slate-400">
+                                    <svg className="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>
+                                        {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} local time
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Contact Information (Excludes Message / Huddle) */}
+                            <div className="pt-4 border-t border-slate-800/80 space-y-3.5">
+                                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    Contact information
+                                </h4>
+
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-xs text-slate-400">Email address</div>
+                                        <a
+                                            href={`mailto:${selectedProfileUser.email}`}
+                                            className="text-xs sm:text-sm font-medium text-sky-400 hover:underline break-all"
+                                        >
+                                            {selectedProfileUser.email}
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                    <div className="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-xs text-slate-400">Phone</div>
+                                        {selectedProfileUser.contact_no ? (
+                                            <a
+                                                href={`tel:${selectedProfileUser.contact_no}`}
+                                                className="text-xs sm:text-sm font-medium text-sky-400 hover:underline"
+                                            >
+                                                {selectedProfileUser.contact_no}
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs sm:text-sm text-slate-500 italic">Not provided</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {selectedProfileUser.birth_date && (
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-xs text-slate-400">Birth date</div>
+                                            <div className="text-xs sm:text-sm font-medium text-slate-200">
+                                                {new Date(selectedProfileUser.birth_date).toLocaleDateString('en-US', {
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    year: 'numeric',
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* About Me (Excludes Recent DMs) */}
+                            <div className="pt-4 border-t border-slate-800/80 space-y-3">
+                                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                                    About me
+                                </h4>
+
+                                {selectedProfileUser.bio && (
+                                    <div className="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                                        {selectedProfileUser.bio}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <div className="text-xs text-slate-400 font-medium">Start Date</div>
+                                    <div className="text-xs sm:text-sm font-medium text-sky-400 mt-0.5">
+                                        {formatMemberSince(selectedProfileUser.created_at)}
+                                    </div>
+                                </div>
+
+                                {userCollaboratedProjects.length > 0 && (
+                                    <div className="pt-3 border-t border-slate-800/60">
+                                        <div className="text-xs text-slate-400 mb-2">
+                                            Assigned Projects ({userCollaboratedProjects.length})
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {userCollaboratedProjects.slice(0, 8).map((proj) => (
+                                                <span
+                                                    key={proj.id}
+                                                    className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300"
+                                                >
+                                                    {proj.name}
+                                                </span>
+                                            ))}
+                                            {userCollaboratedProjects.length > 8 && (
+                                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-800/40 text-slate-500">
+                                                    +{userCollaboratedProjects.length - 8} more
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
