@@ -31,14 +31,14 @@ class DeveloperProjectController extends Controller
         // Query projects: Developers and admins see all projects in the company vault
         $query = Project::query()
             ->with([
-                'creator:id,name,email,avatar_url',
-                'leadDeveloper:id,name,email,avatar_url',
-                'manager:id,name,email,avatar_url',
+                'creator:id,name,email,role,avatar_url,birth_date,contact_no,bio,created_at',
+                'leadDeveloper:id,name,email,role,avatar_url,birth_date,contact_no,bio,created_at',
+                'manager:id,name,email,role,avatar_url,birth_date,contact_no,bio,created_at',
                 'deletionAdmin:id,name,email',
                 'deletionApprovedBy:id,name,email',
                 'editPermissionAdmin:id,name,email',
                 'editPermissionApprovedBy:id,name,email',
-                'developers:id,name,email,role,avatar_url',
+                'developers:id,name,email,role,avatar_url,birth_date,contact_no,bio,created_at',
                 'links',
                 'serverEnvironments',
                 'thirdPartyAccounts',
@@ -137,8 +137,8 @@ class DeveloperProjectController extends Controller
             'projects' => $projects,
             'stats' => $stats,
             'recentAuditActivity' => $recentAuditActivity,
-            'availableDevelopers' => User::select('id', 'name', 'email', 'role')->orderBy('name')->get(),
-            'availableAdmins' => User::whereIn('role', ['admin', 'superadmin'])->select('id', 'name', 'email', 'role')->orderBy('name')->get(),
+            'availableDevelopers' => User::select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
+            'availableAdmins' => User::whereIn('role', ['admin', 'superadmin'])->select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
             'filters' => $request->only(['search', 'type', 'status', 'priority']),
         ]);
     }

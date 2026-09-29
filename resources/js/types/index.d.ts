@@ -11,6 +11,7 @@ export interface User {
     contact_no?: string;
     bio?: string;
     email_verified_at?: string;
+    created_at?: string;
 }
 
 export interface ProjectLink {
