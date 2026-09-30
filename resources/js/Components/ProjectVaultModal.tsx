@@ -18,7 +18,14 @@ export type TabType = 'overview' | 'credentials' | 'client_credentials' | 'links
  * Configurable list of tab IDs accessible by QA Engineers.
  * To enable access to additional sections in the future, simply add their TabType ID to this array.
  */
-export const QA_ALLOWED_TABS: TabType[] = ['credentials'];
+export const QA_ALLOWED_TABS: TabType[] = [
+    'overview',
+    'credentials',
+    'client_credentials',
+    'links',
+    'services',
+    'documents',
+];
 
 export default function ProjectVaultModal({
     project,
