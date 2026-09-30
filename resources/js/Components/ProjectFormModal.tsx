@@ -147,11 +147,17 @@ export default function ProjectFormModal({
                 <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                     {/* Project Name */}
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-300">
-                            Project Name <span className="text-rose-400">*</span>
-                        </label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-300">
+                                Project Name <span className="text-rose-400">*</span>
+                            </label>
+                            <span className={`text-[10px] font-mono ${data.name.length >= 240 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                {data.name.length}/255
+                            </span>
+                        </div>
                         <input
                             type="text"
+                            maxLength={255}
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="e.g. Real-Time Telemetry & Fleet Tracker"
@@ -168,16 +174,14 @@ export default function ProjectFormModal({
                                 <label className="text-xs font-bold text-slate-300">
                                     Project Code / Identifier <span className="text-rose-400">*</span>
                                 </label>
-                                {/* {!isEditing && (
-                                    <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                        Auto-generated
-                                    </span>
-                                )} */}
+                                <span className={`text-[10px] font-mono ${data.code.length >= 45 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                    {data.code.length}/50
+                                </span>
                             </div>
                             <div className="relative">
                                 <input
                                     type="text"
+                                    maxLength={50}
                                     value={data.code}
                                     onChange={(e) => setData('code', e.target.value.toUpperCase())}
                                     placeholder="e.g. EA2609-1001"
@@ -259,11 +263,17 @@ export default function ProjectFormModal({
 
                     {/* Tech Stack */}
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-300">
-                            Tech Stack Chips <span className="text-slate-500 text-[11px]">(comma separated)</span>
-                        </label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-300">
+                                Tech Stack Chips <span className="text-slate-500 text-[11px]">(comma separated)</span>
+                            </label>
+                            <span className={`text-[10px] font-mono ${data.tech_stack.length >= 480 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                {data.tech_stack.length}/500
+                            </span>
+                        </div>
                         <input
                             type="text"
+                            maxLength={500}
                             value={data.tech_stack}
                             onChange={(e) => setData('tech_stack', e.target.value)}
                             placeholder="e.g. Laravel 12, React 19, TailwindCSS, ESP32, MQTT, Redis"
@@ -274,9 +284,15 @@ export default function ProjectFormModal({
 
                     {/* Description */}
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-300">Project Description & Scope</label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-300">Project Description & Scope</label>
+                            <span className={`text-[10px] font-mono ${data.description.length >= 9500 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                {data.description.length.toLocaleString()}/10,000
+                            </span>
+                        </div>
                         <textarea
                             rows={3}
+                            maxLength={10000}
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
                             placeholder="Brief description of the project, features, business requirements, or client scope..."
