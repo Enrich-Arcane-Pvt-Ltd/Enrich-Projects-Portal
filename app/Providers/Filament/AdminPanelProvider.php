@@ -116,14 +116,14 @@ class AdminPanelProvider extends PanelProvider
                         }
                         .fi-sc-tabs.fi-vertical > .fi-tabs.fi-vertical {
                             width: 100%;
-                            padding: 0.5rem;
-                            background: rgba(15, 23, 42, 0.7);
-                            border: 1px solid rgba(51, 65, 85, 0.7);
+                            padding: 0.625rem;
+                            background: #ffffff;
+                            border: 1px solid #e2e8f0;
                             border-radius: 0.875rem;
                             display: flex;
                             flex-direction: column;
                             gap: 0.35rem;
-                            box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.25);
+                            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
                         }
                         @media (min-width: 1024px) {
                             .fi-sc-tabs.fi-vertical {
@@ -142,6 +142,7 @@ class AdminPanelProvider extends PanelProvider
                             display: flex;
                             align-items: center;
                             justify-content: space-between;
+                            gap: 0.625rem;
                             width: 100%;
                             padding: 0.625rem 0.875rem;
                             border-radius: 0.5rem;
@@ -151,6 +152,12 @@ class AdminPanelProvider extends PanelProvider
                             text-align: left;
                             border: 1px solid transparent;
                             box-sizing: border-box;
+                            cursor: pointer;
+                        }
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item .fi-icon {
+                            width: 1.125rem;
+                            height: 1.125rem;
+                            flex-shrink: 0;
                         }
                         .fi-sc-tabs.fi-vertical .fi-tabs-item .fi-tabs-item-label {
                             flex: 1;
@@ -160,7 +167,7 @@ class AdminPanelProvider extends PanelProvider
                             white-space: nowrap;
                         }
                         .fi-sc-tabs.fi-vertical .fi-tabs-item .fi-badge {
-                            margin-inline-start: 0.5rem;
+                            margin-inline-start: auto;
                             font-size: 0.6875rem;
                             font-weight: 700;
                             padding: 0.125rem 0.5rem;
@@ -168,31 +175,93 @@ class AdminPanelProvider extends PanelProvider
                             flex-shrink: 0;
                             line-height: 1.25;
                         }
+
+                        /* Light Mode: Inactive Tabs */
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) {
+                            color: #475569;
+                            background-color: transparent;
+                        }
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) .fi-icon {
+                            color: #64748b;
+                        }
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) .fi-badge {
+                            background-color: #f1f5f9;
+                            color: #475569;
+                            border: 1px solid #e2e8f0;
+                        }
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active):hover {
+                            color: #0f172a;
+                            background-color: #f8fafc;
+                            border-color: #e2e8f0;
+                        }
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active):hover .fi-icon {
+                            color: #4f46e5;
+                        }
+                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active):hover .fi-badge {
+                            background-color: #e2e8f0;
+                            color: #0f172a;
+                            border-color: #cbd5e1;
+                        }
+
+                        /* Light Mode: Active Tab */
                         .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active {
-                            background-color: rgba(99, 102, 241, 0.15) !important;
-                            color: #a5b4fc !important;
-                            border-color: rgba(99, 102, 241, 0.35) !important;
+                            background-color: #eef2ff !important;
+                            color: #4338ca !important;
+                            border-color: #c7d2fe !important;
+                            box-shadow: 0 1px 2px 0 rgba(99, 102, 241, 0.05);
                         }
                         .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active .fi-tabs-item-label,
                         .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active .fi-icon {
-                            color: #a5b4fc !important;
+                            color: #4338ca !important;
                         }
                         .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active .fi-badge {
+                            background-color: #e0e7ff !important;
+                            color: #4338ca !important;
+                            border: 1px solid #c7d2fe !important;
+                        }
+
+                        /* Dark Mode: Container & Tabs */
+                        .dark .fi-sc-tabs.fi-vertical > .fi-tabs.fi-vertical {
+                            background: rgba(15, 23, 42, 0.7);
+                            border: 1px solid rgba(51, 65, 85, 0.7);
+                            box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.25);
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) {
+                            color: #94a3b8;
+                            background-color: transparent;
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) .fi-icon {
+                            color: #94a3b8;
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) .fi-badge {
+                            background-color: rgba(30, 41, 59, 0.85);
+                            color: #94a3b8;
+                            border: 1px solid rgba(51, 65, 85, 0.6);
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active):hover {
+                            color: #f1f5f9;
+                            background-color: rgba(51, 65, 85, 0.45);
+                            border-color: transparent;
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active):hover .fi-icon {
+                            color: #f1f5f9;
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active {
+                            background-color: rgba(99, 102, 241, 0.15) !important;
+                            color: #a5b4fc !important;
+                            border-color: rgba(99, 102, 241, 0.35) !important;
+                            box-shadow: none;
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active .fi-tabs-item-label,
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active .fi-icon {
+                            color: #a5b4fc !important;
+                        }
+                        .dark .fi-sc-tabs.fi-vertical .fi-tabs-item.fi-active .fi-badge {
                             background-color: rgba(99, 102, 241, 0.25) !important;
                             color: #c7d2fe !important;
                             border: 1px solid rgba(99, 102, 241, 0.35) !important;
                         }
-                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) {
-                            color: #94a3b8;
-                        }
-                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active):hover {
-                            color: #f1f5f9;
-                            background-color: rgba(51, 65, 85, 0.45);
-                        }
-                        .fi-sc-tabs.fi-vertical .fi-tabs-item:not(.fi-active) .fi-badge {
-                            background-color: rgba(30, 41, 59, 0.85);
-                            color: #94a3b8;
-                        }
+
                         .fi-sc-tabs.fi-vertical > div:not(.fi-tabs),
                         .fi-sc-tabs.fi-vertical .fi-sc-tabs-tab {
                             flex: 1;
