@@ -422,7 +422,9 @@ export default function Dashboard({
         setIsSubmittingDeletion(true);
         router.delete(`/developer/projects/${projectId}`, {
             preserveScroll: true,
-            onSuccess: () => setApprovedDeletionProject(null),
+            onSuccess: () => {
+                setApprovedDeletionProject(null);
+            },
             onFinish: () => setIsSubmittingDeletion(false),
         });
     };

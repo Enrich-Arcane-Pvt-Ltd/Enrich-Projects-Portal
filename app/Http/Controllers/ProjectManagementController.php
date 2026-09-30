@@ -75,7 +75,7 @@ class ProjectManagementController extends Controller
             "Created project {$project->name} [{$project->code}]"
         );
 
-        return redirect()->back()->with('success', "Project '{$project->name}' created successfully.");
+        return redirect()->back()->with('success', 'Project Created Successfully');
     }
 
     /**
@@ -137,7 +137,7 @@ class ProjectManagementController extends Controller
             "Updated project details for {$project->name}"
         );
 
-        return redirect()->back()->with('success', "Project '{$project->name}' updated successfully.");
+        return redirect()->back()->with('success', 'Project Updated Successfully');
     }
 
     /**
@@ -182,7 +182,7 @@ class ProjectManagementController extends Controller
 
         PortalNotificationService::notifyEditPermissionRequested($project, $admin, $user, $validated['reason'] ?? null);
 
-        return redirect()->back()->with('success', "Edit permission request submitted to {$admin->name}. You will be notified once approved.");
+        return redirect()->back()->with('success', 'Edit Permission Request Sent to Administrator Successfully');
     }
 
     /**
@@ -264,7 +264,7 @@ class ProjectManagementController extends Controller
 
         PortalNotificationService::notifyProjectAccessRequested($project, $admin, $user, $validated['reason'] ?? null);
 
-        return redirect()->back()->with('success', "Access request for '{$project->name}' submitted to {$admin->name}. You will be notified once reviewed.");
+        return redirect()->back()->with('success', 'Project Access Request Sent to Administrator Successfully');
     }
 
     /**
@@ -333,7 +333,7 @@ class ProjectManagementController extends Controller
         // Send Filament database notification to the chosen administrator
         PortalNotificationService::notifyDeletionRequested($project, $admin, $user, $validated['reason'] ?? null);
 
-        return redirect()->back()->with('success', "Deletion request submitted to {$admin->name}. Waiting for administrative approval.");
+        return redirect()->back()->with('success', 'Project Deletion Request Sent to Administrator Successfully');
     }
 
     /**
@@ -393,7 +393,7 @@ class ProjectManagementController extends Controller
 
         PortalNotificationService::notifyApprovedProjectDeleted($name, $code, $user, $approver);
 
-        return redirect()->route('dashboard')->with('success', "Project '{$name}' deleted successfully.");
+        return redirect()->route('dashboard')->with('success', 'Project Deleted Successfully');
     }
 
     // ==========================================
