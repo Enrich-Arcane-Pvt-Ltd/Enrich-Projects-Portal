@@ -3,6 +3,7 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import NotificationDropdown from '@/Components/NotificationDropdown';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import ToastContainer from '@/Components/ToastContainer';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useMemo } from 'react';
 
@@ -32,6 +33,7 @@ export default function Authenticated({
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white w-full max-w-full overflow-x-hidden flex flex-col justify-between">
+            <ToastContainer />
             <nav className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md w-full">
                 <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between items-center">
