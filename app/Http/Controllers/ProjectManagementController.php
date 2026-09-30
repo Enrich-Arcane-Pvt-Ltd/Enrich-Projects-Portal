@@ -51,7 +51,7 @@ class ProjectManagementController extends Controller
             'status' => ['required', Rule::enum(ProjectStatus::class)],
             'priority' => ['required', Rule::enum(ProjectPriority::class)],
             'tech_stack' => 'nullable|string|max:500',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $validated['created_by_id'] = $request->user()->id;
@@ -103,7 +103,7 @@ class ProjectManagementController extends Controller
             'status' => ['required', Rule::enum(ProjectStatus::class)],
             'priority' => ['required', Rule::enum(ProjectPriority::class)],
             'tech_stack' => 'nullable|string|max:500',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
         ]);
 
         $wasCompleted = $project->status === ProjectStatus::COMPLETED->value;
