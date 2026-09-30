@@ -21,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectManagementController extends Controller
@@ -176,7 +177,7 @@ class ProjectManagementController extends Controller
         AuditService::log(
             $project->id,
             'REQUESTED_EDIT_PERMISSION',
-            "Developer {$user->name} requested edit permission from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: {$validated['reason']}" : '')
+            "Developer {$user->name} requested edit permission from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: " . Str::limit($validated['reason'], 500) : '')
         );
 
         PortalNotificationService::notifyEditPermissionRequested($project, $admin, $user, $validated['reason'] ?? null);
@@ -258,7 +259,7 @@ class ProjectManagementController extends Controller
         AuditService::log(
             $project->id,
             'REQUESTED_PROJECT_ACCESS',
-            "Developer {$user->name} requested project access from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: {$validated['reason']}" : '')
+            "Developer {$user->name} requested project access from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: " . Str::limit($validated['reason'], 500) : '')
         );
 
         PortalNotificationService::notifyProjectAccessRequested($project, $admin, $user, $validated['reason'] ?? null);
@@ -326,7 +327,7 @@ class ProjectManagementController extends Controller
         AuditService::log(
             $project->id,
             'REQUESTED_PROJECT_DELETION',
-            "Developer {$user->name} requested deletion approval from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: {$validated['reason']}" : '')
+            "Developer {$user->name} requested deletion approval from Admin {$admin->name}" . (filled($validated['reason'] ?? null) ? " - Reason: " . Str::limit($validated['reason'], 500) : '')
         );
 
         // Send Filament database notification to the chosen administrator
