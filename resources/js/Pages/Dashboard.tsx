@@ -283,6 +283,7 @@ export default function Dashboard({
     const [approvedDeletionProject, setApprovedDeletionProject] = useState<Project | null>(null);
     const [selectedAdminId, setSelectedAdminId] = useState<string>('');
     const [deletionReason, setDeletionReason] = useState<string>('');
+    const [deletionErrors, setDeletionErrors] = useState<{ reason?: string; admin_id?: string }>({});
     const [isSubmittingDeletion, setIsSubmittingDeletion] = useState(false);
 
     // Project edit permission request states (for completed projects)
@@ -290,6 +291,7 @@ export default function Dashboard({
     const [pendingEditPermissionProject, setPendingEditPermissionProject] = useState<Project | null>(null);
     const [selectedEditAdminId, setSelectedEditAdminId] = useState<string>('');
     const [editPermissionReason, setEditPermissionReason] = useState<string>('');
+    const [editPermissionErrors, setEditPermissionErrors] = useState<{ reason?: string; admin_id?: string }>({});
     const [isSubmittingEditPermission, setIsSubmittingEditPermission] = useState(false);
 
     // Project access request states (for developers requesting access to unassigned/unowned projects)
@@ -298,6 +300,7 @@ export default function Dashboard({
     const [rejectedAccessProject, setRejectedAccessProject] = useState<Project | null>(null);
     const [selectedAccessAdminId, setSelectedAccessAdminId] = useState<string>('');
     const [accessReason, setAccessReason] = useState<string>('');
+    const [accessErrors, setAccessErrors] = useState<{ reason?: string; admin_id?: string }>({});
     const [isSubmittingAccess, setIsSubmittingAccess] = useState(false);
 
     // Selected user for profile modal/drawer view
@@ -314,6 +317,7 @@ export default function Dashboard({
                 setEditPermissionRequestProject(project);
                 setSelectedEditAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
                 setEditPermissionReason('');
+                setEditPermissionErrors({});
             }
         } else {
             setEditingProject(project);
@@ -326,6 +330,7 @@ export default function Dashboard({
         if (!editPermissionRequestProject || !selectedEditAdminId) return;
 
         setIsSubmittingEditPermission(true);
+        setEditPermissionErrors({});
         router.post(
             `/developer/projects/${editPermissionRequestProject.id}/request-edit-permission`,
             {
@@ -337,6 +342,10 @@ export default function Dashboard({
                 onSuccess: () => {
                     setEditPermissionRequestProject(null);
                     setEditPermissionReason('');
+                    setEditPermissionErrors({});
+                },
+                onError: (errs) => {
+                    setEditPermissionErrors(errs as any);
                 },
                 onFinish: () => setIsSubmittingEditPermission(false),
             }
@@ -365,6 +374,7 @@ export default function Dashboard({
             setDeletionRequestProject(project);
             setSelectedAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
             setDeletionReason('');
+            setDeletionErrors({});
         }
     };
 
@@ -373,6 +383,7 @@ export default function Dashboard({
         if (!deletionRequestProject || !selectedAdminId) return;
 
         setIsSubmittingDeletion(true);
+        setDeletionErrors({});
         router.post(
             `/developer/projects/${deletionRequestProject.id}/request-deletion`,
             {
@@ -384,6 +395,10 @@ export default function Dashboard({
                 onSuccess: () => {
                     setDeletionRequestProject(null);
                     setDeletionReason('');
+                    setDeletionErrors({});
+                },
+                onError: (errs) => {
+                    setDeletionErrors(errs as any);
                 },
                 onFinish: () => setIsSubmittingDeletion(false),
             }
@@ -421,6 +436,7 @@ export default function Dashboard({
             setAccessRequestProject(project);
             setSelectedAccessAdminId(availableAdmins[0]?.id ? String(availableAdmins[0].id) : '');
             setAccessReason('');
+            setAccessErrors({});
         }
     };
 
@@ -429,6 +445,7 @@ export default function Dashboard({
         if (!accessRequestProject || !selectedAccessAdminId) return;
 
         setIsSubmittingAccess(true);
+        setAccessErrors({});
         router.post(
             `/developer/projects/${accessRequestProject.id}/request-access`,
             {
@@ -440,6 +457,10 @@ export default function Dashboard({
                 onSuccess: () => {
                     setAccessRequestProject(null);
                     setAccessReason('');
+                    setAccessErrors({});
+                },
+                onError: (errs) => {
+                    setAccessErrors(errs as any);
                 },
                 onFinish: () => setIsSubmittingAccess(false),
             }
@@ -1452,16 +1473,30 @@ export default function Dashboard({
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                                    Reason for Deletion <span className="text-slate-500">(Optional)</span>
-                                </label>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-medium text-slate-300">
+                                        Reason for Deletion <span className="text-slate-500">(Optional)</span>
+                                    </label>
+                                    <span className={`text-[10px] font-mono ${deletionReason.length >= 950 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                        {deletionReason.length.toLocaleString()}/1,000
+                                    </span>
+                                </div>
                                 <textarea
+                                    maxLength={1000}
                                     value={deletionReason}
-                                    onChange={(e) => setDeletionReason(e.target.value)}
+                                    onChange={(e) => {
+                                        setDeletionReason(e.target.value);
+                                        if (deletionErrors.reason) {
+                                            setDeletionErrors((prev) => ({ ...prev, reason: undefined }));
+                                        }
+                                    }}
                                     placeholder="Explain why this project should be deleted..."
                                     rows={3}
                                     className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                                 />
+                                {deletionErrors.reason && (
+                                    <p className="mt-1 text-xs text-rose-400">{deletionErrors.reason}</p>
+                                )}
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-2">
@@ -1746,16 +1781,30 @@ export default function Dashboard({
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                                    Reason for Editing <span className="text-slate-500">(Optional)</span>
-                                </label>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-medium text-slate-300">
+                                        Reason for Editing <span className="text-slate-500">(Optional)</span>
+                                    </label>
+                                    <span className={`text-[10px] font-mono ${editPermissionReason.length >= 950 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                        {editPermissionReason.length.toLocaleString()}/1,000
+                                    </span>
+                                </div>
                                 <textarea
+                                    maxLength={1000}
                                     value={editPermissionReason}
-                                    onChange={(e) => setEditPermissionReason(e.target.value)}
+                                    onChange={(e) => {
+                                        setEditPermissionReason(e.target.value);
+                                        if (editPermissionErrors.reason) {
+                                            setEditPermissionErrors((prev) => ({ ...prev, reason: undefined }));
+                                        }
+                                    }}
                                     placeholder="Explain what updates or changes need to be made to this completed project..."
                                     rows={3}
                                     className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                                 />
+                                {editPermissionErrors.reason && (
+                                    <p className="mt-1 text-xs text-rose-400">{editPermissionErrors.reason}</p>
+                                )}
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-2">
@@ -1966,16 +2015,30 @@ export default function Dashboard({
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                                    Reason / Justification <span className="text-slate-500">(Optional)</span>
-                                </label>
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-medium text-slate-300">
+                                        Reason / Justification <span className="text-slate-500">(Optional)</span>
+                                    </label>
+                                    <span className={`text-[10px] font-mono ${accessReason.length >= 950 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                        {accessReason.length.toLocaleString()}/1,000
+                                    </span>
+                                </div>
                                 <textarea
+                                    maxLength={1000}
                                     value={accessReason}
-                                    onChange={(e) => setAccessReason(e.target.value)}
+                                    onChange={(e) => {
+                                        setAccessReason(e.target.value);
+                                        if (accessErrors.reason) {
+                                            setAccessErrors((prev) => ({ ...prev, reason: undefined }));
+                                        }
+                                    }}
                                     placeholder="Explain why you need access to this project (e.g. assisting in debugging, contributing, code review)..."
                                     rows={3}
                                     className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                                 />
+                                {accessErrors.reason && (
+                                    <p className="mt-1 text-xs text-rose-400">{accessErrors.reason}</p>
+                                )}
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-2">

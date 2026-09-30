@@ -179,6 +179,7 @@ class ProjectsTable
                         Textarea::make('rejection_reason')
                             ->label('Rejection Reason')
                             ->placeholder('Specify why edit permission is rejected...')
+                            ->maxLength(1000)
                             ->required(),
                     ])
                     ->modalHeading('Reject Project Edit Permission Request')
@@ -247,6 +248,7 @@ class ProjectsTable
                         Textarea::make('rejection_reason')
                             ->label('Rejection Reason')
                             ->placeholder('Specify why deletion approval is rejected...')
+                            ->maxLength(1000)
                             ->required(),
                     ])
                     ->modalHeading('Reject Project Deletion Request')
@@ -348,6 +350,7 @@ class ProjectsTable
                         $fields[] = Textarea::make('rejection_reason')
                             ->label('Reason for Rejection')
                             ->placeholder('Specify why access to this project is denied...')
+                            ->maxLength(1000)
                             ->required();
 
                         return $fields;
