@@ -467,10 +467,13 @@ class ProjectManagementController extends Controller
             'username' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'password' => 'required|string',
-            'role' => 'nullable|string|max:255',
+            'role' => ['nullable', 'string', 'max:50', 'regex:~^[a-zA-Z0-9\s\-_/&.,()]+$~'],
             'login_url' => 'nullable|url|max:500',
             'environment' => ['required', Rule::in(['local', 'staging', 'production'])],
             'notes' => 'nullable|string',
+        ], [
+            'role.max' => 'The account role may not be greater than 50 characters.',
+            'role.regex' => 'The account role may only contain letters, numbers, spaces, and standard symbols (- _ / & . , ( )).',
         ]);
 
         $validated['project_id'] = $project->id;
@@ -490,10 +493,13 @@ class ProjectManagementController extends Controller
             'username' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'password' => 'nullable|string',
-            'role' => 'nullable|string|max:255',
+            'role' => ['nullable', 'string', 'max:50', 'regex:~^[a-zA-Z0-9\s\-_/&.,()]+$~'],
             'login_url' => 'nullable|url|max:500',
             'environment' => ['required', Rule::in(['local', 'staging', 'production'])],
             'notes' => 'nullable|string',
+        ], [
+            'role.max' => 'The account role may not be greater than 50 characters.',
+            'role.regex' => 'The account role may only contain letters, numbers, spaces, and standard symbols (- _ / & . , ( )).',
         ]);
 
         if (empty($validated['password'])) {

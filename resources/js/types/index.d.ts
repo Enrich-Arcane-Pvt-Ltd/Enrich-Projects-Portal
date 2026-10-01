@@ -228,6 +228,7 @@ export type PageProps<
         success?: string | null;
         error?: string | null;
         info?: string | null;
+        timestamp?: number | string | null;
     };
     notifications?: {
         unread_count: number;

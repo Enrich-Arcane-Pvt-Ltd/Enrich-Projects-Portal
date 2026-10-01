@@ -323,14 +323,54 @@ export default function SubEntityFormModal({
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="font-bold text-slate-300">Account Role</label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="font-bold text-slate-300">Account Role</label>
+                                        <span className={`text-[10px] font-mono ${((data as any).role || '').length >= 45 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                            {((data as any).role || '').length}/50
+                                        </span>
+                                    </div>
                                     <input
                                         type="text"
+                                        maxLength={50}
+                                        list="client-role-suggestions"
                                         value={(data as any).role}
-                                        onChange={(e) => setData('role' as any, e.target.value)}
+                                        onChange={(e) => {
+                                            const sanitized = e.target.value
+                                                .replace(/[^a-zA-Z0-9\s\-_/&.,()]/g, '')
+                                                .slice(0, 50);
+                                            setData('role' as any, sanitized);
+                                        }}
                                         placeholder="e.g. Primary Admin, Manager"
                                         className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
                                     />
+                                    <datalist id="client-role-suggestions">
+                                        <option value="Primary Admin" />
+                                        <option value="Store Manager" />
+                                        <option value="Staff / Operator" />
+                                        <option value="Billing Admin" />
+                                        <option value="Viewer / Read-Only" />
+                                        <option value="QA Test Client" />
+                                        <option value="Support Agent" />
+                                    </datalist>
+                                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                        <span className="text-[10px] text-slate-500">Quick:</span>
+                                        {['Primary Admin', 'Store Manager', 'Staff / Operator', 'Viewer / Read-Only'].map((suggestedRole) => (
+                                            <button
+                                                key={suggestedRole}
+                                                type="button"
+                                                onClick={() => setData('role' as any, suggestedRole)}
+                                                className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                                                    (data as any).role === suggestedRole
+                                                        ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 font-semibold'
+                                                        : 'bg-slate-800/60 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200'
+                                                }`}
+                                            >
+                                                {suggestedRole}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-slate-500">Max 50 characters (letters, numbers, spaces, and standard symbols).</p>
+                                    {errors.role && <p className="text-xs text-rose-400">{errors.role}</p>}
                                 </div>
                             </div>
 
