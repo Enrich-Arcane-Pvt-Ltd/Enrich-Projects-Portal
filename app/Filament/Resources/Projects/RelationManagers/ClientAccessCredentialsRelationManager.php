@@ -53,7 +53,13 @@ class ClientAccessCredentialsRelationManager extends RelationManager
                     ->required(),
                 TextInput::make('role')
                     ->label('Account Role / Access Level')
-                    ->placeholder('e.g. Super Admin, Store Manager, Client Owner'),
+                    ->placeholder('e.g. Super Admin, Store Manager, Client Owner')
+                    ->maxLength(50)
+                    ->regex('~^[a-zA-Z0-9\s\-_/&.,()]+$~')
+                    ->validationMessages([
+                        'max' => 'The account role may not be greater than 50 characters.',
+                        'regex' => 'The account role may only contain letters, numbers, spaces, and standard symbols.',
+                    ]),
                 TextInput::make('login_url')
                     ->label('Application Login URL')
                     ->url()

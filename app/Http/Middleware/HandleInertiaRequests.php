@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
+                'timestamp' => fn () => ($request->session()->has('success') || $request->session()->has('error') || $request->session()->has('info')) ? microtime(true) : null,
             ],
             'notifications' => fn () => $request->user() ? [
                 'unread_count' => $request->user()->unreadNotifications()->count(),

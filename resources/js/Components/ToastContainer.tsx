@@ -27,13 +27,15 @@ export default function ToastContainer() {
     const { flash } = usePage<PageProps>().props;
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const lastMessageRef = useRef<{ message: string; timestamp: number } | null>(null);
+    const lastFlashTimestampRef = useRef<number | string | null>(null);
 
     const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
         const now = Date.now();
-        // Prevent duplicate toasts within 800ms
+        // Prevent duplicate identical toasts within 800ms (e.g. rapid double submit or React StrictMode)
         if (
             lastMessageRef.current &&
-            (lastMessageRef.current.message === toast.message || now - lastMessageRef.current.timestamp < 800)
+            lastMessageRef.current.message === toast.message &&
+            now - lastMessageRef.current.timestamp < 800
         ) {
             return;
         }
@@ -54,21 +56,30 @@ export default function ToastContainer() {
 
     // Listen to Inertia flash props changes
     useEffect(() => {
-        if (flash?.success) {
+        if (!flash) return;
+
+        if (flash.timestamp !== undefined && flash.timestamp !== null) {
+            if (lastFlashTimestampRef.current === flash.timestamp) {
+                return;
+            }
+            lastFlashTimestampRef.current = flash.timestamp;
+        }
+
+        if (flash.success) {
             addToast({
                 type: 'success',
                 title: 'Success',
                 message: flash.success,
             });
         }
-        if (flash?.error) {
+        if (flash.error) {
             addToast({
                 type: 'error',
                 title: 'Error',
                 message: flash.error,
             });
         }
-        if (flash?.info) {
+        if (flash.info) {
             addToast({
                 type: 'info',
                 title: 'Information',
