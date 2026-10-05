@@ -16,6 +16,10 @@ class UpdateUserLastSeen
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('user-offline*')) {
+            return $next($request);
+        }
+
         if (Auth::check()) {
             $user = Auth::user();
             $now = time();

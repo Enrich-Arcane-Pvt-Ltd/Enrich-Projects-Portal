@@ -275,22 +275,61 @@ export default function Dashboard({
     filters,
     nextProjectCode,
 }: DashboardProps) {
-    const activeOnlineUserIds = propOnlineUserIds || sharedOnlineUserIds || [];
+    const [activeOnlineUserIds, setActiveOnlineUserIds] = useState<number[]>(() => {
+        const initial = propOnlineUserIds || sharedOnlineUserIds || [];
+        return Array.isArray(initial) ? initial.map(Number) : [];
+    });
+
+    useEffect(() => {
+        const latest = propOnlineUserIds || sharedOnlineUserIds;
+        if (latest && Array.isArray(latest)) {
+            setActiveOnlineUserIds(latest.map(Number));
+        }
+    }, [propOnlineUserIds, sharedOnlineUserIds]);
 
     const isUserOnline = (user?: User | { id: number; is_online?: boolean } | null) => {
         if (!user || !user.id) return false;
-        return activeOnlineUserIds.includes(user.id) || Boolean(user.is_online);
+        return activeOnlineUserIds.includes(Number(user.id));
     };
 
-    // Auto-refresh online statuses every 20 seconds while window is visible
+    // Fast live-sync of online users without needing a manual page reload
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (document.visibilityState === 'visible') {
-                router.reload({ only: ['online_user_ids', 'onlineUserIds'] });
-            }
-        }, 20000);
+        let isMounted = true;
 
-        return () => clearInterval(interval);
+        const checkOnlineUsers = async () => {
+            if (document.visibilityState !== 'visible') return;
+            try {
+                const res = await fetch('/online-users', {
+                    headers: { Accept: 'application/json' },
+                });
+                if (res.ok && isMounted) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        setActiveOnlineUserIds(data.map(Number));
+                    }
+                }
+            } catch (e) {
+                // Silently ignore temporary network drops
+            }
+        };
+
+        const interval = setInterval(checkOnlineUsers, 5000);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                checkOnlineUsers();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleVisibilityChange);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleVisibilityChange);
+        };
     }, []);
 
     // Immediately notify server when user closes tab or navigates away
@@ -1425,6 +1464,7 @@ export default function Dashboard({
                 isOpen={Boolean(selectedProject)}
                 onClose={() => setSelectedProjectId(null)}
                 availableDevelopers={availableDevelopers}
+                onlineUserIds={activeOnlineUserIds}
             />
 
             {/* Create & edit project modal */}

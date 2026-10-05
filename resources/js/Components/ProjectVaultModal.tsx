@@ -9,6 +9,7 @@ interface ProjectVaultModalProps {
     isOpen?: boolean;
     onClose?: () => void;
     availableDevelopers?: User[];
+    onlineUserIds?: number[];
     isPage?: boolean;
 }
 
@@ -32,6 +33,7 @@ export default function ProjectVaultModal({
     isOpen = true,
     onClose = () => {},
     availableDevelopers = [],
+    onlineUserIds: propOnlineUserIds,
     isPage = false,
 }: ProjectVaultModalProps) {
     if (!isOpen || !project) return null;
@@ -57,6 +59,7 @@ export default function ProjectVaultModal({
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const { online_user_ids = [] } = usePage<PageProps>().props;
+    const activeOnlineIds = propOnlineUserIds || (online_user_ids as number[]) || [];
 
     // Developer assignment & leadership state
     const [isAssignDevModalOpen, setIsAssignDevModalOpen] = useState(false);
@@ -1661,7 +1664,7 @@ export default function ProjectVaultModal({
                                         {project.developers.map((dev) => {
                                             const isCreator = dev.id === project.created_by_id;
                                             const isLead = dev.id === project.lead_developer_id;
-                                            const isOnline = online_user_ids.includes(dev.id) || Boolean(dev.is_online);
+                                            const isOnline = activeOnlineIds.map(Number).includes(Number(dev.id));
 
                                             return (
                                                 <div
