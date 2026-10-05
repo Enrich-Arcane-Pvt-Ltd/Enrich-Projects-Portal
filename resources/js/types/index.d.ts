@@ -12,6 +12,7 @@ export interface User {
     bio?: string;
     email_verified_at?: string;
     created_at?: string;
+    is_online?: boolean;
 }
 
 export interface ProjectLink {
@@ -240,4 +241,5 @@ export type PageProps<
         max_upload_bytes?: number;
         max_upload_mb?: number;
     };
+    online_user_ids?: number[];
 };

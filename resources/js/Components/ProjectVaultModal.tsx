@@ -56,6 +56,8 @@ export default function ProjectVaultModal({
     const [subEntityModal, setSubEntityModal] = useState<{ type: SubEntityType; item?: any } | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    const { online_user_ids = [] } = usePage<PageProps>().props;
+
     // Developer assignment & leadership state
     const [isAssignDevModalOpen, setIsAssignDevModalOpen] = useState(false);
     const [isEditLeadsModalOpen, setIsEditLeadsModalOpen] = useState(false);
@@ -1659,6 +1661,7 @@ export default function ProjectVaultModal({
                                         {project.developers.map((dev) => {
                                             const isCreator = dev.id === project.created_by_id;
                                             const isLead = dev.id === project.lead_developer_id;
+                                            const isOnline = dev.is_online ?? online_user_ids.includes(dev.id);
 
                                             return (
                                                 <div
@@ -1670,7 +1673,12 @@ export default function ProjectVaultModal({
                                                             <div className="h-7 w-7 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold flex items-center justify-center text-xs">
                                                                 {dev.name.charAt(0).toUpperCase()}
                                                             </div>
-                                                            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-slate-900"></span>
+                                                            <span
+                                                                className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-slate-900 ${
+                                                                    isOnline ? 'bg-emerald-400' : 'bg-rose-500'
+                                                                }`}
+                                                                title={isOnline ? 'Online' : 'Offline'}
+                                                            ></span>
                                                         </div>
                                                         <div className="min-w-0">
                                                             <div className="text-slate-200 font-medium truncate flex items-center gap-1.5">

@@ -133,12 +133,23 @@ class DeveloperProjectController extends Controller
             ->take(5)
             ->get();
 
+        $onlineUserIds = User::getOnlineUserIds();
+
+        $availableDevelopers = User::select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($dev) use ($onlineUserIds) {
+                $dev->is_online = in_array((int) $dev->id, $onlineUserIds, true);
+                return $dev;
+            });
+
         return Inertia::render('Dashboard', [
             'projects' => $projects,
             'stats' => $stats,
             'recentAuditActivity' => $recentAuditActivity,
-            'availableDevelopers' => User::select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
+            'availableDevelopers' => $availableDevelopers,
             'availableAdmins' => User::whereIn('role', ['admin', 'superadmin'])->select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
+            'onlineUserIds' => $onlineUserIds,
             'filters' => $request->only(['search', 'type', 'status', 'priority']),
             'nextProjectCode' => Project::generateNextCode(),
         ]);
