@@ -112,4 +112,55 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return $this->hasMany(ProjectAccessRequest::class, 'user_id');
     }
+
+    /**
+     * Get array of IDs for users who were active in the last 5 minutes.
+     *
+     * @return array<int>
+     */
+    public static function getOnlineUserIds(): array
+    {
+        $onlineIds = [];
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                // Active within last 5 minutes
+                $threshold = now()->subMinutes(5)->timestamp;
+                $sessionUserIds = \Illuminate\Support\Facades\DB::table('sessions')
+                    ->whereNotNull('user_id')
+                    ->where('last_activity', '>=', $threshold)
+                    ->pluck('user_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                $onlineIds = array_merge($onlineIds, $sessionUserIds);
+            }
+        } catch (\Throwable $e) {
+            // fallback gracefully
+        }
+
+        // Current user is always considered online in their own active request
+        if ($currentUserId = auth()->id()) {
+            $onlineIds[] = (int) $currentUserId;
+        }
+
+        return array_values(array_unique(array_filter($onlineIds)));
+    }
+
+    /**
+     * Check if this user instance is currently online.
+     */
+    public function isOnline(): bool
+    {
+        if (array_key_exists('is_online', $this->attributes)) {
+            return (bool) $this->attributes['is_online'];
+        }
+
+        if (auth()->id() === $this->id) {
+            return true;
+        }
+
+        return in_array($this->id, static::getOnlineUserIds(), true);
+    }
 }
+

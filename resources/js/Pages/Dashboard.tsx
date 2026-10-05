@@ -20,6 +20,7 @@ interface DashboardProps extends PageProps {
     recentAuditActivity: AuditLog[];
     availableDevelopers?: User[];
     availableAdmins?: User[];
+    onlineUserIds?: number[];
     filters: {
         search?: string;
         type?: string;
@@ -269,9 +270,32 @@ export default function Dashboard({
     recentAuditActivity,
     availableDevelopers = [],
     availableAdmins = [],
+    onlineUserIds: propOnlineUserIds,
+    online_user_ids: sharedOnlineUserIds,
     filters,
     nextProjectCode,
 }: DashboardProps) {
+    const activeOnlineUserIds = propOnlineUserIds || sharedOnlineUserIds || [];
+
+    const isUserOnline = (user?: User | { id: number; is_online?: boolean } | null) => {
+        if (!user || !user.id) return false;
+        if (typeof user.is_online === 'boolean') {
+            return user.is_online;
+        }
+        return activeOnlineUserIds.includes(user.id);
+    };
+
+    // Auto-refresh online statuses every 60 seconds while window is visible
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                router.reload({ only: ['online_user_ids', 'onlineUserIds'] });
+            }
+        }, 60000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     const [scopeFilter, setScopeFilter] = useState<Scope>('all');
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -1283,28 +1307,38 @@ export default function Dashboard({
                                     <span className="text-xs text-slate-500 font-medium">{people.length}</span>
                                 </div>
                                 <div className="flex flex-wrap gap-2 min-w-0">
-                                    {people.map((person) => (
-                                        <button
-                                            key={person.id}
-                                            type="button"
-                                            onClick={() => setSelectedProfileUser(person)}
-                                            className="relative group focus:outline-none transition-transform hover:scale-110 active:scale-95 cursor-pointer"
-                                            title={`${person.name} (${formatRole(person.role)}) - Click to view profile`}
-                                        >
-                                            {person.avatar_url ? (
-                                                <img
-                                                    src={person.avatar_url}
-                                                    alt={person.name}
-                                                    className="h-9 w-9 rounded-full object-cover border-2 border-slate-700 group-hover:border-indigo-500 shadow-sm transition-colors"
+                                    {people.map((person) => {
+                                        const isOnline = isUserOnline(person);
+                                        return (
+                                            <button
+                                                key={person.id}
+                                                type="button"
+                                                onClick={() => setSelectedProfileUser(person)}
+                                                className="relative group focus:outline-none transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+                                                title={`${person.name} (${formatRole(person.role)}) - ${isOnline ? 'Online' : 'Offline'}`}
+                                            >
+                                                {person.avatar_url ? (
+                                                    <img
+                                                        src={person.avatar_url}
+                                                        alt={person.name}
+                                                        className="h-9 w-9 rounded-full object-cover border-2 border-slate-700 group-hover:border-indigo-500 shadow-sm transition-colors"
+                                                    />
+                                                ) : (
+                                                    <div className="h-9 w-9 rounded-full bg-slate-800 border-2 border-slate-700 group-hover:border-indigo-500 text-slate-200 text-xs font-semibold flex items-center justify-center shrink-0 tracking-tight shadow-sm transition-colors">
+                                                        {getUserInitials(person.name)}
+                                                    </div>
+                                                )}
+                                                <span
+                                                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-slate-900 transition-colors ${
+                                                        isOnline
+                                                            ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50'
+                                                            : 'bg-rose-500 shadow-sm shadow-rose-500/50'
+                                                    }`}
+                                                    title={isOnline ? 'Online' : 'Offline'}
                                                 />
-                                            ) : (
-                                                <div className="h-9 w-9 rounded-full bg-slate-800 border-2 border-slate-700 group-hover:border-indigo-500 text-slate-200 text-xs font-semibold flex items-center justify-center shrink-0 tracking-tight shadow-sm transition-colors">
-                                                    {getUserInitials(person.name)}
-                                                </div>
-                                            )}
-                                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-slate-900" />
-                                        </button>
-                                    ))}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </section>
                         )}
@@ -2297,20 +2331,37 @@ export default function Dashboard({
                             </div>
 
                             {/* Status Indicators */}
-                            <div className="space-y-2 pt-1 text-xs text-slate-300">
-                                <div className="flex items-center gap-2.5">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 shrink-0" />
-                                    <span className="font-medium text-emerald-400">Active</span>
-                                </div>
-                                <div className="flex items-center gap-2.5 text-slate-400">
-                                    <svg className="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span>
-                                        {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} local time
-                                    </span>
-                                </div>
-                            </div>
+                            {(() => {
+                                const isOnline = isUserOnline(selectedProfileUser);
+                                return (
+                                    <div className="space-y-2 pt-1 text-xs text-slate-300">
+                                        <div className="flex items-center gap-2.5">
+                                            <span
+                                                className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                                                    isOnline
+                                                        ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50'
+                                                        : 'bg-rose-500 shadow-sm shadow-rose-500/50'
+                                                }`}
+                                            />
+                                            <span
+                                                className={`font-medium ${
+                                                    isOnline ? 'text-emerald-400' : 'text-rose-400'
+                                                }`}
+                                            >
+                                                {isOnline ? 'Online' : 'Offline'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2.5 text-slate-400">
+                                            <svg className="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span>
+                                                {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} local time
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Contact Information (Excludes Message / Huddle) */}
                             <div className="pt-4 border-t border-slate-800/80 space-y-3.5">

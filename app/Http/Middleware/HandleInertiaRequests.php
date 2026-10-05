@@ -60,6 +60,7 @@ class HandleInertiaRequests extends Middleware
                         ];
                     }),
             ] : null,
+            'online_user_ids' => fn () => $request->user() ? \App\Models\User::getOnlineUserIds() : [],
             'system_limits' => [
                 'upload_max_filesize' => ini_get('upload_max_filesize') ?: '2M',
                 'post_max_size' => ini_get('post_max_size') ?: '8M',
