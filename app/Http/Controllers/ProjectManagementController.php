@@ -536,9 +536,9 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'category' => ['required', Rule::in(['github', 'gitlab', 'bitbucket', 'figma', 'postman', 'jira'])],
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:100',
             'url' => 'required|url|max:500',
-            'branch_strategy' => 'nullable|string|max:255',
+            'branch_strategy' => 'nullable|string|max:150',
         ]);
 
         $validated['project_id'] = $project->id;
@@ -556,9 +556,9 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'category' => ['required', Rule::in(['github', 'gitlab', 'bitbucket', 'figma', 'postman', 'jira'])],
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:100',
             'url' => 'required|url|max:500',
-            'branch_strategy' => 'nullable|string|max:255',
+            'branch_strategy' => 'nullable|string|max:150',
         ]);
 
         $link->update($validated);
@@ -591,14 +591,14 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'environment_type' => ['required', Rule::in(['development', 'staging', 'production'])],
-            'hosting_provider' => 'required|string|max:255',
+            'hosting_provider' => 'required|string|max:80',
             'ip_address' => 'nullable|string|max:100',
             'hostname' => 'nullable|string|max:255',
             'ssh_port' => 'required|integer|min:1|max:65535',
-            'ssh_user' => 'required|string|max:100',
+            'ssh_user' => ['required', 'string', 'max:32', 'regex:/^[a-zA-Z0-9_\-]+$/'],
             'ssh_credential' => 'nullable|string',
-            'runtime_stack' => 'nullable|string|max:255',
-            'deploy_path' => 'nullable|string|max:255',
+            'runtime_stack' => 'nullable|string|max:120',
+            'deploy_path' => 'nullable|string|max:200',
             'env_backup' => 'nullable|string',
         ]);
 
@@ -617,14 +617,14 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'environment_type' => ['required', Rule::in(['development', 'staging', 'production'])],
-            'hosting_provider' => 'required|string|max:255',
+            'hosting_provider' => 'required|string|max:80',
             'ip_address' => 'nullable|string|max:100',
             'hostname' => 'nullable|string|max:255',
             'ssh_port' => 'required|integer|min:1|max:65535',
-            'ssh_user' => 'required|string|max:100',
+            'ssh_user' => ['required', 'string', 'max:32', 'regex:/^[a-zA-Z0-9_\-]+$/'],
             'ssh_credential' => 'nullable|string',
-            'runtime_stack' => 'nullable|string|max:255',
-            'deploy_path' => 'nullable|string|max:255',
+            'runtime_stack' => 'nullable|string|max:120',
+            'deploy_path' => 'nullable|string|max:200',
             'env_backup' => 'nullable|string',
         ]);
 
@@ -661,11 +661,11 @@ class ProjectManagementController extends Controller
         $this->authorizeCreator($request, $project);
 
         $validated = $request->validate([
-            'service_provider' => 'required|string|max:255',
+            'service_provider' => 'required|string|max:80',
             'account_identifier' => 'required|string|max:255',
             'login_password' => 'nullable|string',
             'console_url' => 'nullable|url|max:500',
-            'project_or_app_id' => 'nullable|string|max:255',
+            'project_or_app_id' => 'nullable|string|max:100',
             'environment' => ['required', Rule::in(['development', 'testing', 'production'])],
             'notes' => 'nullable|string',
         ]);
@@ -684,11 +684,11 @@ class ProjectManagementController extends Controller
         abort_if($account->project_id !== $project->id, 404);
 
         $validated = $request->validate([
-            'service_provider' => 'required|string|max:255',
+            'service_provider' => 'required|string|max:80',
             'account_identifier' => 'required|string|max:255',
             'login_password' => 'nullable|string',
             'console_url' => 'nullable|url|max:500',
-            'project_or_app_id' => 'nullable|string|max:255',
+            'project_or_app_id' => 'nullable|string|max:100',
             'environment' => ['required', Rule::in(['development', 'testing', 'production'])],
             'notes' => 'nullable|string',
         ]);
@@ -727,8 +727,8 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'service_type' => ['required', Rule::in(['cron_schedule', 'queue_worker', 'supervisor_daemon', 'websocket'])],
-            'command' => 'required|string|max:500',
-            'frequency_or_config' => 'nullable|string|max:255',
+            'command' => 'required|string|max:300',
+            'frequency_or_config' => 'nullable|string|max:100',
             'monitoring_notes' => 'nullable|string',
         ]);
 
@@ -747,8 +747,8 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'service_type' => ['required', Rule::in(['cron_schedule', 'queue_worker', 'supervisor_daemon', 'websocket'])],
-            'command' => 'required|string|max:500',
-            'frequency_or_config' => 'nullable|string|max:255',
+            'command' => 'required|string|max:300',
+            'frequency_or_config' => 'nullable|string|max:100',
             'monitoring_notes' => 'nullable|string',
         ]);
 
@@ -781,12 +781,12 @@ class ProjectManagementController extends Controller
         $this->authorizeCreator($request, $project);
 
         $validated = $request->validate([
-            'hardware_model' => 'required|string|max:255',
-            'firmware_version' => 'nullable|string|max:100',
+            'hardware_model' => 'required|string|max:100',
+            'firmware_version' => 'nullable|string|max:50',
             'communication_protocol' => ['required', Rule::in(['MQTT', 'HTTP_REST', 'WebSockets'])],
-            'broker_url' => 'nullable|string|max:255',
+            'broker_url' => 'nullable|string|max:200',
             'port' => 'nullable|string|max:50',
-            'topic_structure' => 'nullable|string|max:500',
+            'topic_structure' => 'nullable|string|max:200',
             'auth_token_or_certs' => 'nullable|string',
         ]);
 
@@ -804,12 +804,12 @@ class ProjectManagementController extends Controller
         abort_if($iot->project_id !== $project->id, 404);
 
         $validated = $request->validate([
-            'hardware_model' => 'required|string|max:255',
-            'firmware_version' => 'nullable|string|max:100',
+            'hardware_model' => 'required|string|max:100',
+            'firmware_version' => 'nullable|string|max:50',
             'communication_protocol' => ['required', Rule::in(['MQTT', 'HTTP_REST', 'WebSockets'])],
-            'broker_url' => 'nullable|string|max:255',
+            'broker_url' => 'nullable|string|max:200',
             'port' => 'nullable|string|max:50',
-            'topic_structure' => 'nullable|string|max:500',
+            'topic_structure' => 'nullable|string|max:200',
             'auth_token_or_certs' => 'nullable|string',
         ]);
 
@@ -846,8 +846,8 @@ class ProjectManagementController extends Controller
         $this->authorizeCreator($request, $project);
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'file' => 'nullable|file|max:51200', // up to 50MB
+            'title' => 'required|string|max:150',
+            'file' => 'nullable|file|max:51200', // up to 50MB direct upload
             'file_url' => 'nullable|string|max:500',
         ]);
 
@@ -894,7 +894,7 @@ class ProjectManagementController extends Controller
         abort_if($document->project_id !== $project->id, 404);
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:150',
             'file' => 'nullable|file|max:51200',
             'file_url' => 'nullable|string|max:500',
         ]);

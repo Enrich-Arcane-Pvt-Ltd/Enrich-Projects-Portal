@@ -1428,7 +1428,7 @@ export default function ProjectVaultModal({
                                     </div>
                                     <p className="text-sm font-medium text-slate-300">No project documents uploaded yet</p>
                                     <p className="text-xs text-slate-500 max-w-md mx-auto">
-                                        Upload documentation (.pdf, .docx), source code files, project backups (.zip up to 50MB), or add external Google Drive links.
+                                        Upload documentation (.pdf, .docx), source code files, project archives (.zip up to 25MB), or add external Google Drive links.
                                     </p>
                                 </div>
                             ) : (
