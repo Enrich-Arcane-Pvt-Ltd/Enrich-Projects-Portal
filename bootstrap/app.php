@@ -17,7 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\UpdateUserLastSeen::class,
         ]);
 
-        //
+        $middleware->validateCsrfTokens(except: [
+            'user-offline',
+            'user-offline/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, \Illuminate\Http\Request $request) {

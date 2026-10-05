@@ -50,6 +50,10 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        if ($user = Auth::user()) {
+            \App\Models\User::markUserOffline($user->id);
+        }
+
         Auth::guard('web')->logout();
         Auth::guard('admin')->logout();
 

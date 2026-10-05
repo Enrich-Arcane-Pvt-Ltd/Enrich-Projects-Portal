@@ -293,6 +293,23 @@ export default function Dashboard({
         return () => clearInterval(interval);
     }, []);
 
+    // Immediately notify server when user closes tab or navigates away
+    useEffect(() => {
+        const handleOffline = () => {
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(`/user-offline?u=${auth.user.id}`);
+            }
+        };
+
+        window.addEventListener('beforeunload', handleOffline);
+        window.addEventListener('pagehide', handleOffline);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleOffline);
+            window.removeEventListener('pagehide', handleOffline);
+        };
+    }, [auth.user.id]);
+
     const [scopeFilter, setScopeFilter] = useState<Scope>('all');
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);

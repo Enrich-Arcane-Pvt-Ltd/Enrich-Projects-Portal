@@ -271,6 +271,17 @@ class AdminPanelProvider extends PanelProvider
                             overflow-x: auto;
                         }
                     </style>
+                    <script>
+                        (function() {
+                            function notifyOffline() {
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon("/user-offline");
+                                }
+                            }
+                            window.addEventListener("beforeunload", notifyOffline);
+                            window.addEventListener("pagehide", notifyOffline);
+                        })();
+                    </script>
                 ')
             );
     }
