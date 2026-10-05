@@ -19,5 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, \Illuminate\Http\Request $request) {
+            $postLimit = ini_get('post_max_size') ?: '8M';
+            $message = "The uploaded file exceeds the server post limit ({$postLimit}). Please use the External Link (Google Drive) option or increase post_max_size in php.ini.";
+
+            return redirect()->back()->withErrors([
+                'file' => $message,
+            ]);
+        });
     })->create();

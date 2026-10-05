@@ -60,6 +60,48 @@ class HandleInertiaRequests extends Middleware
                         ];
                     }),
             ] : null,
+            'system_limits' => [
+                'upload_max_filesize' => ini_get('upload_max_filesize') ?: '2M',
+                'post_max_size' => ini_get('post_max_size') ?: '8M',
+                'max_upload_bytes' => (function () {
+                    $parse = function ($val) {
+                        $val = trim((string) $val);
+                        if (empty($val)) return 8388608;
+                        $last = strtolower(substr($val, -1));
+                        $num = (float) $val;
+                        switch ($last) {
+                            case 'g': $num *= 1024 * 1024 * 1024; break;
+                            case 'm': $num *= 1024 * 1024; break;
+                            case 'k': $num *= 1024; break;
+                        }
+                        return (int) $num;
+                    };
+                    $post = $parse(ini_get('post_max_size') ?: '8M');
+                    $upload = $parse(ini_get('upload_max_filesize') ?: '2M');
+                    $appLimit = 100 * 1024 * 1024; // Allow up to 100MB if configured in php.ini
+                    $effective = min($post, $upload, $appLimit);
+                    // Reserve 256KB buffer for headers and other POST inputs
+                    return max(1048576, $effective > 524288 ? $effective - 262144 : $effective);
+                })(),
+                'max_upload_mb' => (function () {
+                    $parse = function ($val) {
+                        $val = trim((string) $val);
+                        if (empty($val)) return 8388608;
+                        $last = strtolower(substr($val, -1));
+                        $num = (float) $val;
+                        switch ($last) {
+                            case 'g': $num *= 1024 * 1024 * 1024; break;
+                            case 'm': $num *= 1024 * 1024; break;
+                            case 'k': $num *= 1024; break;
+                        }
+                        return (int) $num;
+                    };
+                    $post = $parse(ini_get('post_max_size') ?: '8M');
+                    $upload = $parse(ini_get('upload_max_filesize') ?: '2M');
+                    $effective = min($post, $upload, 100 * 1024 * 1024);
+                    return round($effective / (1024 * 1024), 1);
+                })(),
+            ],
         ];
     }
 }
