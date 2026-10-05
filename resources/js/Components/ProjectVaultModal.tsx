@@ -1661,7 +1661,7 @@ export default function ProjectVaultModal({
                                         {project.developers.map((dev) => {
                                             const isCreator = dev.id === project.created_by_id;
                                             const isLead = dev.id === project.lead_developer_id;
-                                            const isOnline = dev.is_online ?? online_user_ids.includes(dev.id);
+                                            const isOnline = online_user_ids.includes(dev.id) || Boolean(dev.is_online);
 
                                             return (
                                                 <div
