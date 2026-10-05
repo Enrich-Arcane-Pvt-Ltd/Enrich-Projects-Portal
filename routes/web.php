@@ -25,12 +25,16 @@ Route::get('/', function () {
 });
 
 Route::match(['get', 'post'], '/user-offline', function (\Illuminate\Http\Request $request) {
-    $userId = auth()->id() ?: (int) $request->input('u');
+    $userId = (int) $request->input('u') ?: auth()->id() ?: \Filament\Facades\Filament::auth()->id();
     if ($userId) {
         \App\Models\User::markUserOffline($userId);
     }
     return response()->noContent();
 });
+
+Route::get('/online-users', function () {
+    return response()->json(\App\Models\User::getOnlineUserIds());
+})->middleware('auth');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DeveloperProjectController::class, 'index'])->name('dashboard');

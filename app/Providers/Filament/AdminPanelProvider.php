@@ -273,9 +273,10 @@ class AdminPanelProvider extends PanelProvider
                     </style>
                     <script>
                         (function() {
+                            var uid = "{{ auth()->id() ?? "" }}";
                             function notifyOffline() {
                                 if (navigator.sendBeacon) {
-                                    navigator.sendBeacon("/user-offline");
+                                    navigator.sendBeacon("/user-offline?u=" + encodeURIComponent(uid));
                                 }
                             }
                             window.addEventListener("beforeunload", notifyOffline);
