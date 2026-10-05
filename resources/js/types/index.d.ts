@@ -234,4 +234,10 @@ export type PageProps<
         unread_count: number;
         recent: InertiaNotification[];
     } | null;
+    system_limits?: {
+        upload_max_filesize?: string;
+        post_max_size?: string;
+        max_upload_bytes?: number;
+        max_upload_mb?: number;
+    };
 };
