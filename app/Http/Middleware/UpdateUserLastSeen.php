@@ -29,8 +29,8 @@ class UpdateUserLastSeen
 
                 $activeUsers[$user->id] = $now;
 
-                // Prune entries older than 5 minutes (300 seconds)
-                $threshold = $now - 300;
+                // Prune entries older than 75 seconds
+                $threshold = $now - 75;
                 $activeUsers = array_filter($activeUsers, fn ($time) => is_numeric($time) && $time >= $threshold);
 
                 Cache::put('active_portal_user_ids', $activeUsers, now()->addMinutes(15));
@@ -38,11 +38,11 @@ class UpdateUserLastSeen
                 // Ignore cache failures
             }
 
-            // 2. Update last_seen_at in users table if column exists (throttled to once every 60s)
+            // 2. Update last_seen_at in users table if column exists (throttled to once every 20s)
             try {
                 if (Schema::hasColumn('users', 'last_seen_at')) {
                     $lastSeen = $user->last_seen_at ? $user->last_seen_at->timestamp : 0;
-                    if ($now - $lastSeen >= 60) {
+                    if ($now - $lastSeen >= 20) {
                         $user->timestamps = false;
                         $user->last_seen_at = now();
                         $user->saveQuietly();

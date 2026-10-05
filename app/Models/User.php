@@ -128,7 +128,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         try {
             $activeUsers = \Illuminate\Support\Facades\Cache::get('active_portal_user_ids', []);
             if (is_array($activeUsers)) {
-                $threshold = time() - 300;
+                // Active within last 75 seconds (heartbeats are every 20-30s)
+                $threshold = time() - 75;
                 foreach ($activeUsers as $uid => $time) {
                     if (is_numeric($time) && $time >= $threshold) {
                         $onlineIds[] = (int) $uid;
@@ -140,7 +141,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // 2. From users.last_seen_at column (if migration has run)
         try {
             if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'last_seen_at')) {
-                $lastSeenThreshold = now()->subMinutes(5);
+                $lastSeenThreshold = now()->subSeconds(75);
                 $dbIds = static::where('last_seen_at', '>=', $lastSeenThreshold)
                     ->pluck('id')
                     ->map(fn ($id) => (int) $id)
@@ -152,7 +153,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // 3. From database sessions table (if database session driver is used)
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                $threshold = now()->subMinutes(5)->timestamp;
+                $threshold = now()->subSeconds(75)->timestamp;
                 $sessionUserIds = \Illuminate\Support\Facades\DB::table('sessions')
                     ->whereNotNull('user_id')
                     ->where('last_activity', '>=', $threshold)
@@ -170,6 +171,39 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         return array_values(array_unique(array_filter($onlineIds)));
+    }
+
+    /**
+     * Mark a user immediately as offline when logging out or leaving.
+     */
+    public static function markUserOffline(int $userId): void
+    {
+        // 1. Remove from active cache map
+        try {
+            $activeUsers = \Illuminate\Support\Facades\Cache::get('active_portal_user_ids', []);
+            if (is_array($activeUsers)) {
+                unset($activeUsers[$userId]);
+                \Illuminate\Support\Facades\Cache::put('active_portal_user_ids', $activeUsers, now()->addMinutes(15));
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Clear last_seen_at in DB
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'last_seen_at')) {
+                \Illuminate\Support\Facades\DB::table('users')
+                    ->where('id', $userId)
+                    ->update(['last_seen_at' => null]);
+            }
+        } catch (\Throwable $e) {}
+
+        // 3. Remove active sessions
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+                \Illuminate\Support\Facades\DB::table('sessions')
+                    ->where('user_id', $userId)
+                    ->delete();
+            }
+        } catch (\Throwable $e) {}
     }
 
     /**

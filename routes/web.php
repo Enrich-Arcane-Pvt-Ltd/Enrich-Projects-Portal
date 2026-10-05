@@ -24,6 +24,14 @@ Route::get('/', function () {
     ]);
 });
 
+Route::match(['get', 'post'], '/user-offline', function (\Illuminate\Http\Request $request) {
+    $userId = auth()->id() ?: (int) $request->input('u');
+    if ($userId) {
+        \App\Models\User::markUserOffline($userId);
+    }
+    return response()->noContent();
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DeveloperProjectController::class, 'index'])->name('dashboard');
     Route::get('/projects/{project}', [DeveloperProjectController::class, 'show'])->name('projects.show');
