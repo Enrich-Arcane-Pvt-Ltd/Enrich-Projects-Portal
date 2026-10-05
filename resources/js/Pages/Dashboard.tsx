@@ -279,19 +279,16 @@ export default function Dashboard({
 
     const isUserOnline = (user?: User | { id: number; is_online?: boolean } | null) => {
         if (!user || !user.id) return false;
-        if (typeof user.is_online === 'boolean') {
-            return user.is_online;
-        }
-        return activeOnlineUserIds.includes(user.id);
+        return activeOnlineUserIds.includes(user.id) || Boolean(user.is_online);
     };
 
-    // Auto-refresh online statuses every 60 seconds while window is visible
+    // Auto-refresh online statuses every 20 seconds while window is visible
     useEffect(() => {
         const interval = setInterval(() => {
             if (document.visibilityState === 'visible') {
                 router.reload({ only: ['online_user_ids', 'onlineUserIds'] });
             }
-        }, 60000);
+        }, 20000);
 
         return () => clearInterval(interval);
     }, []);

@@ -143,12 +143,21 @@ class DeveloperProjectController extends Controller
                 return $dev;
             });
 
+        $availableAdmins = User::whereIn('role', ['admin', 'superadmin'])
+            ->select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($admin) use ($onlineUserIds) {
+                $admin->is_online = in_array((int) $admin->id, $onlineUserIds, true);
+                return $admin;
+            });
+
         return Inertia::render('Dashboard', [
             'projects' => $projects,
             'stats' => $stats,
             'recentAuditActivity' => $recentAuditActivity,
             'availableDevelopers' => $availableDevelopers,
-            'availableAdmins' => User::whereIn('role', ['admin', 'superadmin'])->select('id', 'name', 'email', 'role', 'avatar_url', 'birth_date', 'contact_no', 'bio', 'created_at')->orderBy('name')->get(),
+            'availableAdmins' => $availableAdmins,
             'onlineUserIds' => $onlineUserIds,
             'filters' => $request->only(['search', 'type', 'status', 'priority']),
             'nextProjectCode' => Project::generateNextCode(),

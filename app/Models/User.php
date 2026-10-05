@@ -30,6 +30,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'birth_date',
         'contact_no',
         'bio',
+        'last_seen_at',
     ];
 
     /**
@@ -51,6 +52,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -122,9 +124,34 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         $onlineIds = [];
 
+        // 1. From active users cache (tracks all requests across both Filament admin and Inertia portal)
+        try {
+            $activeUsers = \Illuminate\Support\Facades\Cache::get('active_portal_user_ids', []);
+            if (is_array($activeUsers)) {
+                $threshold = time() - 300;
+                foreach ($activeUsers as $uid => $time) {
+                    if (is_numeric($time) && $time >= $threshold) {
+                        $onlineIds[] = (int) $uid;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. From users.last_seen_at column (if migration has run)
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'last_seen_at')) {
+                $lastSeenThreshold = now()->subMinutes(5);
+                $dbIds = static::where('last_seen_at', '>=', $lastSeenThreshold)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+                $onlineIds = array_merge($onlineIds, $dbIds);
+            }
+        } catch (\Throwable $e) {}
+
+        // 3. From database sessions table (if database session driver is used)
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
-                // Active within last 5 minutes
                 $threshold = now()->subMinutes(5)->timestamp;
                 $sessionUserIds = \Illuminate\Support\Facades\DB::table('sessions')
                     ->whereNotNull('user_id')
@@ -135,11 +162,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
                 $onlineIds = array_merge($onlineIds, $sessionUserIds);
             }
-        } catch (\Throwable $e) {
-            // fallback gracefully
-        }
+        } catch (\Throwable $e) {}
 
-        // Current user is always considered online in their own active request
+        // 4. Current user is always considered online in their own active request
         if ($currentUserId = auth()->id()) {
             $onlineIds[] = (int) $currentUserId;
         }
