@@ -847,7 +847,7 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:150',
-            'file' => 'nullable|file|max:25600', // up to 25MB direct upload
+            'file' => 'nullable|file|max:51200', // up to 50MB direct upload
             'file_url' => 'nullable|string|max:500',
         ]);
 
@@ -895,7 +895,7 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:150',
-            'file' => 'nullable|file|max:25600',
+            'file' => 'nullable|file|max:51200',
             'file_url' => 'nullable|string|max:500',
         ]);
 

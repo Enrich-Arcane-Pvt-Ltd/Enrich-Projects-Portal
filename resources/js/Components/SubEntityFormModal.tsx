@@ -1,5 +1,6 @@
 import { useForm, usePage } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
+import { PageProps } from '@/types';
 
 export type SubEntityType = 'credentials' | 'client_credentials' | 'links' | 'servers' | 'accounts' | 'services' | 'iot' | 'documents';
 
@@ -24,14 +25,7 @@ export default function SubEntityFormModal({
     const [docMode, setDocMode] = useState<'file' | 'link'>('file');
     const [localDocError, setLocalDocError] = useState<string | null>(null);
 
-    const { system_limits } = usePage<{
-        system_limits?: {
-            upload_max_filesize?: string;
-            post_max_size?: string;
-            max_upload_bytes?: number;
-            max_upload_mb?: number;
-        };
-    }>().props;
+    const { system_limits } = usePage<PageProps>().props;
 
     // Use dynamic PHP server limit if provided, or conservative default
     const MAX_DOC_FILE_SIZE_BYTES = system_limits?.max_upload_bytes || (7.5 * 1024 * 1024);
