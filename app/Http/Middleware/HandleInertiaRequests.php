@@ -78,7 +78,7 @@ class HandleInertiaRequests extends Middleware
                     };
                     $post = $parse(ini_get('post_max_size') ?: '8M');
                     $upload = $parse(ini_get('upload_max_filesize') ?: '2M');
-                    $appLimit = 100 * 1024 * 1024; // Allow up to 100MB if configured in php.ini
+                    $appLimit = 25 * 1024 * 1024; // 25MB application limit
                     $effective = min($post, $upload, $appLimit);
                     // Reserve 256KB buffer for headers and other POST inputs
                     return max(1048576, $effective > 524288 ? $effective - 262144 : $effective);
@@ -98,7 +98,7 @@ class HandleInertiaRequests extends Middleware
                     };
                     $post = $parse(ini_get('post_max_size') ?: '8M');
                     $upload = $parse(ini_get('upload_max_filesize') ?: '2M');
-                    $effective = min($post, $upload, 100 * 1024 * 1024);
+                    $effective = min($post, $upload, 25 * 1024 * 1024);
                     return round($effective / (1024 * 1024), 1);
                 })(),
             ],
