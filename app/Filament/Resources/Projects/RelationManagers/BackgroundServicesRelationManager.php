@@ -47,10 +47,12 @@ class BackgroundServicesRelationManager extends RelationManager
                     ->label('Execution Command')
                     ->placeholder('e.g. php artisan schedule:run')
                     ->required()
+                    ->maxLength(1000)
                     ->columnSpanFull(),
                 TextInput::make('frequency_or_config')
                     ->label('Cron Frequency / Daemon Settings')
                     ->placeholder('e.g. * * * * * or numprocs=4, autostart=true')
+                    ->maxLength(255)
                     ->columnSpanFull(),
                 Textarea::make('monitoring_notes')
                     ->label('Supervisor Conf & Monitoring Notes')

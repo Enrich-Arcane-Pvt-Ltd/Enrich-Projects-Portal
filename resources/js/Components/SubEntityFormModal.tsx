@@ -1008,16 +1008,16 @@ export default function SubEntityFormModal({
                             <div className="space-y-1">
                                 <div className="flex items-center justify-between">
                                     <label className="font-bold text-slate-300">Executable Command *</label>
-                                    <span className={`text-[10px] font-mono ${((data as any).command || '').length >= 270 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
-                                        {((data as any).command || '').length}/300
+                                    <span className={`text-[10px] font-mono ${((data as any).command || '').length >= 950 ? 'text-amber-400 font-semibold' : 'text-slate-500'}`}>
+                                        {((data as any).command || '').length}/1000
                                     </span>
                                 </div>
                                 <input
                                     type="text"
-                                    maxLength={300}
+                                    maxLength={1000}
                                     list="command-suggestions"
                                     value={(data as any).command}
-                                    onChange={(e) => setData('command' as any, e.target.value.slice(0, 300))}
+                                    onChange={(e) => setData('command' as any, e.target.value.slice(0, 1000))}
                                     placeholder="php artisan schedule:run"
                                     required
                                     className="w-full px-3 py-2 font-mono rounded-xl bg-slate-950 border border-slate-800 text-white focus:ring-2 focus:ring-indigo-500"
@@ -1047,7 +1047,7 @@ export default function SubEntityFormModal({
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-[10px] text-slate-500">Max 300 characters. Full binary or artisan/CLI command to execute.</p>
+                                <p className="text-[10px] text-slate-500">Max 1000 characters. Full binary or artisan/CLI command to execute.</p>
                                 {errors.command && <p className="text-xs text-rose-400">{errors.command}</p>}
                             </div>
 
