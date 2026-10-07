@@ -25,9 +25,9 @@ export default function SubEntityFormModal({
     const [docMode, setDocMode] = useState<'file' | 'link'>('file');
     const [localDocError, setLocalDocError] = useState<string | null>(null);
 
-    // Direct document upload limit is strictly 2 MB for server and production compatibility
-    const MAX_DOC_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
-    const maxDocMBFormatted = '2 MB';
+    // Direct document upload limit is strictly 1 MB for server and production compatibility
+    const MAX_DOC_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
+    const maxDocMBFormatted = '1 MB';
 
     // Intercept raw server 413 error responses (e.g. from Nginx) and show a friendly guide instead
     useEffect(() => {
@@ -35,7 +35,7 @@ export default function SubEntityFormModal({
             if (event.detail.response?.status === 413) {
                 event.preventDefault();
                 setLocalDocError(
-                    'The server rejected the upload because the file exceeds 2 MB (HTTP 413). Please switch to the "External Link" option below to link via Google Drive, OneDrive, or Dropbox.'
+                    'The server rejected the upload because the file exceeds 1 MB (HTTP 413). Please switch to the "External Link" option below to link via Google Drive, OneDrive, or Dropbox.'
                 );
             }
         });
@@ -163,7 +163,7 @@ export default function SubEntityFormModal({
             if (docMode === 'file' && (data as any).file && (data as any).file.size > MAX_DOC_FILE_SIZE_BYTES) {
                 const fileSizeMb = (((data as any).file.size) / (1024 * 1024)).toFixed(2);
                 setLocalDocError(
-                    `The selected file is ${fileSizeMb} MB, which exceeds the direct upload limit of 2 MB. Direct uploads are limited to 2 MB. Please switch to the "External Link" tab to link via Google Drive, OneDrive, or Dropbox.`
+                    `The selected file is ${fileSizeMb} MB, which exceeds the direct upload limit of 1 MB. Direct uploads are limited to 1 MB. Please switch to the "External Link" tab to link via Google Drive, OneDrive, or Dropbox.`
                 );
                 return;
             }
@@ -185,7 +185,7 @@ export default function SubEntityFormModal({
                         onClose();
                     },
                     onError: (errs) => {
-                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload could not be processed. If the file is larger than 2 MB, please use the External Link option.';
+                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload could not be processed. If the file is larger than 1 MB, please use the External Link option.';
                         setLocalDocError(String(msg));
                     },
                 });
@@ -208,7 +208,7 @@ export default function SubEntityFormModal({
                 },
                 onError: (errs) => {
                     if (type === 'documents') {
-                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload rejected. Direct uploads are capped at 2 MB. Please switch to External Link to link via Google Drive instead.';
+                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload rejected. Direct uploads are capped at 1 MB. Please switch to External Link to link via Google Drive instead.';
                         setLocalDocError(String(msg));
                     }
                 },
@@ -1339,7 +1339,7 @@ export default function SubEntityFormModal({
                                                     if (file.size > MAX_DOC_FILE_SIZE_BYTES) {
                                                         const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
                                                         setLocalDocError(
-                                                            `The selected file "${file.name}" is ${sizeMB} MB, which exceeds the direct upload limit of 2 MB. Direct uploads are limited to 2 MB. Please click "Switch to External Link" below to link via Google Drive, OneDrive, or Dropbox.`
+                                                            `The selected file "${file.name}" is ${sizeMB} MB, which exceeds the direct upload limit of 1 MB. Direct uploads are limited to 1 MB. Please click "Switch to External Link" below to link via Google Drive, OneDrive, or Dropbox.`
                                                         );
                                                         setData('file' as any, null);
                                                         e.target.value = '';
@@ -1368,7 +1368,7 @@ export default function SubEntityFormModal({
                                                     </p>
                                                     {((data as any).file as File).size > (MAX_DOC_FILE_SIZE_BYTES * 0.75) && (
                                                         <p className="text-[10px] text-amber-300">
-                                                            Tip: File is close to the 2 MB limit. For larger documents or source archives, consider using External Link (Google Drive).
+                                                            Tip: File is close to the 1 MB limit. For larger documents or source archives, consider using External Link (Google Drive).
                                                         </p>
                                                     )}
                                                     <span className="text-[10px] text-indigo-400 underline">
@@ -1447,7 +1447,7 @@ export default function SubEntityFormModal({
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                         </svg>
                                         <div className="space-y-0.5 min-w-0">
-                                            <p className="font-semibold text-amber-300">File Limit Notice (2 MB Max)</p>
+                                            <p className="font-semibold text-amber-300">File Limit Notice (1 MB Max)</p>
                                             <p className="text-slate-200 leading-relaxed text-[11px]">
                                                 {localDocError || errors.file || errors.file_url}
                                             </p>

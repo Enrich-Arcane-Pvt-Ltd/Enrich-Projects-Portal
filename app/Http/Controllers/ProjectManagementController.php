@@ -847,10 +847,10 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:150',
-            'file' => 'nullable|file|max:2048', // up to 2MB direct upload
+            'file' => 'nullable|file|max:1024', // up to 1MB direct upload
             'file_url' => 'nullable|string|max:500',
         ], [
-            'file.max' => 'The file exceeds the 2 MB direct upload limit. Please link it via Google Drive, OneDrive, or Dropbox using the External Link option.',
+            'file.max' => 'The file exceeds the 1 MB direct upload limit. Please link it via Google Drive, OneDrive, or Dropbox using the External Link option.',
         ]);
 
         if (! $request->hasFile('file') && empty(trim($validated['file_url'] ?? ''))) {
@@ -897,10 +897,10 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:150',
-            'file' => 'nullable|file|max:2048', // up to 2MB direct upload
+            'file' => 'nullable|file|max:1024', // up to 1MB direct upload
             'file_url' => 'nullable|string|max:500',
         ], [
-            'file.max' => 'The file exceeds the 2 MB direct upload limit. Please link it via Google Drive, OneDrive, or Dropbox using the External Link option.',
+            'file.max' => 'The file exceeds the 1 MB direct upload limit. Please link it via Google Drive, OneDrive, or Dropbox using the External Link option.',
         ]);
 
         $updateData = [
