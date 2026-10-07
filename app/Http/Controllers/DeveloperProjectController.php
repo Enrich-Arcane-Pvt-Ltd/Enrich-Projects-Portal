@@ -296,10 +296,6 @@ class DeveloperProjectController extends Controller
         $cred = \App\Models\ClientAccessCredential::findOrFail($id);
         $user = $request->user();
 
-        if ($user->role === 'qa') {
-            abort(403, 'Unauthorized.');
-        }
-
         if (! $this->userCanAccessProject($user, $cred->project_id)) {
             abort(403, 'Unauthorized.');
         }

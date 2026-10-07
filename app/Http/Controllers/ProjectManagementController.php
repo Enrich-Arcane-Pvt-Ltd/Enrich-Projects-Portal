@@ -727,8 +727,8 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'service_type' => ['required', Rule::in(['cron_schedule', 'queue_worker', 'supervisor_daemon', 'websocket'])],
-            'command' => 'required|string|max:300',
-            'frequency_or_config' => 'nullable|string|max:100',
+            'command' => 'required|string|max:1000',
+            'frequency_or_config' => 'nullable|string|max:255',
             'monitoring_notes' => 'nullable|string',
         ]);
 
@@ -747,8 +747,8 @@ class ProjectManagementController extends Controller
 
         $validated = $request->validate([
             'service_type' => ['required', Rule::in(['cron_schedule', 'queue_worker', 'supervisor_daemon', 'websocket'])],
-            'command' => 'required|string|max:300',
-            'frequency_or_config' => 'nullable|string|max:100',
+            'command' => 'required|string|max:1000',
+            'frequency_or_config' => 'nullable|string|max:255',
             'monitoring_notes' => 'nullable|string',
         ]);
 

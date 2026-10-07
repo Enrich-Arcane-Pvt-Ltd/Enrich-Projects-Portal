@@ -257,8 +257,10 @@ export default function ProjectVaultModal({
             const res = await axios.post(`/developer/reveal-client-credential/${clientCred.id}`);
             setRevealedClients(prev => ({ ...prev, [clientCred.id]: res.data.password }));
             triggerCopyFeedback(`Audited: Revealed ${clientCred.username} password`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to reveal client credential', error);
+            const msg = error?.response?.data?.message || 'Failed to reveal password';
+            triggerCopyFeedback(msg);
         } finally {
             setLoadingIds(prev => ({ ...prev, [`client_${clientCred.id}`]: false }));
         }
@@ -271,8 +273,10 @@ export default function ProjectVaultModal({
                 const res = await axios.post(`/developer/reveal-client-credential/${clientCred.id}`);
                 password = res.data.password;
                 setRevealedClients(prev => ({ ...prev, [clientCred.id]: password! }));
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Failed to fetch client password for copy', err);
+                const msg = err?.response?.data?.message || 'Failed to copy password';
+                triggerCopyFeedback(msg);
                 return;
             }
         }
