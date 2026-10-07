@@ -1,4 +1,4 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import React, { useEffect, useState } from 'react';
 import { PageProps } from '@/types';
 
@@ -25,11 +25,25 @@ export default function SubEntityFormModal({
     const [docMode, setDocMode] = useState<'file' | 'link'>('file');
     const [localDocError, setLocalDocError] = useState<string | null>(null);
 
-    const { system_limits } = usePage<PageProps>().props;
+    // Direct document upload limit is strictly 2 MB for server and production compatibility
+    const MAX_DOC_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2 MB
+    const maxDocMBFormatted = '2 MB';
 
-    // Use dynamic PHP server limit if provided, or conservative default
-    const MAX_DOC_FILE_SIZE_BYTES = system_limits?.max_upload_bytes || (7.5 * 1024 * 1024);
-    const maxDocMBFormatted = system_limits?.max_upload_mb ? `${system_limits.max_upload_mb} MB` : `${(MAX_DOC_FILE_SIZE_BYTES / (1024 * 1024)).toFixed(1)} MB`;
+    // Intercept raw server 413 error responses (e.g. from Nginx) and show a friendly guide instead
+    useEffect(() => {
+        const removeInvalidListener = router.on('invalid', (event) => {
+            if (event.detail.response?.status === 413) {
+                event.preventDefault();
+                setLocalDocError(
+                    'The server rejected the upload because the file exceeds 2 MB (HTTP 413). Please switch to the "External Link" option below to link via Google Drive, OneDrive, or Dropbox.'
+                );
+            }
+        });
+
+        return () => {
+            removeInvalidListener();
+        };
+    }, []);
 
     // Initial state based on entity type
     const getInitialData = () => {
@@ -147,8 +161,9 @@ export default function SubEntityFormModal({
                 return;
             }
             if (docMode === 'file' && (data as any).file && (data as any).file.size > MAX_DOC_FILE_SIZE_BYTES) {
+                const fileSizeMb = (((data as any).file.size) / (1024 * 1024)).toFixed(2);
                 setLocalDocError(
-                    `The selected file is ${((data as any).file.size / (1024 * 1024)).toFixed(1)} MB, which exceeds the direct upload limit of ${maxDocMBFormatted}. Server limits (post_max_size / upload_max_filesize) reject larger uploads with HTTP 413. Please switch to the "External Link" tab to link via Google Drive, OneDrive, or Dropbox.`
+                    `The selected file is ${fileSizeMb} MB, which exceeds the direct upload limit of 2 MB. Direct uploads are limited to 2 MB. Please switch to the "External Link" tab to link via Google Drive, OneDrive, or Dropbox.`
                 );
                 return;
             }
@@ -170,7 +185,7 @@ export default function SubEntityFormModal({
                         onClose();
                     },
                     onError: (errs) => {
-                        const msg = errs?.file || errs?.file_url || errs?.title || 'Failed to update document. Please verify the file size or link.';
+                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload could not be processed. If the file is larger than 2 MB, please use the External Link option.';
                         setLocalDocError(String(msg));
                     },
                 });
@@ -193,7 +208,7 @@ export default function SubEntityFormModal({
                 },
                 onError: (errs) => {
                     if (type === 'documents') {
-                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload rejected. If the file is large, please link via Google Drive instead.';
+                        const msg = errs?.file || errs?.file_url || errs?.title || 'Upload rejected. Direct uploads are capped at 2 MB. Please switch to External Link to link via Google Drive instead.';
                         setLocalDocError(String(msg));
                     }
                 },
@@ -1315,19 +1330,23 @@ export default function SubEntityFormModal({
                                             onChange={(e) => {
                                                 const file = e.target.files ? e.target.files[0] : null;
                                                 if (file) {
+                                                    // Auto-populate title from filename if title is empty
+                                                    if (!(data as any).title) {
+                                                        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                                                        setData('title' as any, cleanName || file.name);
+                                                    }
+
                                                     if (file.size > MAX_DOC_FILE_SIZE_BYTES) {
+                                                        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
                                                         setLocalDocError(
-                                                            `The selected file "${file.name}" is ${(file.size / (1024 * 1024)).toFixed(1)} MB, which exceeds the direct upload limit of ${maxDocMBFormatted}. Server payload limits reject large uploads (HTTP 413). Please switch to the "External Link" tab and link via Google Drive, OneDrive, or Dropbox.`
+                                                            `The selected file "${file.name}" is ${sizeMB} MB, which exceeds the direct upload limit of 2 MB. Direct uploads are limited to 2 MB. Please click "Switch to External Link" below to link via Google Drive, OneDrive, or Dropbox.`
                                                         );
                                                         setData('file' as any, null);
                                                         e.target.value = '';
                                                         return;
                                                     }
+
                                                     setData('file' as any, file);
-                                                    if (!(data as any).title) {
-                                                        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-                                                        setData('title' as any, cleanName || file.name);
-                                                    }
                                                     setLocalDocError(null);
                                                 }
                                             }}
@@ -1349,7 +1368,7 @@ export default function SubEntityFormModal({
                                                     </p>
                                                     {((data as any).file as File).size > (MAX_DOC_FILE_SIZE_BYTES * 0.75) && (
                                                         <p className="text-[10px] text-amber-300">
-                                                            Tip: Large file detected. For very fast access, consider using External Link (Google Drive).
+                                                            Tip: File is close to the 2 MB limit. For larger documents or source archives, consider using External Link (Google Drive).
                                                         </p>
                                                     )}
                                                     <span className="text-[10px] text-indigo-400 underline">
@@ -1422,14 +1441,14 @@ export default function SubEntityFormModal({
 
                             {/* Error Alert with Quick Switch */}
                             {(localDocError || errors.file || errors.file_url) && (
-                                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-150">
+                                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-150">
                                     <div className="flex items-start gap-2.5 min-w-0">
-                                        <svg className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                         </svg>
                                         <div className="space-y-0.5 min-w-0">
-                                            <p className="font-semibold text-rose-200">Upload Issue</p>
-                                            <p className="text-slate-300 leading-relaxed text-[11px]">
+                                            <p className="font-semibold text-amber-300">File Limit Notice (2 MB Max)</p>
+                                            <p className="text-slate-200 leading-relaxed text-[11px]">
                                                 {localDocError || errors.file || errors.file_url}
                                             </p>
                                         </div>
@@ -1441,8 +1460,11 @@ export default function SubEntityFormModal({
                                                 setDocMode('link');
                                                 setLocalDocError(null);
                                             }}
-                                            className="self-start sm:self-auto shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors shadow-sm whitespace-nowrap"
+                                            className="self-start sm:self-auto shrink-0 px-3.5 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md whitespace-nowrap flex items-center gap-1.5"
                                         >
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                            </svg>
                                             Switch to External Link
                                         </button>
                                     )}
